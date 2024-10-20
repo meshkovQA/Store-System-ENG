@@ -1,6 +1,8 @@
 # schemas.py
+from pydantic import BaseModel
 from pydantic import BaseModel, EmailStr
 from pydantic.types import constr
+from typing import Optional
 
 
 class UserCreate(BaseModel):
@@ -29,3 +31,8 @@ class Login(BaseModel):  # Модель для аутентификации по
 class Token(BaseModel):
     access_token: str
     token_type: str
+
+
+class UserUpdate(BaseModel):
+    email: EmailStr  # Позволяет изменить email
+    name: str   # Позволяет изменить имя

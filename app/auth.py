@@ -1,7 +1,7 @@
 # auth.py
 from datetime import datetime, timedelta
 from jose import JWTError, jwt
-from fastapi import Request
+from fastapi import HTTPException, status, Depends
 from passlib.context import CryptContext
 from config import SECRET_KEY
 from app import logger
@@ -11,7 +11,7 @@ ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
 
-def create_access_token(data: dict):
+def create_access_token(data: dict):  # Функция создания access_token
     to_encode = data.copy()
     expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     to_encode.update({"exp": expire})
@@ -20,25 +20,15 @@ def create_access_token(data: dict):
     return encoded_jwt
 
 
-def verify_token(request: Request):
-    auth_header = request.headers.get("Authorization")
-    if auth_header is None:
-        logger.log_message("Authorization header is missing.")
-        return None
-
+def verify_token(token: str):
     try:
-        scheme, token = auth_header.split()
-        if scheme.lower() != 'bearer':
-            logger.log_message(f"Incorrect token scheme: {scheme}")
-            return None
-
-        logger.log_message(f"Token received: {token}")
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         logger.log_message(f"Token successfully decoded: {payload}")
         return payload
-    except (JWTError, ValueError) as e:
+    except JWTError as e:
         logger.log_message(f"Token decoding failed: {str(e)}")
-        return None
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
 
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")

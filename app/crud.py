@@ -4,7 +4,7 @@ from app.models import User
 from app.schemas import UserCreate
 from app.auth import get_password_hash
 import uuid
-from app import logger
+from app import logger, schemas
 
 
 def get_user_by_email(db: Session, email: str):
@@ -62,3 +62,30 @@ def get_user_by_id(db: Session, user_id: uuid.UUID, requesting_user: User):
     logger.log_message(f"""A user {
                        requesting_user.email} tried to get user information {user_id}""")
     return db.query(User).filter(User.id == requesting_user.id).first()
+
+
+def edit_user(db: Session, user_id: str, user_data: schemas.UserUpdate):  # Редактирование пользователя
+    user = db.query(User).filter(User.id == user_id).first()
+    if user:
+        if user_data.email:
+            user.email = user_data.email
+        if user_data.name:
+            user.name = user_data.name
+        # При необходимости можно добавить другие поля для редактирования
+        db.commit()
+        db.refresh(user)
+        logger.log_message(
+            f"User {user.email} has been updated in the database")
+        return user
+    return None
+
+
+def delete_user(db: Session, user_id: str):  # Удаление пользователя
+    user = db.query(User).filter(User.id == user_id).first()
+    if user:
+        db.delete(user)
+        db.commit()
+        logger.log_message(
+            f"User {user.email} has been deleted from the database")
+        return user
+    return None

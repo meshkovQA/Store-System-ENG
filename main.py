@@ -5,13 +5,21 @@ from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import RedirectResponse
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from app import routes, database, logger, auth
 from sqlalchemy.orm import Session
 from app.database import get_session_local
 from app.crud import get_user_by_email
 from app.auth import verify_token
 
-app = FastAPI()
+app = FastAPI(
+    title="User Manager MS",  # Укажите название вашего микросервиса здесь
+    description="API for Auth",  # Описание вашего микросервиса
+    version="1.0.0"  # Версия микросервиса
+)
+# Добавляем схему безопасности OAuth2 с токенами
+security = HTTPBearer()
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],  # Либо список доменов
@@ -40,12 +48,36 @@ def index():
 
 # Роут для главной страницы личного кабинета
 @app.get("/store", include_in_schema=False, response_class=HTMLResponse)
-def dashboard_page(request: Request, token: dict = Depends(verify_token), db: Session = Depends(get_session_local)):
-    if token is None:
-        logger.log_message("Token is None, access denied to /store.")
+def dashboard_page(request: Request, credentials: HTTPAuthorizationCredentials = Depends(security), db: Session = Depends(get_session_local)):
+    token = credentials.credentials
+    user_data = auth.verify_token(token)
+
+    if user_data is None:
+        logger.log_message("Token is invalid, access denied to /store.")
         raise HTTPException(status_code=403, detail="Not authorized")
 
-    user = get_user_by_email(db, email=token["sub"])
+    user = get_user_by_email(db, email=user_data["sub"])
     logger.log_message(f"User {user.email} accessed to /store.")
 
     return templates.TemplateResponse("store.html", {"request": request, "is_superadmin": user.is_superadmin})
+
+
+# Обновляем OpenAPI-схему для отображения Bearer токена в Swagger UI
+@app.get("/openapi.json", include_in_schema=False)
+def custom_openapi():
+    if app.openapi_schema:
+        return app.openapi_schema
+    openapi_schema = app.openapi()
+    openapi_schema["components"]["securitySchemes"] = {
+        "bearerAuth": {
+            "type": "http",
+            "scheme": "bearer",
+            "bearerFormat": "JWT"
+        }
+    }
+    for path in openapi_schema["paths"]:
+        for method in openapi_schema["paths"][path]:
+            openapi_schema["paths"][path][method]["security"] = [
+                {"bearerAuth": []}]
+    app.openapi_schema = openapi_schema
+    return app.openapi_schema

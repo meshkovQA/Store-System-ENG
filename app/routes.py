@@ -1,4 +1,5 @@
 # routes.py
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.responses import RedirectResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
@@ -11,6 +12,9 @@ from app.database import get_session_local
 
 router = APIRouter()
 templates = Jinja2Templates(directory="templates")
+
+# Создаем объект security для использования схемы авторизации Bearer
+security = HTTPBearer()
 
 
 # Рендеринг страницы регистрации
@@ -70,14 +74,22 @@ def login_for_access_token(form_data: schemas.Login, db: Session = Depends(datab
 
 
 # Повышение прав до супер-админа (только для супер-админа)
-@router.put("/admin/promote/{user_id}")
-def promote_user_to_superadmin(user_id: str, db: Session = Depends(database.get_session_local), token: str = Depends(auth.verify_token)):
-    # Проверяем, что текущий пользователь является супер-админом
-    requesting_user = crud.get_user_by_email(db, email=token["sub"])
-    if not requesting_user.is_superadmin:
-        raise HTTPException(
-            status_code=403, detail="Insufficient rights for promotion")
+@router.put("/users/promote/{user_id}")
+def promote_user_to_superadmin(user_id: str,
+                               db: Session = Depends(get_session_local),
+                               credentials: HTTPAuthorizationCredentials = Depends(security)):
+    # Получаем токен из заголовка Authorization
+    token = credentials.credentials
 
+    # Проверяем токен
+    token_data = auth.verify_token(token)
+    requesting_user = crud.get_user_by_email(db, token_data["sub"])
+
+    # Проверяем права (только супер-админ может повышать других пользователей)
+    if not requesting_user.is_superadmin:
+        raise HTTPException(status_code=403, detail="Insufficient rights")
+
+    # Повышаем пользователя до супер-админа
     user = crud.promote_to_superadmin(db, user_id)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
@@ -88,25 +100,66 @@ def promote_user_to_superadmin(user_id: str, db: Session = Depends(database.get_
 
 # Получение списка пользователей (только для супер-админа)
 @router.get("/users/")
-def get_users(request: Request, token: str = Depends(auth.verify_token), db: Session = Depends(get_session_local)):
-    # Получаем информацию о пользователе по токену
-    requesting_user = crud.get_user_by_email(db, token['sub'])
+def get_users(db: Session = Depends(get_session_local),
+              credentials: HTTPAuthorizationCredentials = Depends(security)):
+    # Получаем токен из заголовка Authorization
+    token = credentials.credentials
 
-    # Супер-админ получает доступ ко всем пользователям
-    if requesting_user.is_superadmin:
-        logger.log_message(
-            f"Super admin {requesting_user.email} accessed the user list.")
-        users = crud.get_users_for_superadmin(db)
-    else:
-        # Обычный пользователь видит только свои данные
-        logger.log_message(
-            f"User {requesting_user.email} accessed their own data.")
-        users = [crud.get_user_by_id(db, requesting_user.id, requesting_user)]
+    # Проверяем токен
+    token_data = auth.verify_token(token)
+    requesting_user = crud.get_user_by_email(db, token_data["sub"])
 
-    # Проверяем, что запрашивает клиент: HTML или JSON
-    if "text/html" in request.headers.get("accept", ""):
-        # Если клиент запрашивает HTML, рендерим страницу
-        return templates.TemplateResponse("user_list.html", {"request": request, "users": users})
-    else:
-        # Если клиент запрашивает JSON, возвращаем данные
-        return JSONResponse(content={"users": [user.dict() for user in users]})
+    # Проверяем права (только супер-админ может видеть список всех пользователей)
+    if not requesting_user.is_superadmin:
+        raise HTTPException(status_code=403, detail="Insufficient rights")
+
+    # Возвращаем список пользователей
+    users = crud.get_users_for_superadmin(db)
+    return users
+
+
+# Пример маршрута для редактирования пользователя с проверкой токена через HTTPBearer
+@router.put("/users/edit/{user_id}")
+def edit_user(user_id: str, form_data: schemas.UserUpdate, db: Session = Depends(get_session_local), credentials: HTTPAuthorizationCredentials = Depends(security)):
+    # Проверяем права через токен
+    token = credentials.credentials
+    user_data_from_token = auth.verify_token(token)
+
+    # Проверяем права (например, только супер-админ может изменять пользователей)
+    requesting_user = crud.get_user_by_email(db, user_data_from_token["sub"])
+
+    if not requesting_user.is_superadmin:
+        raise HTTPException(status_code=403, detail="Insufficient rights")
+
+    user = crud.edit_user(db, user_id, form_data)
+
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    logger.log_message(f"User {user.email} has been updated.")
+    return {"detail": "User successfully updated", "user": user}
+
+# Пример маршрута для удаления пользователя с проверкой токена через HTTPBearer
+
+
+@router.delete("/users/delete/{user_id}")
+def delete_user(user_id: str,
+                credentials: HTTPAuthorizationCredentials = Depends(security),
+                db: Session = Depends(get_session_local)):
+    # Извлекаем и проверяем токен
+    token = credentials.credentials
+    user_data_from_token = auth.verify_token(token)
+
+    # Проверяем права (например, только супер-админ может удалять пользователей)
+    requesting_user = crud.get_user_by_email(db, user_data_from_token["sub"])
+    if not requesting_user.is_superadmin:
+        raise HTTPException(status_code=403, detail="Insufficient rights")
+
+    # Удаление пользователя
+    user = crud.delete_user(db, user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    logger.log_message(
+        f"Super admin {requesting_user.email} deleted user {user.email}.")
+    return {"detail": "User successfully deleted", "user": user.email}
