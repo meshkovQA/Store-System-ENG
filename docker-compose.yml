@@ -1,0 +1,147 @@
+version: "3.9"
+
+services:
+  # Elasticsearch - хранилище логов
+  elasticsearch:
+    image: elasticsearch:7.17.18
+    container_name: elasticsearch
+    environment:
+      - bootstrap.memory_lock=true
+      - discovery.type=single-node
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    ports:
+      - 9200:9200
+    stdin_open: true
+    tty: true
+    networks:
+      - app_network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "50"
+
+  # Logstash - обработка и отправка логов в Elasticsearch
+  logstash:
+    container_name: logstash
+    image: logstash:7.17.18
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - ./logstash/logstash.conf:/usr/share/logstash/pipeline/logstash.conf
+      - ./logstash/logstash.template.json:/usr/share/logstash/templates/logstash.template.json
+    ports:
+      - 5044:5044
+    links:
+      - elasticsearch:elasticsearch
+    depends_on:
+      - elasticsearch
+    stdin_open: true
+    tty: true
+    networks:
+      - app_network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "50"
+
+  # Kibana - интерфейс для просмотра логов
+  kibana:
+    container_name: kibana
+    image: kibana:7.17.18
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    ports:
+      - 5601:5601
+    links:
+      - elasticsearch:elasticsearch
+    depends_on:
+      - elasticsearch
+    stdin_open: true
+    tty: true
+    networks:
+      - app_network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "50"
+
+  # Filebeat - сборщик логов с контейнеров
+  filebeat:
+    user: root
+    container_name: filebeat
+    image: elastic/filebeat:7.17.18
+    links:
+      - logstash:logstash
+    depends_on:
+      - logstash
+      - app
+    volumes:
+      - /var/run/docker.sock:/host_docker/docker.sock
+      - ./logs:/usr/share/filebeat/mylogs
+      - ./filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml
+    command: [ "--strict.perms=false" ]
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    stdin_open: true
+    tty: true
+    networks:
+      - app_network
+    deploy:
+      mode: global
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "50"
+
+  db:
+    image: postgres:12-bullseye
+    container_name: postgres_db
+    environment:
+      POSTGRES_USER: storage_admin # Задать пользователя
+      POSTGRES_PASSWORD: THw7l0bxvPPkWUhP # Задать пароль
+      POSTGRES_DB: strg_users_db # Задать имя БД
+    ports:
+      - "5435:5432" # Открыть порт для внешнего доступа
+    volumes:
+      - ./docker-data/postgres:/var/lib/postgresql/data
+      - ./db_init/init.sql:/docker-entrypoint-initdb.d/init.sql # Путь к папке с SQL-скриптами
+    networks:
+      - app_network
+
+  app:
+    build:
+      context: . # Путь к папке с кодом приложения
+      dockerfile: Dockerfile
+    container_name: python_app
+    volumes:
+      - ./logs:/app/logs
+    depends_on:
+      - db
+    environment:
+      DATABASE_URL: postgresql://storage_admin:THw7l0bxvPPkWUhP@db:5432/strg_users_db
+    ports:
+      - "8000:8000" # Открыть порт для FastAPI или другого веб-сервиса
+    networks:
+      - app_network
+
+volumes:
+  postgres_data:
+
+
+networks:
+  app_network:
+    driver: bridge
