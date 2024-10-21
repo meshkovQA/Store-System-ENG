@@ -51,7 +51,7 @@ def register_page(request: Request):
 
 
 # Авторизация пользователя и перенаправление на страницу store
-@router.post("/login/")
+@router.post("/login/", response_model=schemas.LoginResponse)
 def login_for_access_token(form_data: schemas.Login, db: Session = Depends(database.get_session_local)):
     user = crud.get_user_by_email(db, email=form_data.email)
     if not user or not auth.verify_password(form_data.password, user.hashed_password):

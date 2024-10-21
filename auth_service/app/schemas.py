@@ -2,7 +2,6 @@
 from pydantic import BaseModel
 from pydantic import BaseModel, EmailStr
 from pydantic.types import constr
-from typing import Optional
 
 
 class UserCreate(BaseModel):
@@ -25,6 +24,21 @@ class User(BaseModel):
 class Login(BaseModel):  # Модель для аутентификации пользователя (логин)
     email: EmailStr
     password: str
+
+
+class LoginResponse(BaseModel):
+    message: str
+    access_token: str
+    token_type: str
+
+    class Config:
+        schema_extra = {
+            "example": {
+                "message": "User successfully logged in",
+                "access_token": "your_access_token",
+                "token_type": "bearer"
+            }
+        }
 
 
 # Модель для ответа с токеном

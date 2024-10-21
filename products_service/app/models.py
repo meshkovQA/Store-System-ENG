@@ -9,25 +9,29 @@ Base = declarative_base()
 class Product(Base):
     __tablename__ = "products"
 
-    product_id = Column(String, primary_key=True, index=True)
+    product_id = Column(UUID(as_uuid=True), primary_key=True,
+                        default=uuid.uuid4, unique=True, index=True)
     name = Column(String, index=True)
     description = Column(String)
     category = Column(String)           # Категория товара
     price = Column(Float)               # Цена товара
     stock_quantity = Column(Integer)    # Количество на складе
-    supplier_name = Column(String)      # Поставщик товара
+    supplier_name = Column(UUID, ForeignKey(
+        'suppliers.supplier_id'))      # Поставщик товара
     is_available = Column(Boolean)      # Доступность для заказа
     created_at = Column(DateTime)       # Дата добавления товара
     updated_at = Column(DateTime)       # Дата последнего обновления информации
     weight = Column(Float)              # Вес товара
     dimensions = Column(String)         # Габариты товара (ДхШхВ)
     manufacturer = Column(String)       # Производитель товара
+    image_url = Column(String)       # Ссылка на изображение товара
 
 
 class Warehouse(Base):
     __tablename__ = "warehouses"
 
-    warehouse_id = Column(String, primary_key=True, index=True)
+    warehouse_id = Column(UUID(as_uuid=True), primary_key=True,
+                          default=uuid.uuid4, unique=True, index=True)
     location = Column(String)           # Местоположение склада
     manager_name = Column(String)       # Имя управляющего склада
     capacity = Column(Integer)          # Вместимость склада (в ед. товаров)
@@ -42,8 +46,33 @@ class Warehouse(Base):
 class ProductWarehouse(Base):
     __tablename__ = "product_warehouses"
 
-    product_warehouse_id = Column(String, primary_key=True, index=True)
-    product_id = Column(String, ForeignKey('products.product_id'), index=True)
-    warehouse_id = Column(String, ForeignKey(
+    product_warehouse_id = Column(UUID(as_uuid=True), primary_key=True,
+                                  default=uuid.uuid4, unique=True, index=True)
+    product_id = Column(UUID, ForeignKey('products.product_id'), index=True)
+    warehouse_id = Column(UUID, ForeignKey(
         'warehouses.warehouse_id'), index=True)
     quantity = Column(Integer)          # Количество данного товара на складе
+
+
+class Supplier(Base):
+    __tablename__ = "suppliers"
+
+    # Уникальный ID поставщика (UUID)
+    supplier_id = Column(UUID(as_uuid=True), primary_key=True,
+                         default=uuid.uuid4, unique=True, index=True)
+    # Название поставщика
+    name = Column(String, index=True)
+    # Имя контактного лица
+    contact_name = Column(String)
+    # Email контактного лица
+    contact_email = Column(String)
+    # Номер телефона поставщика
+    phone_number = Column(String)
+    # Адрес поставщика
+    address = Column(String)
+    # Страна поставщика
+    country = Column(String)
+    # Город поставщика
+    city = Column(String)
+    # Вебсайт поставщика
+    website = Column(String)

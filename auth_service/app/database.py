@@ -4,7 +4,7 @@ from sqlalchemy import Column, String, Boolean, create_engine
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
-from auth_service.config import SQLALCHEMY_DATABASE_URI
+from auth_service.app.config import SQLALCHEMY_DATABASE_URI
 from app import models
 
 DATABASE_URL = SQLALCHEMY_DATABASE_URI
