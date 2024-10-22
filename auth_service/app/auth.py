@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 from jose import JWTError, jwt
 from fastapi import HTTPException, status, Depends
 from passlib.context import CryptContext
-from auth_service.app.config import SECRET_KEY
+from app.config import SECRET_KEY
 from app import logger
 
 SECRET_KEY = SECRET_KEY
