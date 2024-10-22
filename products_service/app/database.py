@@ -5,7 +5,6 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from auth_service.app.config import SQLALCHEMY_DATABASE_URI
-from app import models
 
 DATABASE_URL = SQLALCHEMY_DATABASE_URI
 
@@ -46,7 +45,9 @@ class Product(Base):
     weight = Column(Float)              # Вес товара
     dimensions = Column(String)         # Габариты товара (ДхШхВ)
     manufacturer = Column(String)       # Производитель товара
-    image_url = Column(String)       # Ссылка на изображение товара
+    image_url = Column(String)          # Ссылка на изображение товара
+    # ID пользователя, добавившего товар
+    user_id = Column(UUID(as_uuid=True))
 
 
 class Warehouse(Base):
@@ -79,22 +80,21 @@ class ProductWarehouse(Base):
 class Supplier(Base):
     __tablename__ = "suppliers"
 
-    # Уникальный ID поставщика (UUID)
     supplier_id = Column(UUID(as_uuid=True), primary_key=True,
+                         # Уникальный ID поставщика (UUID)
                          default=uuid.uuid4, unique=True, index=True)
-    # Название поставщика
-    name = Column(String, index=True)
-    # Имя контактного лица
-    contact_name = Column(String)
-    # Email контактного лица
-    contact_email = Column(String)
-    # Номер телефона поставщика
-    phone_number = Column(String)
-    # Адрес поставщика
-    address = Column(String)
-    # Страна поставщика
-    country = Column(String)
-    # Город поставщика
-    city = Column(String)
-    # Вебсайт поставщика
-    website = Column(String)
+    name = Column(String, index=True)  # Название поставщика
+
+    contact_name = Column(String)  # Имя контактного лица
+
+    contact_email = Column(String)  # Email контактного лица
+
+    phone_number = Column(String)  # Номер телефона поставщика
+
+    address = Column(String)  # Адрес поставщика
+
+    country = Column(String)  # Страна поставщика
+
+    city = Column(String)  # Город поставщика
+
+    website = Column(String)  # Вебсайт поставщика

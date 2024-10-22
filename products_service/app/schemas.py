@@ -17,6 +17,7 @@ class ProductBase(BaseModel):
     weight: Optional[float] = None
     dimensions: Optional[str] = None
     manufacturer: Optional[str] = None
+    user_id: UUID
 
 
 class ProductCreate(ProductBase):
