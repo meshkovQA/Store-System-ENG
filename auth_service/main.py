@@ -13,8 +13,10 @@ from app.crud import get_user_by_email
 from app.auth import verify_token
 
 app = FastAPI(
-    title="User Manager MS",  # Укажите название вашего микросервиса здесь
-    description="API for Auth",  # Описание вашего микросервиса
+    # Укажите название вашего микросервиса здесь
+    title="User Manager Microservice API",
+    # Описание вашего микросервиса
+    description="API for managing users and roles in the application",
     version="1.0.0"  # Версия микросервиса
 )
 # Добавляем схему безопасности OAuth2 с токенами

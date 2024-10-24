@@ -4,7 +4,8 @@ filebeat.inputs:
 - type: log
   enabled: true
   paths:
-    - /usr/share/filebeat/mylogs/*.log
+    - /usr/share/filebeat/products_service/*.log
+    - /usr/share/filebeat/auth_service/*.log
 
 output.logstash:
   hosts: ["logstash:5044"]

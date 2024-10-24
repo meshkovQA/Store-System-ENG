@@ -5,9 +5,9 @@ from fastapi.security import HTTPBearer
 from app import routes, database, logger, auth
 
 app = FastAPI(
-    title="User Manager MS",  # Укажите название вашего микросервиса здесь
-    description="API for Auth",  # Описание вашего микросервиса
-    version="1.0.0"  # Версия микросервиса
+    title="Warehouse Management Microservice API",
+    description="API for managing products and suppliers in the warehouse",
+    version="1.0.0"
 )
 # Добавляем схему безопасности OAuth2 с токенами
 security = HTTPBearer()

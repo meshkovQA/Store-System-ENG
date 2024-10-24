@@ -8,10 +8,10 @@ services:
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT
       KAFKA_PROCESS_ROLES: broker,controller
-      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@localhost:9093
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
       KAFKA_LOG_DIRS: /var/lib/kafka/data
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
       KAFKA_CLUSTER_ID: "5L6g3nShT-eMCtK--X86sw" # Cluster ID из логов
@@ -21,6 +21,21 @@ services:
       - "9093:9093"
     volumes:
       - /var/lib/kafka/data
+    networks:
+      - app_network
+    healthcheck:
+      test: [ "CMD-SHELL", "/opt/kafka/bin/kafka-broker-api-versions.sh --bootstrap-server kafka:9092 || exit 1" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  topic_creator:
+    image: apache/kafka:3.8.0
+    depends_on:
+      kafka:
+        condition: service_healthy
+    command: >
+      sh -c "/opt/kafka/bin/kafka-topics.sh --create --topic __consumer_offsets --partitions 50 --replication-factor 1 --bootstrap-server kafka:9092; "
     networks:
       - app_network
 
@@ -112,8 +127,8 @@ services:
       - products_service
     volumes:
       - /var/run/docker.sock:/host_docker/docker.sock
-      - ./auth_service/logs:/usr/share/filebeat/mylogs
-      - ./product_service/logs:/usr/share/filebeat/mylogs
+      - ./auth_service/logs:/usr/share/filebeat/auth_service
+      - ./products_service/logs:/usr/share/filebeat/products_service
       - ./filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml
     command: [ "--strict.perms=false" ]
     ulimits:
@@ -158,7 +173,7 @@ services:
       - "5436:5432" # Открыть порт для внешнего доступа
     volumes:
       - ./docker-data/products_db:/var/lib/postgresql/data
-      - ./product_service/db_init/init_products.sql:/docker-entrypoint-initdb.d/init.sql # Путь к папке с SQL-скриптами
+      - ./products_service/db_init/init_products.sql:/docker-entrypoint-initdb.d/init.sql # Путь к папке с SQL-скриптами
     networks:
       - app_network
 
@@ -170,7 +185,8 @@ services:
     volumes:
       - ./auth_service/logs:/app/logs
     depends_on:
-      - db_auth
+      kafka:
+        condition: service_healthy
     environment:
       DATABASE_URL: postgresql://storage_admin:THw7l0bxvPPkWUhP@db:5432/strg_users_db
     ports:
@@ -186,7 +202,8 @@ services:
     volumes:
       - ./products_service/logs:/app/logs
     depends_on:
-      - db_products
+      kafka:
+        condition: service_healthy
     environment:
       DATABASE_URL: postgresql://storage_admin:THw7l0bxvPPkWUhP@db_products:5432/strg_products_db
     ports:

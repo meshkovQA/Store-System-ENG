@@ -9,3 +9,4 @@ pydantic
 pydantic[email]
 Jinja2
 uvicorn
+kafka-python

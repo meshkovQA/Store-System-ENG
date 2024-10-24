@@ -5,9 +5,9 @@ from fastapi.responses import RedirectResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from app import crud, schemas, database, auth, logger
-from app.models import User
 from fastapi.responses import JSONResponse
 from app.database import get_session_local
+from app.kafka import create_auth_topic_kafka
 
 
 router = APIRouter()
@@ -23,7 +23,7 @@ def register_page(request: Request):
     return templates.TemplateResponse("register.html", {"request": request})
 
 
-@router.post("/register/", response_model=schemas.User)
+@router.post("/register/", response_model=schemas.User, tags=["Auth"], summary="Register a new user")
 def register_user(user: schemas.UserCreate, db: Session = Depends(database.get_session_local)):
     db_user = crud.get_user_by_email(db, email=user.email)
     if db_user:
@@ -50,8 +50,8 @@ def register_page(request: Request):
     return templates.TemplateResponse("login.html", {"request": request})
 
 
-# Авторизация пользователя и перенаправление на страницу store
-@router.post("/login/", response_model=schemas.LoginResponse)
+# Авторизация пользователя
+@router.post("/login/", response_model=schemas.LoginResponse, tags=["Auth"], summary="Login to the system")
 def login_for_access_token(form_data: schemas.Login, db: Session = Depends(database.get_session_local)):
     user = crud.get_user_by_email(db, email=form_data.email)
     if not user or not auth.verify_password(form_data.password, user.hashed_password):
@@ -65,6 +65,12 @@ def login_for_access_token(form_data: schemas.Login, db: Session = Depends(datab
         data={"sub": user.email, "is_superadmin": user.is_superadmin}
     )
     logger.log_message(f"User is logged in: {form_data.email}")
+    user_id_str = str(user.id)
+
+    create_auth_topic_kafka(access_token, user.email, user_id_str, "login")
+    logger.log_message(f"""Message sent to Kafka: User {
+                       user.email} and id {user.id} logged in.""")
+
     return JSONResponse(
         status_code=status.HTTP_200_OK,
         content={"message": "User successfully logged in",
@@ -74,7 +80,7 @@ def login_for_access_token(form_data: schemas.Login, db: Session = Depends(datab
 
 
 # Повышение прав до супер-админа (только для супер-админа)
-@router.put("/users/promote/{user_id}")
+@router.put("/users/promote/{user_id}", tags=["User Management"], summary="Promote user to superadmin")
 def promote_user_to_superadmin(user_id: str,
                                db: Session = Depends(get_session_local),
                                credentials: HTTPAuthorizationCredentials = Depends(security)):
@@ -99,7 +105,7 @@ def promote_user_to_superadmin(user_id: str,
 
 
 # Получение списка пользователей (только для супер-админа)
-@router.get("/users/")
+@router.get("/users/", tags=["User Management"], summary="Get all users")
 def get_users(db: Session = Depends(get_session_local),
               credentials: HTTPAuthorizationCredentials = Depends(security)):
     # Получаем токен из заголовка Authorization
@@ -119,7 +125,7 @@ def get_users(db: Session = Depends(get_session_local),
 
 
 # Пример маршрута для редактирования пользователя с проверкой токена через HTTPBearer
-@router.put("/users/edit/{user_id}")
+@router.put("/users/edit/{user_id}", tags=["User Management"], summary="Edit user")
 def edit_user(user_id: str, form_data: schemas.UserUpdate, db: Session = Depends(get_session_local), credentials: HTTPAuthorizationCredentials = Depends(security)):
     # Проверяем права через токен
     token = credentials.credentials
@@ -142,7 +148,7 @@ def edit_user(user_id: str, form_data: schemas.UserUpdate, db: Session = Depends
 # Пример маршрута для удаления пользователя с проверкой токена через HTTPBearer
 
 
-@router.delete("/users/delete/{user_id}")
+@router.delete("/users/delete/{user_id}", tags=["User Management"], summary="Delete user")
 def delete_user(user_id: str,
                 credentials: HTTPAuthorizationCredentials = Depends(security),
                 db: Session = Depends(get_session_local)):

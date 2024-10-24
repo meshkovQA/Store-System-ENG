@@ -1,0 +1,12 @@
+{"name": "app.logger", "class": "INFO", "state": 20, "timestamp": 1729767497675, "message": "Database initialized.", "ip_address": "172.28.0.8", "microservice": "auth_service"}
+{"name": "app.logger", "class": "INFO", "state": 20, "timestamp": 1729767542498, "message": "Created token for: a@a.ru", "ip_address": "172.28.0.8", "microservice": "auth_service"}
+{"name": "app.logger", "class": "INFO", "state": 20, "timestamp": 1729767542498, "message": "User is logged in: a@a.ru", "ip_address": "172.28.0.8", "microservice": "auth_service"}
+{"name": "app.logger", "class": "INFO", "state": 20, "timestamp": 1729767542499, "message": "Sending message to Kafka: Action: login, User: a@a.ru, User ID: b03cbb8d-faad-4dca-8bf5-0912368c8456", "ip_address": "172.28.0.8", "microservice": "auth_service"}
+{"name": "app.logger", "class": "INFO", "state": 20, "timestamp": 1729767542699, "message": "Message sent to Kafka", "ip_address": "172.28.0.8", "microservice": "auth_service"}
+{"name": "app.logger", "class": "INFO", "state": 20, "timestamp": 1729767542699, "message": "Message sent to Kafka: User a@a.ru and id b03cbb8d-faad-4dca-8bf5-0912368c8456 logged in.", "ip_address": "172.28.0.8", "microservice": "auth_service"}
+{"name": "app.logger", "class": "INFO", "state": 20, "timestamp": 1729772574772, "message": "Database initialized.", "ip_address": "192.168.48.9", "microservice": "auth_service"}
+{"name": "app.logger", "class": "INFO", "state": 20, "timestamp": 1729773331740, "message": "Created token for: a@a.ru", "ip_address": "192.168.48.9", "microservice": "auth_service"}
+{"name": "app.logger", "class": "INFO", "state": 20, "timestamp": 1729773331741, "message": "User is logged in: a@a.ru", "ip_address": "192.168.48.9", "microservice": "auth_service"}
+{"name": "app.logger", "class": "INFO", "state": 20, "timestamp": 1729773331741, "message": "Sending message to Kafka: Action: login, User: a@a.ru, User ID: b03cbb8d-faad-4dca-8bf5-0912368c8456", "ip_address": "192.168.48.9", "microservice": "auth_service"}
+{"name": "app.logger", "class": "INFO", "state": 20, "timestamp": 1729773331896, "message": "Message sent to Kafka", "ip_address": "192.168.48.9", "microservice": "auth_service"}
+{"name": "app.logger", "class": "INFO", "state": 20, "timestamp": 1729773331896, "message": "Message sent to Kafka: User a@a.ru and id b03cbb8d-faad-4dca-8bf5-0912368c8456 logged in.", "ip_address": "192.168.48.9", "microservice": "auth_service"}

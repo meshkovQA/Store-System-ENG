@@ -25,6 +25,9 @@
             },
             "ip_address": {
                 "type": "keyword"
+            },
+            "microservice": {
+                "type": "keyword"
             }
         }
     }

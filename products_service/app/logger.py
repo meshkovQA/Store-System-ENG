@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 # Создаем обработчик, который записывает логи в файл
-handler = logging.FileHandler('logs/app.log')
+handler = logging.FileHandler('logs/products_service.log')
 handler.setLevel(logging.INFO)
 
 # Получаем IP-адрес машины
@@ -40,7 +40,8 @@ class JsonFormatter(logging.Formatter):
             # временная метка в миллисекундах
             "timestamp": int(datetime.utcnow().timestamp() * 1000),
             "message": record.getMessage(),  # добавляем текст сообщения
-            "ip_address": get_ip_address()  # добавляем IP-адрес
+            "ip_address": get_ip_address(),  # добавляем IP-адрес
+            "microservice": "products_service"
         }
         return json.dumps(log_entry)
 
