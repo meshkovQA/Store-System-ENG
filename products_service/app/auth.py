@@ -9,8 +9,11 @@ ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
 
-def verify_token(token: str):
+def verify_token(token):
     try:
+        # Убедимся, что токен — это строка
+        if not isinstance(token, str):
+            token = str(token)
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         logger.log_message(f"Token successfully decoded: {payload}")
         return payload

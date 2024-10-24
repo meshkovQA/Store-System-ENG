@@ -17,7 +17,19 @@ templates = Jinja2Templates(directory="templates")
 security = HTTPBearer()
 
 
+@router.get("/verify-token/", summary="Verify the validity of a token")
+async def verify_token_route(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    token = credentials.credentials
+    # Проверяем токен
+    try:
+        payload = auth.verify_token(token)
+        return {"status": "Token is valid", "payload": payload}
+    except HTTPException as e:
+        raise HTTPException(status_code=e.status_code, detail=e.detail)
+
 # Рендеринг страницы регистрации
+
+
 @router.get("/register/", include_in_schema=False)
 def register_page(request: Request):
     return templates.TemplateResponse("register.html", {"request": request})
