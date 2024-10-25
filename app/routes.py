@@ -25,22 +25,42 @@ def register_page(request: Request):
 
 @router.post("/register/", response_model=schemas.User)
 def register_user(user: schemas.UserCreate, db: Session = Depends(database.get_session_local)):
-    db_user = crud.get_user_by_email(db, email=user.email)
+    user_email = user.email.lower()
+    db_user = crud.get_user_by_email(db, email=user_email)
     if db_user:
         logger.log_message(f"""Registration failed: email {
                            user.email} is already existed.""")
         raise HTTPException(
-            status_code=400, detail="Email already registered")
+            status_code=422, detail="Email already registered")
+
+    # Проверка имени пользователя
+    if not user.name.strip():
+        raise HTTPException(
+            status_code=422, detail="Name contains invalid characters."
+        )
+    # Проверка пароля
+    if not user.password.strip():
+        raise HTTPException(
+            status_code=422, detail="Password contains invalid characters."
+        )
+    # Проверка email
+    if not user.email.strip():
+        raise HTTPException(
+            status_code=422, detail="Invalid email format."
+        )
 
     # Суперадмин не может быть установлен через регистрацию
-    created_user = crud.create_user(db=db, user=user, is_superadmin=False)
+    created_user = crud.create_user(db=db, user=user.copy(
+        update={"email": user_email}), is_superadmin=False)
     logger.log_message(f"User is registered: {user.email}")
 
     # Перенаправляем на страницу авторизации
     return JSONResponse(
         status_code=status.HTTP_201_CREATED,
         content={"message": "User successfully created",
-                 "user": created_user.email}
+                 "user": created_user.email,
+                 "user_id": created_user.id,
+                 "name": created_user.name}
     )
 
 
@@ -109,12 +129,12 @@ def get_users(db: Session = Depends(get_session_local),
     token_data = auth.verify_token(token)
     requesting_user = crud.get_user_by_email(db, token_data["sub"])
 
-    # Проверяем права (только супер-админ может видеть список всех пользователей)
-    if not requesting_user.is_superadmin:
-        raise HTTPException(status_code=403, detail="Insufficient rights")
-
-    # Возвращаем список пользователей
-    users = crud.get_users_for_superadmin(db)
+    if requesting_user.is_superadmin:
+        # Если пользователь супер-админ, возвращаем список всех пользователей
+        users = crud.get_users_for_superadmin(db)
+    else:
+        # Если пользователь не супер-админ, возвращаем только его запись
+        users = [requesting_user]
     return users
 
 
