@@ -8,7 +8,7 @@ from app import logger, schemas
 
 
 def get_user_by_email(db: Session, email: str):
-    return db.query(User).filter(User.email == email).first()
+    return db.query(User).filter(User.email == email.lower()).first()
 
 
 def create_user(db: Session, user: UserCreate, is_superadmin: bool = False):
