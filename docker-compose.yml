@@ -24,6 +24,19 @@ services:
       options:
         max-size: "10m"
         max-file: "50"
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1GB
+        reservations:
+          cpus: '1'
+          memory: 1GB
+      restart_policy:
+        condition: on-failure
+        max_attempts: 3
+        delay: 5s
+        window: 20s
 
   # Logstash - обработка и отправка логов в Elasticsearch
   logstash:
@@ -51,6 +64,16 @@ services:
       options:
         max-size: "10m"
         max-file: "50"
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512MB
+      restart_policy:
+        condition: on-failure
+        max_attempts: 3
+        delay: 5s
+        window: 20s
 
   # Kibana - интерфейс для просмотра логов
   kibana:
@@ -75,6 +98,16 @@ services:
       options:
         max-size: "10m"
         max-file: "50"
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512MB
+      restart_policy:
+        condition: on-failure
+        max_attempts: 3
+        delay: 5s
+        window: 20s
 
   # Filebeat - сборщик логов с контейнеров
   filebeat:
@@ -99,13 +132,22 @@ services:
     tty: true
     networks:
       - app_network
-    deploy:
-      mode: global
     logging:
       driver: "json-file"
       options:
         max-size: "10m"
         max-file: "50"
+    deploy:
+      mode: global
+      resources:
+        limits:
+          cpus: '0.2'
+          memory: 512MB
+      restart_policy:
+        condition: on-failure
+        max_attempts: 3
+        delay: 5s
+        window: 20s
 
   db:
     image: postgres:12-bullseye
@@ -121,6 +163,16 @@ services:
       - ./db_init/init.sql:/docker-entrypoint-initdb.d/init.sql # Путь к папке с SQL-скриптами
     networks:
       - app_network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.3'
+          memory: 512MB
+      restart_policy:
+        condition: on-failure
+        max_attempts: 3
+        delay: 5s
+        window: 20s
 
   app:
     build:
@@ -137,6 +189,16 @@ services:
       - "8000:8000" # Открыть порт для FastAPI или другого веб-сервиса
     networks:
       - app_network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.3'
+          memory: 512MB
+      restart_policy:
+        condition: on-failure
+        max_attempts: 3
+        delay: 5s
+        window: 20s
 
 volumes:
   postgres_data:
