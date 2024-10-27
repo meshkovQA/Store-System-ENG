@@ -1,6 +1,7 @@
 # routes.py
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi import APIRouter, Depends, HTTPException, Request, status
+import uuid
 from fastapi.responses import RedirectResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
@@ -17,7 +18,7 @@ templates = Jinja2Templates(directory="templates")
 security = HTTPBearer()
 
 
-@router.get("/verify-token/", summary="Verify the validity of a token")
+@router.get("/verify-token/", summary="Verify the validity of a token", include_in_schema=False)
 async def verify_token_route(credentials: HTTPAuthorizationCredentials = Depends(security)):
     token = credentials.credentials
     # Проверяем токен
@@ -91,13 +92,12 @@ def login_for_access_token(form_data: schemas.Login, db: Session = Depends(datab
                            form_data.email}""")
         raise HTTPException(
             status_code=400, detail="Invalid email or password")
-
+    user_id_str = str(user.id)
     # Создаем access_token
     access_token = auth.create_access_token(
-        data={"sub": user.email, "is_superadmin": user.is_superadmin}
+        data={"sub": user_id_str, "is_superadmin": user.is_superadmin}, db=db
     )
     logger.log_message(f"User is logged in: {form_data.email}")
-    user_id_str = str(user.id)
 
     create_auth_topic_kafka(access_token, user.email, user_id_str, "login")
     logger.log_message(f"""Message sent to Kafka: User {
@@ -120,7 +120,7 @@ def promote_user_to_superadmin(user_id: str,
     token = credentials.credentials
 
     # Проверяем токен
-    token_data = auth.verify_token(token)
+    token_data = auth.verify_token(token, db=db)
     requesting_user = crud.get_user_by_email(db, token_data["sub"])
 
     # Проверяем права (только супер-админ может повышать других пользователей)
@@ -144,8 +144,8 @@ def get_users(db: Session = Depends(get_session_local),
     token = credentials.credentials
 
     # Проверяем токен
-    token_data = auth.verify_token(token)
-    requesting_user = crud.get_user_by_email(db, token_data["sub"])
+    token_data = auth.verify_token(token, db=db)
+    requesting_user = crud.get_user_by_id(db, uuid.UUID(token_data["sub"]))
 
     if requesting_user.is_superadmin:
         # Если пользователь супер-админ, возвращаем список всех пользователей
@@ -161,10 +161,10 @@ def get_users(db: Session = Depends(get_session_local),
 def edit_user(user_id: str, form_data: schemas.UserUpdate, db: Session = Depends(get_session_local), credentials: HTTPAuthorizationCredentials = Depends(security)):
     # Проверяем права через токен
     token = credentials.credentials
-    user_data_from_token = auth.verify_token(token)
+    token_data = auth.verify_token(token, db=db)
 
     # Проверяем права (например, только супер-админ может изменять пользователей)
-    requesting_user = crud.get_user_by_email(db, user_data_from_token["sub"])
+    requesting_user = crud.get_user_by_id(db, uuid.UUID(token_data["sub"]))
 
     if not requesting_user.is_superadmin:
         raise HTTPException(status_code=403, detail="Insufficient rights")
@@ -186,10 +186,10 @@ def delete_user(user_id: str,
                 db: Session = Depends(get_session_local)):
     # Извлекаем и проверяем токен
     token = credentials.credentials
-    user_data_from_token = auth.verify_token(token)
+    token_data = auth.verify_token(token, db=db)
 
     # Проверяем права (например, только супер-админ может удалять пользователей)
-    requesting_user = crud.get_user_by_email(db, user_data_from_token["sub"])
+    requesting_user = crud.get_user_by_id(db, uuid.UUID(token_data["sub"]))
     if not requesting_user.is_superadmin:
         raise HTTPException(status_code=403, detail="Insufficient rights")
 

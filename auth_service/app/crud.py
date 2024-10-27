@@ -56,12 +56,8 @@ def get_users_for_superadmin(db: Session):
     return db.query(User).all()
 
 
-def get_user_by_id(db: Session, user_id: uuid.UUID, requesting_user: User):
-    if requesting_user.is_superadmin:
-        return db.query(User).filter(User.id == user_id).first()
-    logger.log_message(f"""A user {
-                       requesting_user.email} tried to get user information {user_id}""")
-    return db.query(User).filter(User.id == requesting_user.id).first()
+def get_user_by_id(db: Session, user_id: uuid.UUID):
+    return db.query(User).filter(User.id == user_id).first()
 
 
 def edit_user(db: Session, user_id: str, user_data: schemas.UserUpdate):  # Редактирование пользователя

@@ -1,23 +1,18 @@
 # auth.py
-from jose import JWTError, jwt
+import requests
 from fastapi import HTTPException, status
 from app.config import SECRET_KEY
 from app import logger
 
-SECRET_KEY = SECRET_KEY
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
+
+# URL микросервиса авторизации
+AUTH_SERVICE_URL = "http://auth_service:8000/verify-token"
 
 
-def verify_token(token):
-    try:
-        # Убедимся, что токен — это строка
-        if not isinstance(token, str):
-            token = str(token)
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        logger.log_message(f"Token successfully decoded: {payload}")
-        return payload
-    except JWTError as e:
-        logger.log_message(f"Token decoding failed: {str(e)}")
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
+def verify_token_in_other_service(token: str):
+    headers = {"Content-Type": "application/json"}
+    response = requests.post(AUTH_SERVICE_URL, json={
+                             "token": token}, headers=headers)
+    if response.status_code != 200 or not response.json().get("valid"):
+        raise HTTPException(status_code=401, detail="Invalid token")
+    return response.json().get("user_id")

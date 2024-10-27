@@ -83,3 +83,17 @@ def custom_openapi():
                 {"bearerAuth": []}]
     app.openapi_schema = openapi_schema
     return app.openapi_schema
+
+
+@app.post("/verify-token", include_in_schema=False)
+async def verify_token_endpoint(request: Request, db: Session = Depends(get_session_local)):
+    try:
+        body = await request.json()  # Получаем JSON-данные из тела запроса
+        token = body.get("token")  # Извлекаем токен
+        if not token:
+            raise HTTPException(status_code=422, detail="Token is required")
+
+        payload = verify_token(token, db)
+        return {"valid": True, "user_id": payload.get("sub")}
+    except HTTPException as e:
+        return {"valid": False, "error": str(e.detail)}

@@ -29,7 +29,8 @@ async def test_kafka_consumer():
 async def create_product(product: schemas.ProductCreate, db: Session = Depends(get_session_local), credentials: HTTPAuthorizationCredentials = Depends(security)):
     token = credentials.credentials
     user_id = await get_token_and_user_from_kafka()
-    user_data = auth.verify_token(token)  # Проверяем токен через auth.py
+    user_data = auth.verify_token_in_other_service(
+        token)  # Проверяем токен через auth.py
     if not user_data:
         logger.log_message("Invalid token or unauthorized access")
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
@@ -42,10 +43,11 @@ async def create_product(product: schemas.ProductCreate, db: Session = Depends(g
 
 
 @router.get("/products/", response_model=list[schemas.Product], tags=["Products Service"], summary="Get all products")
-async def get_products(credentials: HTTPAuthorizationCredentials = Depends(security), db: Session = Depends(get_session_local)):
+def get_products(credentials: HTTPAuthorizationCredentials = Depends(security), db: Session = Depends(get_session_local)):
     token = credentials.credentials
     # token = await get_token_and_user_from_kafka()
-    user_data = auth.verify_token(token)  # Проверяем токен через auth.py
+    user_data = auth.verify_token_in_other_service(
+        token)  # Проверяем токен через auth.py
     if not user_data:
         logger.log_message("Invalid token or unauthorized access")
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
@@ -58,7 +60,8 @@ async def get_products(credentials: HTTPAuthorizationCredentials = Depends(secur
 def get_product(product_id: str, db: Session = Depends(get_session_local), credentials: HTTPAuthorizationCredentials = Depends(security)):
     token = credentials.credentials
     # token = get_token_and_user_from_kafka()
-    user_data = auth.validate_token(token)  # Проверяем токен через auth.py
+    user_data = auth.verify_token_in_other_service(
+        token)  # Проверяем токен через auth.py
     if not user_data:
         logger.log_message("Invalid token or unauthorized access")
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
@@ -68,9 +71,10 @@ def get_product(product_id: str, db: Session = Depends(get_session_local), crede
 
 
 @router.put("/products/{product_id}", response_model=schemas.Product, tags=["Products Service"], summary="Update product by ID")
-def update_product(product_id: str, product: schemas.ProductUpdate, db: Session = Depends(get_session_local), credentials: HTTPAuthorizationCredentials = Depends(security)):
-    token, user_id = get_token_and_user_from_kafka()
-    user_data = auth.validate_token(token)  # Проверяем токен через auth.py
+async def update_product(product_id: str, product: schemas.ProductUpdate, db: Session = Depends(get_session_local), credentials: HTTPAuthorizationCredentials = Depends(security)):
+    token = credentials.credentials
+    user_data = auth.verify_token_in_other_service(token)
+    user_id = await get_token_and_user_from_kafka()  # Проверяем токен через auth.py
     if not user_data:
         logger.log_message("Invalid token or unauthorized access")
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
@@ -85,8 +89,9 @@ def update_product(product_id: str, product: schemas.ProductUpdate, db: Session 
 
 @router.delete("/products/{product_id}", tags=["Products Service"], summary="Delete product by ID")
 def delete_product(product_id: str, db: Session = Depends(get_session_local), credentials: HTTPAuthorizationCredentials = Depends(security)):
-    token = get_token_and_user_from_kafka()
-    user_data = auth.validate_token(token)  # Проверяем токен через auth.py
+    token = credentials.credentials
+    user_data = auth.verify_token_in_other_service(
+        token)  # Проверяем токен через auth.py
     if not user_data:
         logger.log_message("Invalid token or unauthorized access")
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
@@ -97,8 +102,9 @@ def delete_product(product_id: str, db: Session = Depends(get_session_local), cr
 
 @router.post("/suppliers/", response_model=schemas.Supplier, tags=["Suppliers Service"], summary="Create a new supplier")
 def create_supplier(supplier: schemas.SupplierCreate, db: Session = Depends(get_session_local), credentials: HTTPAuthorizationCredentials = Depends(security)):
-    token = get_token_and_user_from_kafka()
-    user_data = auth.validate_token(token)  # Проверяем токен через auth.py
+    token = credentials.credentials
+    user_data = auth.verify_token_in_other_service(
+        token)  # Проверяем токен через auth.py
     if not user_data:
         logger.log_message("Invalid token or unauthorized access")
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
@@ -113,8 +119,9 @@ def create_supplier(supplier: schemas.SupplierCreate, db: Session = Depends(get_
 
 @router.get("/suppliers/", response_model=list[schemas.Supplier], tags=["Suppliers Service"], summary="Get all suppliers")
 def get_suppliers(db: Session = Depends(get_session_local), credentials: HTTPAuthorizationCredentials = Depends(security)):
-    token = get_token_and_user_from_kafka()
-    user_data = auth.validate_token(token)  # Проверяем токен через auth.py
+    token = credentials.credentials
+    user_data = auth.verify_token_in_other_service(
+        token)  # Проверяем токен через auth.py
     if not user_data:
         logger.log_message("Invalid token or unauthorized access")
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
@@ -125,8 +132,9 @@ def get_suppliers(db: Session = Depends(get_session_local), credentials: HTTPAut
 
 @router.patch("/suppliers/{supplier_id}", response_model=schemas.Supplier, tags=["Suppliers Service"], summary="Update supplier by ID")
 def patch_supplier(supplier_id: str, supplier: schemas.SupplierUpdate, db: Session = Depends(get_session_local), credentials: HTTPAuthorizationCredentials = Depends(security)):
-    token = get_token_and_user_from_kafka()
-    user_data = auth.validate_token(token)  # Проверяем токен через auth.py
+    token = credentials.credentials
+    user_data = auth.verify_token_in_other_service(
+        token)  # Проверяем токен через auth.py
     if not user_data:
         logger.log_message("Invalid token or unauthorized access")
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
@@ -139,8 +147,9 @@ def patch_supplier(supplier_id: str, supplier: schemas.SupplierUpdate, db: Sessi
 
 @router.delete("/suppliers/{supplier_id}", tags=["Suppliers Service"], summary="Delete supplier by ID")
 def delete_supplier(supplier_id: str, db: Session = Depends(get_session_local), credentials: HTTPAuthorizationCredentials = Depends(security)):
-    token = get_token_and_user_from_kafka()
-    user_data = auth.validate_token(token)  # Проверяем токен через auth.py
+    token = credentials.credentials
+    user_data = auth.verify_token_in_other_service(
+        token)  # Проверяем токен через auth.py
     if not user_data:
         logger.log_message("Invalid token or unauthorized access")
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
@@ -153,8 +162,9 @@ def delete_supplier(supplier_id: str, db: Session = Depends(get_session_local), 
 
 @router.post("/warehouses/", response_model=schemas.Warehouse, tags=["Warehouses Service"], summary="Create a new warehouse")
 def create_warehouse(warehouse: schemas.WarehouseCreate, db: Session = Depends(get_session_local), credentials: HTTPAuthorizationCredentials = Depends(security)):
-    token = get_token_and_user_from_kafka()
-    user_data = auth.validate_token(token)  # Проверяем токен через auth.py
+    token = credentials.credentials
+    user_data = auth.verify_token_in_other_service(
+        token)  # Проверяем токен через auth.py
     if not user_data:
         logger.log_message("Invalid token or unauthorized access")
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
@@ -176,8 +186,9 @@ def create_warehouse(warehouse: schemas.WarehouseCreate, db: Session = Depends(g
 
 @router.get("/warehouses/{warehouse_id}", response_model=schemas.Warehouse, tags=["Warehouses Service"], summary="Get warehouse by ID")
 def get_warehouse_by_id(warehouse_id: UUID, db: Session = Depends(get_session_local), credentials: HTTPAuthorizationCredentials = Depends(security)):
-    token = get_token_and_user_from_kafka()
-    user_data = auth.validate_token(token)  # Проверяем токен через auth.py
+    token = credentials.credentials
+    user_data = auth.verify_token_in_other_service(
+        token)  # Проверяем токен через auth.py
     if not user_data:
         logger.log_message("Invalid token or unauthorized access")
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
@@ -188,8 +199,9 @@ def get_warehouse_by_id(warehouse_id: UUID, db: Session = Depends(get_session_lo
 
 @router.delete("/warehouses/{warehouse_id}", tags=["Warehouses Service"], summary="Delete warehouse by ID")
 def delete_warehouse(warehouse_id: UUID, db: Session = Depends(get_session_local), credentials: HTTPAuthorizationCredentials = Depends(security)):
-    token = get_token_and_user_from_kafka()
-    user_data = auth.validate_token(token)  # Проверяем токен через auth.py
+    token = credentials.credentials
+    user_data = auth.verify_token_in_other_service(
+        token)  # Проверяем токен через auth.py
     if not user_data:
         logger.log_message("Invalid token or unauthorized access")
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
@@ -200,6 +212,19 @@ def delete_warehouse(warehouse_id: UUID, db: Session = Depends(get_session_local
 
 # ---- CRUD операции для товаров на складах (ProductWarehouses) ----
 
+@router.get("/productinwarehouses/{warehouse_id}", response_model=list[schemas.ProductWarehouse], tags=["Product Warehouses Service"], summary="Get products in warehouse")
+def get_products_in_warehouse(warehouse_id: UUID, db: Session = Depends(get_session_local), credentials: HTTPAuthorizationCredentials = Depends(security)):
+    token = credentials.credentials
+    user_data = auth.verify_token_in_other_service(
+        token)  # Проверяем токен через auth.py
+    if not user_data:
+        logger.log_message("Invalid token or unauthorized access")
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                            detail="Invalid token or unauthorized access")
+    logger.log_message(f"Getting products in warehouse {warehouse_id}")
+    return crud.get_products_in_warehouse(db, warehouse_id=str(warehouse_id))
+
+
 @router.post("/productinwarehouses/{warehouse_id}{product_id}", response_model=schemas.ProductWarehouse, tags=["Product Warehouses Service"], summary="Add product to warehouse")
 def add_product_to_warehouse(
         warehouse_id: UUID,
@@ -207,8 +232,9 @@ def add_product_to_warehouse(
         quantity: int,
         db: Session = Depends(get_session_local), credentials: HTTPAuthorizationCredentials = Depends(security)
 ):
-    token = get_token_and_user_from_kafka()
-    user_data = auth.validate_token(token)  # Проверяем токен через auth.py
+    token = credentials.credentials
+    user_data = auth.verify_token_in_other_service(
+        token)  # Проверяем токен через auth.py
     if not user_data:
         logger.log_message("Invalid token or unauthorized access")
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
@@ -223,18 +249,6 @@ def add_product_to_warehouse(
     )
 
 
-@router.get("/productinwarehouses/{warehouse_id}", response_model=list[schemas.ProductWarehouse], tags=["Product Warehouses Service"], summary="Get products in warehouse")
-def get_products_in_warehouse(warehouse_id: UUID, db: Session = Depends(get_session_local), credentials: HTTPAuthorizationCredentials = Depends(security)):
-    token = get_token_and_user_from_kafka()
-    user_data = auth.validate_token(token)  # Проверяем токен через auth.py
-    if not user_data:
-        logger.log_message("Invalid token or unauthorized access")
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
-                            detail="Invalid token or unauthorized access")
-    logger.log_message(f"Getting products in warehouse {warehouse_id}")
-    return crud.get_products_in_warehouse(db, warehouse_id=str(warehouse_id))
-
-
 @router.put("/productinwarehouses/{product_id}", response_model=schemas.ProductWarehouse, tags=["Product Warehouses Service"], summary="Update product in warehouse")
 def update_product_in_warehouse(
         product_warehouse_id: UUID,
@@ -242,8 +256,9 @@ def update_product_in_warehouse(
         db: Session = Depends(get_session_local),
         credentials: HTTPAuthorizationCredentials = Depends(security)
 ):
-    token = get_token_and_user_from_kafka()
-    user_data = auth.validate_token(token)  # Проверяем токен через auth.py
+    token = credentials.credentials
+    user_data = auth.verify_token_in_other_service(
+        token)  # Проверяем токен через auth.py
     if not user_data:
         logger.log_message("Invalid token or unauthorized access")
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
@@ -258,80 +273,9 @@ def update_product_in_warehouse(
 
 @router.delete("/productinwarehouses/{product_id}", tags=["Product Warehouses Service"], summary="Delete product from warehouse")
 def delete_product_from_warehouse(product_warehouse_id: UUID, db: Session = Depends(get_session_local), credentials: HTTPAuthorizationCredentials = Depends(security)):
-    token = get_token_and_user_from_kafka()
-    user_data = auth.validate_token(token)  # Проверяем токен через auth.py
-    if not user_data:
-        logger.log_message("Invalid token or unauthorized access")
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
-                            detail="Invalid token or unauthorized access")
-    logger.log_message(f"""Deleting product from warehouse {
-                       product_warehouse_id}""")
-    return crud.delete_product_from_warehouse(db, product_warehouse_id=str(product_warehouse_id))
-
-    # ---- CRUD операции для товаров на складах (ProductWarehouses) ----
-
-
-@ router.post("/warehouses/{warehouse_id}/products/{product_id}", response_model=schemas.ProductWarehouse, status_code=status.HTTP_201_CREATED, tags=["Product Warehouses Service"], summary="Add product to warehouse")
-def add_product_to_warehouse(
-        warehouse_id: UUID,
-        product_id: UUID,
-        quantity: int,
-        db: Session = Depends(get_session_local),
-        redentials: HTTPAuthorizationCredentials = Depends(security)):
-    token = get_token_and_user_from_kafka()
-    user_data = auth.validate_token(token)  # Проверяем токен через auth.py
-    if not user_data:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
-                            detail="Invalid token or unauthorized access")
-    logger.log_message(f"""Adding product {product_id} to warehouse {
-                       warehouse_id} with quantity {quantity}""")
-    return crud.add_product_to_warehouse(
-        db=db,
-        product_id=str(product_id),
-        warehouse_id=str(warehouse_id),
-        quantity=quantity
-    )
-
-
-@ router.get("/warehouses/{warehouse_id}/products/", response_model=list[schemas.ProductWarehouse], tags=["Product Warehouses Service"], summary="Get products in warehouse")
-def get_products_in_warehouse(warehouse_id: UUID, db: Session = Depends(get_session_local), credentials: HTTPAuthorizationCredentials = Depends(security)):
-    token = get_token_and_user_from_kafka()
-    user_data = auth.validate_token(token)  # Проверяем токен через auth.py
-    if not user_data:
-        logger.log_message("Invalid token or unauthorized access")
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
-                            detail="Invalid token or unauthorized access")
-    logger.log_message(f"Getting products in warehouse {warehouse_id}")
-    return crud.get_products_in_warehouse(db, warehouse_id=str(warehouse_id))
-
-
-@ router.put("/warehouses/products/{product_warehouse_id}", response_model=schemas.ProductWarehouse, tags=["Product Warehouses Service"], summary="Update product in warehouse")
-def update_product_in_warehouse(
-        product_warehouse_id: UUID,
-        quantity: int,
-        db: Session = Depends(get_session_local),
-        credentials: HTTPAuthorizationCredentials = Depends(security)
-
-):
-    token = get_token_and_user_from_kafka()
-    user_data = auth.validate_token(token)  # Проверяем токен через auth.py
-    if not user_data:
-        logger.log_message("Invalid token or unauthorized access")
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
-                            detail="Invalid token or unauthorized access")
-    logger.log_message(f"""Updating product in warehouse {
-                       product_warehouse_id} with quantity {quantity}""")
-    return crud.update_product_in_warehouse(
-        db=db,
-        product_warehouse_id=str(product_warehouse_id),
-        quantity=quantity
-    )
-
-
-@ router.delete("/warehouses/products/{product_warehouse_id}", tags=["Product Warehouses Service"], summary="Delete product from warehouse")
-def delete_product_from_warehouse(product_warehouse_id: UUID, db: Session = Depends(get_session_local), credentials: HTTPAuthorizationCredentials = Depends(security)):
-    token = get_token_and_user_from_kafka()
-    user_data = auth.validate_token(token)  # Проверяем токен через auth.py
+    token = credentials.credentials
+    user_data = auth.verify_token_in_other_service(
+        token)  # Проверяем токен через auth.py
     if not user_data:
         logger.log_message("Invalid token or unauthorized access")
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
