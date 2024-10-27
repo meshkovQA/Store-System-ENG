@@ -119,7 +119,7 @@ def promote_user_to_superadmin(user_id: str,
 
 
 # Получение списка пользователей (только для супер-админа)
-@router.get("/users/")
+@router.get("/users/", response_model=list[schemas.UserResponse])
 def get_users(db: Session = Depends(get_session_local),
               credentials: HTTPAuthorizationCredentials = Depends(security)):
     # Получаем токен из заголовка Authorization
@@ -135,7 +135,17 @@ def get_users(db: Session = Depends(get_session_local),
     else:
         # Если пользователь не супер-админ, возвращаем только его запись
         users = [requesting_user]
-    return users
+
+    result = []
+    for user in users:
+        result.append({
+            "id": str(user.id),
+            "name": user.name,
+            "email": user.email,
+            "role": "superadmin" if user.is_superadmin else "user"
+        })
+
+    return result
 
 
 # Пример маршрута для редактирования пользователя с проверкой токена через HTTPBearer

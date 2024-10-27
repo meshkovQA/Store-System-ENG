@@ -62,3 +62,13 @@ class Token(BaseModel):
 class UserUpdate(BaseModel):
     email: EmailStr  # Позволяет изменить email
     name: str   # Позволяет изменить имя
+
+
+class UserResponse(BaseModel):
+    id: str
+    name: str
+    email: str
+    role: str
+
+    class Config:
+        orm_mode = True
