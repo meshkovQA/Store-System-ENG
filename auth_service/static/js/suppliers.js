@@ -1,8 +1,12 @@
 document.addEventListener("DOMContentLoaded", function () {
-    loadSuppliers();
+    initializeSuppliers();
 
     document.getElementById("create-supplier-form").addEventListener("submit", async (event) => {
         event.preventDefault();
+
+        // Получаем токен из базы данных
+        const token = await getTokenFromDatabase();
+
         const name = document.getElementById("name").value;
         const contact_name = document.getElementById("contact_name").value;
         const contact_email = document.getElementById("contact_email").value;
@@ -12,24 +16,64 @@ document.addEventListener("DOMContentLoaded", function () {
         const city = document.getElementById("city").value;
         const website = document.getElementById("website").value;
 
-        await fetch("http://products_service:8002/suppliers/", {  // URL сервиса поставщиков
+        await fetch("http://localhost:8002/suppliers/", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
-                "Authorization": `Bearer ${localStorage.getItem("token")}`
+                "Authorization": `Bearer ${token}`
             },
             body: JSON.stringify({ name, contact_name, contact_email, phone_number, address, country, city, website })
         });
-        loadSuppliers();
+
+        document.getElementById("create-supplier-form").reset();
+        loadSuppliers(token);
     });
 });
 
-async function loadSuppliers() {
-    const response = await fetch("http://products_service:8002/suppliers/", {  // URL сервиса поставщиков
+async function initializeSuppliers() {
+    const token = await getTokenFromDatabase();
+    await loadSuppliers(token);
+}
+
+// Функция для получения токена из базы данных
+async function getTokenFromDatabase() {
+    const userId = localStorage.getItem("user_id");
+
+    if (!userId) {
+        console.error("User ID не найден в localStorage. Перенаправление на страницу логина.");
+        window.location.href = '/login';
+        return null;
+    }
+
+    const response = await fetch(`/get-user-token/${userId}`, {
         headers: {
-            "Authorization": `Bearer ${localStorage.getItem("token")}`
+            "Content-Type": "application/json",
         }
     });
+
+    if (!response.ok) {
+        console.error("Ошибка при получении токена:", response.status);
+        window.location.href = '/login';
+        return null;
+    }
+
+    const data = await response.json();
+    return data.access_token;
+}
+
+async function loadSuppliers(token) {
+    const response = await fetch("http://localhost:8002/suppliers/", {
+        headers: {
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/json"
+        }
+    });
+
+    if (!response.ok) {
+        console.error("Ошибка при загрузке поставщиков:", response.status);
+        return;
+    }
+
     const suppliers = await response.json();
     const tableBody = document.querySelector("#suppliers-table tbody");
     tableBody.innerHTML = "";

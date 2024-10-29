@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', function () {
 
-    localStorage.removeItem('access_token');
-    console.log('Токен удален при посещении страницы логина.');
+    localStorage.removeItem('user_id');
+    console.log('id пользователя удален при посещении страницы логина.');
 
 
     document.getElementById('loginForm').addEventListener('submit', function (e) {
@@ -44,10 +44,10 @@ document.addEventListener('DOMContentLoaded', function () {
             })
                 .then(response => response.json())
                 .then(data => {
-                    if (data.access_token) {
+                    if (data.user_id) {
                         // Сохраняем токен в localStorage
-                        localStorage.setItem('access_token', data.access_token);
-                        console.log('Токен сохранен:', data.access_token);
+                        localStorage.setItem('user_id', data.user_id);
+                        console.log('User ID сохранен:', data.user_id);
 
                         // Перенаправляем на страницу store
                         loadStorePage(data.access_token);
@@ -71,27 +71,52 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 });
 
-// Функция для загрузки страницы store
-function loadStorePage(token) {
-    // Запрашиваем страницу /store с токеном в заголовке
-    fetch('/store', {
-        method: 'GET',
-        headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-        }
-    })
-        .then(response => {
-            if (response.ok) {
-                return response.text();  // Получаем HTML страницы
-            } else {
-                console.error('Ошибка авторизации на странице /store', response.status);
-                window.location.href = '/login';  // Перенаправляем на логин, если нет доступа
+// Функция для загрузки страницы store с актуальным токеном из базы данных
+async function loadStorePage() {
+    const userId = localStorage.getItem("user_id");
+
+    if (!userId) {
+        console.error("User ID отсутствует в localStorage. Перенаправление на страницу логина.");
+        window.location.href = '/login';
+        return;
+    }
+
+    try {
+        // Запрашиваем актуальный токен для пользователя из базы данных
+        const tokenResponse = await fetch(`/get-user-token/${userId}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
             }
-        })
-        .then(html => {
-            // Вставляем содержимое страницы store в текущий DOM
-            document.documentElement.innerHTML = html;
-        })
-        .catch(error => console.error('Ошибка при загрузке страницы /store:', error));
+        });
+
+        if (!tokenResponse.ok) {
+            console.error("Ошибка при получении токена:", tokenResponse.status);
+            window.location.href = '/login';
+            return;
+        }
+
+        const tokenData = await tokenResponse.json();
+        const token = tokenData.access_token;
+
+        // Используем полученный токен для запроса страницы store
+        const storeResponse = await fetch('/store', {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (storeResponse.ok) {
+            const html = await storeResponse.text();
+            document.documentElement.innerHTML = html; // Вставляем HTML страницы store в текущий DOM
+        } else {
+            console.error("Ошибка авторизации на странице /store:", storeResponse.status);
+            window.location.href = '/login';
+        }
+    } catch (error) {
+        console.error("Ошибка при загрузке страницы /store:", error);
+        window.location.href = '/login';
+    }
 }

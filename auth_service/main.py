@@ -80,7 +80,7 @@ def get_products_page(request: Request):
 
 @app.get("/warehouses", response_class=HTMLResponse, include_in_schema=False)
 def get_products_page(request: Request):
-    return templates.TemplateResponse("suppliers.html", {"request": request})
+    return templates.TemplateResponse("warehouses.html", {"request": request})
 
 
 # Обновляем OpenAPI-схему для отображения Bearer токена в Swagger UI

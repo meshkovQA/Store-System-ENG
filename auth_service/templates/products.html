@@ -41,8 +41,10 @@
                         <input type="number" class="form-control" id="stock_quantity">
                     </div>
                     <div class="mb-3">
-                        <label for="supplier_name" class="form-label">Поставщик</label>
-                        <input type="text" class="form-control" id="supplier_name">
+                        <label for="supplier_id" class="form-label">Поставщик</label>
+                        <select class="form-control" id="supplier_id" required>
+                            <!-- Список поставщиков будет загружен через JS -->
+                        </select>
                     </div>
                     <button type="submit" class="btn btn-primary">Создать продукт</button>
                 </form>

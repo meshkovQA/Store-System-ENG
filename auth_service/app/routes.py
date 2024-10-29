@@ -107,7 +107,8 @@ def login_for_access_token(form_data: schemas.Login, db: Session = Depends(datab
         status_code=status.HTTP_200_OK,
         content={"message": "User successfully logged in",
                  "access_token": access_token,
-                 "token_type": "bearer"}
+                 "token_type": "bearer",
+                 "user_id": user_id_str}
     )
 
 
@@ -201,3 +202,15 @@ def delete_user(user_id: str,
     logger.log_message(
         f"Super admin {requesting_user.email} deleted user {user.email}.")
     return {"detail": "User successfully deleted", "user": user.email}
+
+
+@router.get("/get-user-token/{user_id}", tags=["Authorization"], summary="Get token for user", include_in_schema=False)
+def get_user_token(user_id: str, db: Session = Depends(get_session_local)):
+ # Запрашиваем последний активный токен пользователя
+    user_token = db.query(database.Token).filter(
+        database.Token.user_id == user_id).order_by(database.Token.created_at.desc()).first()
+    if not user_token:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Token not found")
+
+    return {"access_token": user_token.token}

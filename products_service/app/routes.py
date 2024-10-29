@@ -118,7 +118,7 @@ def create_supplier(supplier: schemas.SupplierCreate, db: Session = Depends(get_
 
 
 @router.get("/suppliers/", response_model=list[schemas.Supplier], tags=["Suppliers Service"], summary="Get all suppliers")
-def get_suppliers(db: Session = Depends(get_session_local), credentials: HTTPAuthorizationCredentials = Depends(security)):
+def get_all_suppliers(db: Session = Depends(get_session_local), credentials: HTTPAuthorizationCredentials = Depends(security)):
     token = credentials.credentials
     user_data = auth.verify_token_in_other_service(
         token)  # Проверяем токен через auth.py
@@ -128,6 +128,19 @@ def get_suppliers(db: Session = Depends(get_session_local), credentials: HTTPAut
                             detail="Invalid token or unauthorized access")
     logger.log_message("Getting all suppliers")
     return crud.get_all_suppliers(db)
+
+
+@router.get("/suppliers/{supplier_id}", response_model=schemas.Supplier, tags=["Suppliers Service"], summary="Get supplier by ID")
+def get_supplier_by_id(supplier_id: str, db: Session = Depends(get_session_local), credentials: HTTPAuthorizationCredentials = Depends(security)):
+    token = credentials.credentials
+    user_data = auth.verify_token_in_other_service(
+        token)  # Проверяем токен через auth.py
+    if not user_data:
+        logger.log_message("Invalid token or unauthorized access")
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                            detail="Invalid token or unauthorized access")
+    logger.log_message(f"Getting supplier with ID {supplier_id}")
+    return crud.get_supplier_by_id(db, supplier_id)
 
 
 @router.patch("/suppliers/{supplier_id}", response_model=schemas.Supplier, tags=["Suppliers Service"], summary="Update supplier by ID")
