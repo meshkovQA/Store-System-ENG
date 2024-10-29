@@ -160,6 +160,19 @@ def delete_supplier(supplier_id: str, db: Session = Depends(get_session_local), 
 # ---- CRUD операции для складов (Warehouses) ----
 
 
+@router.get("/warehouses/{warehouse_id}", response_model=schemas.Warehouse, tags=["Warehouses Service"], summary="Get warehouse by ID")
+def get_warehouse_by_id(warehouse_id: UUID, db: Session = Depends(get_session_local), credentials: HTTPAuthorizationCredentials = Depends(security)):
+    token = credentials.credentials
+    user_data = auth.verify_token_in_other_service(
+        token)  # Проверяем токен через auth.py
+    if not user_data:
+        logger.log_message("Invalid token or unauthorized access")
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                            detail="Invalid token or unauthorized access")
+    logger.log_message(f"Getting warehouse with id {warehouse_id}")
+    return crud.get_warehouse_by_id(db, warehouse_id=str(warehouse_id))
+
+
 @router.post("/warehouses/", response_model=schemas.Warehouse, tags=["Warehouses Service"], summary="Create a new warehouse")
 def create_warehouse(warehouse: schemas.WarehouseCreate, db: Session = Depends(get_session_local), credentials: HTTPAuthorizationCredentials = Depends(security)):
     token = credentials.credentials
@@ -184,17 +197,17 @@ def create_warehouse(warehouse: schemas.WarehouseCreate, db: Session = Depends(g
     )
 
 
-@router.get("/warehouses/{warehouse_id}", response_model=schemas.Warehouse, tags=["Warehouses Service"], summary="Get warehouse by ID")
-def get_warehouse_by_id(warehouse_id: UUID, db: Session = Depends(get_session_local), credentials: HTTPAuthorizationCredentials = Depends(security)):
+@router.patch("/warehouses/{warehouse_id}", response_model=schemas.Warehouse, tags=["Warehouses Service"], summary="Update warehouse by ID")
+def patch_warehouse(warehouse_id: UUID, warehouse: schemas.WarehouseUpdate, db: Session = Depends(get_session_local), credentials: HTTPAuthorizationCredentials = Depends(security)):
     token = credentials.credentials
     user_data = auth.verify_token_in_other_service(
-        token)  # Проверяем токен через auth.py
+        token)
     if not user_data:
         logger.log_message("Invalid token or unauthorized access")
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
                             detail="Invalid token or unauthorized access")
-    logger.log_message(f"Getting warehouse with id {warehouse_id}")
-    return crud.get_warehouse_by_id(db, warehouse_id=str(warehouse_id))
+    updates = warehouse.dict(exclude_unset=True)
+    return crud.patch_warehouse(db=db, warehouse_id=str(warehouse_id), updates=updates)
 
 
 @router.delete("/warehouses/{warehouse_id}", tags=["Warehouses Service"], summary="Delete warehouse by ID")

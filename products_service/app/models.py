@@ -13,6 +13,7 @@ class Product(Base):
                         default=uuid.uuid4, unique=True, index=True)
     name = Column(String, index=True)
     description = Column(String)
+    user_id = Column(UUID, index=True)
     category = Column(String)           # Категория товара
     price = Column(Float)               # Цена товара
     stock_quantity = Column(Integer)    # Количество на складе

@@ -40,6 +40,7 @@ def create_access_token(data: dict, db: Session):
 
 
 def verify_token(token: str, db: Session):
+    logger.log_message(f"verify_token called with token: {token} and db: {db}")
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         user_id = payload.get("sub")

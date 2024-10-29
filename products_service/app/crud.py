@@ -206,6 +206,28 @@ def get_warehouse_by_id(db: Session, warehouse_id: str):
     return warehouse
 
 
+def patch_warehouse(db: Session, warehouse_id: str, updates: dict):
+    try:
+        # Получаем запись склада по ID
+        warehouse = db.query(models.Warehouse).filter(
+            models.Warehouse.warehouse_id == warehouse_id).first()
+        if not warehouse:
+            raise HTTPException(status_code=404, detail="Warehouse not found")
+
+        # Обновляем только те поля, которые переданы в словаре updates
+        for key, value in updates.items():
+            if hasattr(warehouse, key):
+                setattr(warehouse, key, value)
+
+        db.commit()
+        db.refresh(warehouse)
+        return warehouse
+    except SQLAlchemyError as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=500, detail=f"Database error: {str(e)}")
+
+
 def delete_warehouse(db: Session, warehouse_id: str):
     try:
         warehouse = db.query(models.Warehouse).filter(

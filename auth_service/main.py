@@ -6,11 +6,11 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import RedirectResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from app import routes, database, logger, auth
+from app import routes, database, logger, crud
 from sqlalchemy.orm import Session
 from app.database import get_session_local
-from app.crud import get_user_by_email
 from app.auth import verify_token
+import uuid
 
 app = FastAPI(
     # Укажите название вашего микросервиса здесь
@@ -50,18 +50,37 @@ def index():
 
 # Роут для главной страницы личного кабинета
 @app.get("/store", include_in_schema=False, response_class=HTMLResponse)
-def dashboard_page(request: Request, credentials: HTTPAuthorizationCredentials = Depends(security), db: Session = Depends(get_session_local)):
+def dashboard_page(request: Request, db: Session = Depends(get_session_local), credentials: HTTPAuthorizationCredentials = Depends(security)):
     token = credentials.credentials
-    user_data = auth.verify_token(token)
+    logger.log_message(f"DB session: {db}")
+    logger.log_message(f"Received token for /store access: {token}")
 
-    if user_data is None:
+    token_data = verify_token(token, db=db)
+
+    if token_data is None:
         logger.log_message("Token is invalid, access denied to /store.")
         raise HTTPException(status_code=403, detail="Not authorized")
 
-    user = get_user_by_email(db, email=user_data["sub"])
+    user = crud.get_user_by_id(
+        db, uuid.UUID(token_data["sub"]))
     logger.log_message(f"User {user.email} accessed to /store.")
 
     return templates.TemplateResponse("store.html", {"request": request, "is_superadmin": user.is_superadmin})
+
+
+@app.get("/products", response_class=HTMLResponse, include_in_schema=False)
+def get_products_page(request: Request):
+    return templates.TemplateResponse("products.html", {"request": request})
+
+
+@app.get("/suppliers", response_class=HTMLResponse, include_in_schema=False)
+def get_products_page(request: Request):
+    return templates.TemplateResponse("suppliers.html", {"request": request})
+
+
+@app.get("/warehouses", response_class=HTMLResponse, include_in_schema=False)
+def get_products_page(request: Request):
+    return templates.TemplateResponse("suppliers.html", {"request": request})
 
 
 # Обновляем OpenAPI-схему для отображения Bearer токена в Swagger UI

@@ -1,0 +1,76 @@
+{% extends "layout.html" %}
+
+{% block title %}Управление поставщиками{% endblock %}
+
+{% block content %}
+<h2>Управление поставщиками</h2>
+
+<!-- Форма создания поставщика -->
+<div class="card mb-4">
+    <div class="card-body">
+        <h5 class="card-title">Добавить нового поставщика</h5>
+        <form id="create-supplier-form">
+            <div class="mb-3">
+                <label for="name" class="form-label">Название поставщика</label>
+                <input type="text" class="form-control" id="name" required>
+            </div>
+            <div class="mb-3">
+                <label for="contact_name" class="form-label">Контактное лицо</label>
+                <input type="text" class="form-control" id="contact_name" required>
+            </div>
+            <div class="mb-3">
+                <label for="contact_email" class="form-label">Email</label>
+                <input type="email" class="form-control" id="contact_email" required>
+            </div>
+            <div class="mb-3">
+                <label for="phone_number" class="form-label">Телефон</label>
+                <input type="text" class="form-control" id="phone_number">
+            </div>
+            <div class="mb-3">
+                <label for="address" class="form-label">Адрес</label>
+                <input type="text" class="form-control" id="address">
+            </div>
+            <div class="mb-3">
+                <label for="country" class="form-label">Страна</label>
+                <input type="text" class="form-control" id="country">
+            </div>
+            <div class="mb-3">
+                <label for="city" class="form-label">Город</label>
+                <input type="text" class="form-control" id="city">
+            </div>
+            <div class="mb-3">
+                <label for="website" class="form-label">Вебсайт</label>
+                <input type="text" class="form-control" id="website">
+            </div>
+            <button type="submit" class="btn btn-primary">Создать поставщика</button>
+        </form>
+    </div>
+</div>
+
+<!-- Таблица поставщиков -->
+<div class="card">
+    <div class="card-body">
+        <h5 class="card-title">Список поставщиков</h5>
+        <table class="table table-striped" id="suppliers-table">
+            <thead>
+                <tr>
+                    <th>Название</th>
+                    <th>Контактное лицо</th>
+                    <th>Email</th>
+                    <th>Телефон</th>
+                    <th>Адрес</th>
+                    <th>Страна</th>
+                    <th>Город</th>
+                    <th>Вебсайт</th>
+                    <th>Действия</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Данные будут загружены через JS -->
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script src="/static/js/suppliers.js"></script>
+{% endblock %}

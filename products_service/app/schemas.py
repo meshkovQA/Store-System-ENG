@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, constr, validator, conint, condecimal
 from typing import Optional
 from uuid import UUID
 from datetime import datetime
@@ -7,16 +7,16 @@ from datetime import datetime
 # ---- Схемы для товаров (Product) ----
 
 class ProductBase(BaseModel):
-    name: str
-    description: Optional[str] = None
-    category: Optional[str] = None
-    price: float
-    stock_quantity: int
+    name: constr(min_length=1, max_length=100)
+    description: Optional[constr(max_length=500)] = None
+    category: Optional[constr(max_length=50)] = None
+    price: condecimal(gt=0, max_digits=10, decimal_places=2)
+    stock_quantity: conint(ge=0)
     supplier_id: UUID
-    image_url: Optional[str] = None
-    weight: Optional[float] = None
-    dimensions: Optional[str] = None
-    manufacturer: Optional[str] = None
+    image_url: Optional[constr(max_length=255)] = None
+    weight: Optional[condecimal(gt=0, max_digits=6, decimal_places=2)] = None
+    dimensions: Optional[constr(max_length=100)] = None
+    manufacturer: Optional[constr(max_length=100)] = None
 
 
 class ProductCreate(ProductBase):
@@ -39,14 +39,14 @@ class Product(ProductBase):
 # ---- Схемы для поставщиков (Supplier) ----
 
 class SupplierBase(BaseModel):
-    name: str
-    contact_name: Optional[str] = None
-    contact_email: Optional[str] = None
-    phone_number: Optional[str] = None
-    address: Optional[str] = None
-    country: Optional[str] = None
-    city: Optional[str] = None
-    website: Optional[str] = None
+    name: constr(min_length=1, max_length=100)
+    contact_name: Optional[constr(max_length=100)] = None
+    contact_email: Optional[constr(max_length=100)] = None
+    phone_number: Optional[constr(max_length=15)] = None
+    address: Optional[constr(max_length=200)] = None
+    country: Optional[constr(max_length=50)] = None
+    city: Optional[constr(max_length=50)] = None
+    website: Optional[constr(max_length=255)] = None
 
 
 class SupplierCreate(SupplierBase):
@@ -54,14 +54,14 @@ class SupplierCreate(SupplierBase):
 
 
 class SupplierUpdate(BaseModel):
-    name: Optional[str] = None
-    contact_name: Optional[str] = None
-    contact_email: Optional[str] = None
-    phone_number: Optional[str] = None
-    address: Optional[str] = None
-    country: Optional[str] = None
-    city: Optional[str] = None
-    website: Optional[str] = None
+    name: Optional[constr(min_length=1, max_length=100)] = None
+    contact_name: Optional[constr(max_length=100)] = None
+    contact_email: Optional[constr(max_length=100)] = None
+    phone_number: Optional[constr(max_length=15)] = None
+    address: Optional[constr(max_length=200)] = None
+    country: Optional[constr(max_length=50)] = None
+    city: Optional[constr(max_length=50)] = None
+    website: Optional[constr(max_length=255)] = None
 
     class Config:
         orm_mode = True
@@ -77,14 +77,15 @@ class Supplier(SupplierBase):
 # ---- Схемы для складов (Warehouse) ----
 
 class WarehouseBase(BaseModel):
-    location: str
-    manager_name: Optional[str] = None
-    capacity: int
-    current_stock: int
-    contact_number: Optional[str] = None
-    email: Optional[str] = None
+    location: constr(min_length=1, max_length=100)
+    manager_name: Optional[constr(max_length=100)] = None
+    capacity: conint(gt=0)
+    current_stock: conint(ge=0)
+    contact_number: Optional[constr(max_length=15)] = None
+    email: Optional[constr(max_length=100)] = None
     is_active: bool
-    area_size: Optional[float] = None
+    area_size: Optional[condecimal(
+        gt=0, max_digits=7, decimal_places=2)] = None
 
 
 class WarehouseCreate(WarehouseBase):
@@ -107,7 +108,7 @@ class Warehouse(WarehouseBase):
 class ProductWarehouseBase(BaseModel):
     product_id: UUID
     warehouse_id: UUID
-    quantity: int
+    quantity: conint(ge=0)
 
 
 class ProductWarehouseCreate(ProductWarehouseBase):
@@ -115,7 +116,7 @@ class ProductWarehouseCreate(ProductWarehouseBase):
 
 
 class ProductWarehouseUpdate(BaseModel):
-    quantity: int
+    quantity: conint(ge=0)
 
 
 class ProductWarehouse(ProductWarehouseBase):
