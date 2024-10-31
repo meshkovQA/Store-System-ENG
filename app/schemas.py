@@ -1,6 +1,6 @@
 # schemas.py
 from pydantic import BaseModel
-from pydantic import BaseModel, EmailStr, constr, validator
+from pydantic import BaseModel, EmailStr, constr, validator, Field
 import re
 from typing import Optional
 
@@ -42,6 +42,14 @@ class UserCreate(BaseModel):
         orm_mode = True  # Для работы с ORM (если используется SQLAlchemy)
 
 
+class RegistrationResponse(BaseModel):
+    message: str = Field("User successfully created",
+                         example="User successfully created")
+    user_id: str = Field(..., example="uuid-1234-5678-90ab-cdef")
+    email: str = Field(..., example="john.doe@example.com")
+    name: str = Field(..., example="John Doe")
+
+
 class User(BaseModel):
     id: int
     name: str
@@ -51,6 +59,14 @@ class User(BaseModel):
 class Login(BaseModel):  # Модель для аутентификации пользователя (логин)
     email: EmailStr
     password: str
+
+    # Модель для успешного ответа на логин
+
+
+class LoginResponse(BaseModel):
+    message: str = Field("User successfully logged in")
+    access_token: str = Field(..., example="your_access_token")
+    token_type: str = Field("bearer", example="bearer")
 
 
 # Модель для ответа с токеном
@@ -83,6 +99,14 @@ class UserUpdate(BaseModel):
 
     class Config:
         orm_mode = True
+
+
+class UserUpdateResponse(BaseModel):
+    message: str = Field("User successfully updated",
+                         example="User successfully updated")
+    user_id: str = Field(..., example="uuid-1234-5678-90ab-cdef")
+    email: str = Field(..., example="john.doe@example.com")
+    name: str = Field(..., example="John Doe")
 
 
 class UserResponse(BaseModel):
