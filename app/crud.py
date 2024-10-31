@@ -43,12 +43,14 @@ def assign_role_to_user(db: Session, email: str, password: str):
 
 def promote_to_superadmin(db: Session, user_id: uuid.UUID):
     user = db.query(User).filter(User.id == user_id).first()
-    if user:
-        user.is_superadmin = True
-        db.commit()
-        db.refresh(user)
-        logger.log_message(
-            f"A user {user.email} promoted to super admin in the database")
+    if not user:
+        return None
+
+    user.is_superadmin = True
+    db.commit()
+    db.refresh(user)
+    logger.log_message(
+        f"A user {user.email} promoted to super admin in the database")
     return user
 
 
@@ -66,26 +68,30 @@ def get_user_by_id(db: Session, user_id: uuid.UUID, requesting_user: User):
 
 def edit_user(db: Session, user_id: str, user_data: schemas.UserUpdate):  # Редактирование пользователя
     user = db.query(User).filter(User.id == user_id).first()
-    if user:
-        if user_data.email:
-            user.email = user_data.email
-        if user_data.name:
-            user.name = user_data.name
-        # При необходимости можно добавить другие поля для редактирования
-        db.commit()
-        db.refresh(user)
-        logger.log_message(
-            f"User {user.email} has been updated in the database")
-        return user
-    return None
+    if not user:
+        return None
+
+    if user_data.email:
+        user.email = user_data.email
+    if user_data.name:
+        user.name = user_data.name
+
+    # При необходимости можно добавить другие поля для редактирования
+    db.commit()
+    db.refresh(user)
+    logger.log_message(
+        f"User {user.email} has been updated in the database")
+    return user
 
 
 def delete_user(db: Session, user_id: str):  # Удаление пользователя
     user = db.query(User).filter(User.id == user_id).first()
-    if user:
-        db.delete(user)
-        db.commit()
-        logger.log_message(
-            f"User {user.email} has been deleted from the database")
-        return user
-    return None
+    if not user:
+        # Возвращаем None, если пользователь не найден
+        return None
+
+    db.delete(user)
+    db.commit()
+    logger.log_message(
+        f"User {user.email} has been deleted from the database")
+    return user

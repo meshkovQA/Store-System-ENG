@@ -61,7 +61,28 @@ class Token(BaseModel):
 
 class UserUpdate(BaseModel):
     email: EmailStr  # Позволяет изменить email
-    name: str   # Позволяет изменить имя
+    name: constr(min_length=3, max_length=50)   # Позволяет изменить имя
+
+    @validator("name")
+    def validate_name(cls, value):
+        # Регулярное выражение для проверки: минимум 3 символа, без строк из пробелов или начальных пробелов
+        pattern = r'^(?!\s*$)(?!\s).{3,50}$'
+        if not re.match(pattern, value):
+            raise ValueError("Name contains invalid characters.")
+        return value
+
+    @validator("email")
+    def validate_email(cls, value):
+        # Проверка первой части email до знака @
+        local_part_pattern = (
+            r"^(?!\.)(?!.*\.\.)([a-zA-Z0-9!#$%&'*+/=?^_`{|}~.-]+)(?<!\.)@([a-zA-Z0-9.-]+\.[a-zA-Z]{2,})$"
+        )
+        if not re.match(local_part_pattern, value):
+            raise ValueError("Invalid email format.")
+        return value.lower()  # Приводим к нижнему регистру для единого хранения
+
+    class Config:
+        orm_mode = True
 
 
 class UserResponse(BaseModel):

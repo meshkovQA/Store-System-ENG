@@ -23,7 +23,7 @@ def register_page(request: Request):
     return templates.TemplateResponse("register.html", {"request": request})
 
 
-@router.post("/register/", response_model=schemas.User)
+@router.post("/register/")
 def register_user(user: schemas.UserCreate, db: Session = Depends(database.get_session_local)):
     user_email = user.email.lower()
     db_user = crud.get_user_by_email(db, email=user_email)
@@ -114,6 +114,11 @@ def promote_user_to_superadmin(user_id: str,
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
+    # Проверяем, является ли пользователь уже супер-админом
+    if user.is_superadmin:
+        raise HTTPException(
+            status_code=422, detail="This user is already a super admin")
+
     logger.log_message(f"User {user.email} promoted to super admin.")
     return {"detail": "User successfully promoted to super admin"}
 
@@ -167,7 +172,7 @@ def edit_user(user_id: str, form_data: schemas.UserUpdate, db: Session = Depends
         raise HTTPException(status_code=404, detail="User not found")
 
     logger.log_message(f"User {user.email} has been updated.")
-    return {"detail": "User successfully updated", "user": user}
+    return {"detail": "User successfully updated", "user": {"id": user.id, "name": user.name, "email": user.email}}
 
 # Пример маршрута для удаления пользователя с проверкой токена через HTTPBearer
 
@@ -185,6 +190,11 @@ def delete_user(user_id: str,
     if not requesting_user.is_superadmin:
         raise HTTPException(status_code=403, detail="Insufficient rights")
 
+        # Проверяем, пытается ли супер-админ удалить свой собственный аккаунт
+    if str(requesting_user.id) == user_id:
+        raise HTTPException(
+            status_code=403, detail="Super admin cannot delete own account")
+
     # Удаление пользователя
     user = crud.delete_user(db, user_id)
     if not user:
@@ -192,4 +202,4 @@ def delete_user(user_id: str,
 
     logger.log_message(
         f"Super admin {requesting_user.email} deleted user {user.email}.")
-    return {"detail": "User successfully deleted", "user": user.email}
+    return {"detail": "User successfully deleted"}
