@@ -36,7 +36,10 @@ def register_page(request: Request):
     return templates.TemplateResponse("register.html", {"request": request})
 
 
-@router.post("/register/", response_model=schemas.User, tags=["Auth"], summary="Register a new user")
+@router.post("/register/", response_model=schemas.RegistrationResponse, status_code=status.HTTP_201_CREATED, responses={
+    201: {"description": "User successfully created", "model": schemas.RegistrationResponse},
+    422: {"description": "Email already registered or invalid data"},
+})
 def register_user(user: schemas.UserCreate, db: Session = Depends(database.get_session_local)):
     user_email = user.email.lower()
     db_user = crud.get_user_by_email(db, email=user_email)
@@ -69,11 +72,12 @@ def register_user(user: schemas.UserCreate, db: Session = Depends(database.get_s
 
     # Перенаправляем на страницу авторизации
     return JSONResponse(
-        status_code=status.HTTP_201_CREATED,
-        content={"message": "User successfully created",
-                 "user": created_user.email,
-                 "user_id": created_user.id,
-                 "name": created_user.name}
+        content={
+            "message": "User successfully created",
+            "user_id": str(created_user.id),
+            "email": created_user.email,
+            "name": created_user.name
+        }
     )
 
 
@@ -83,8 +87,11 @@ def register_page(request: Request):
     return templates.TemplateResponse("login.html", {"request": request})
 
 
-# Авторизация пользователя
-@router.post("/login/", response_model=schemas.LoginResponse, tags=["Auth"], summary="Login to the system")
+# Авторизация пользователя и перенаправление на страницу store
+@router.post("/login/",  response_model=schemas.LoginResponse, responses={
+    200: {"description": "User successfully logged in", "model": schemas.LoginResponse},
+    400: {"description": "Invalid email or password"}
+})
 def login_for_access_token(form_data: schemas.Login, db: Session = Depends(database.get_session_local)):
     user = crud.get_user_by_email(db, email=form_data.email)
     if not user or not auth.verify_password(form_data.password, user.hashed_password):
@@ -99,21 +106,20 @@ def login_for_access_token(form_data: schemas.Login, db: Session = Depends(datab
     )
     logger.log_message(f"User is logged in: {form_data.email}")
 
-    create_auth_topic_kafka(access_token, user.email, user_id_str, "login")
-    logger.log_message(f"""Message sent to Kafka: User {
-                       user.email} and id {user.id} logged in.""")
-
-    return JSONResponse(
-        status_code=status.HTTP_200_OK,
-        content={"message": "User successfully logged in",
-                 "access_token": access_token,
-                 "token_type": "bearer",
-                 "user_id": user_id_str}
-    )
+    return {
+        "message": "User successfully logged in",
+        "access_token": access_token,
+        "token_type": "bearer"
+    }
 
 
 # Повышение прав до супер-админа (только для супер-админа)
-@router.put("/users/promote/{user_id}", tags=["User Management"], summary="Promote user to superadmin")
+@router.put("/users/promote/{user_id}", status_code=200, responses={
+    200: {"description": "User successfully promoted to super admin", "content": {"application/json": {"example": {"detail": "User successfully promoted to super admin"}}}},
+    403: {"description": "Insufficient rights", "content": {"application/json": {"example": {"detail": "Insufficient rights"}}}},
+    404: {"description": "User not found", "content": {"application/json": {"example": {"detail": "User not found"}}}},
+    422: {"description": "This user is already a super admin", "content": {"application/json": {"example": {"detail": "This user is already a super admin"}}}},
+})
 def promote_user_to_superadmin(user_id: str,
                                db: Session = Depends(get_session_local),
                                credentials: HTTPAuthorizationCredentials = Depends(security)):
@@ -133,12 +139,17 @@ def promote_user_to_superadmin(user_id: str,
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
+    # Проверяем, является ли пользователь уже супер-админом
+    if user.is_superadmin:
+        raise HTTPException(
+            status_code=422, detail="This user is already a super admin")
+
     logger.log_message(f"User {user.email} promoted to super admin.")
     return {"detail": "User successfully promoted to super admin"}
 
 
 # Получение списка пользователей (только для супер-админа)
-@router.get("/users/", tags=["User Management"], summary="Get all users")
+@router.get("/users/", response_model=list[schemas.UserResponse])
 def get_users(db: Session = Depends(get_session_local),
               credentials: HTTPAuthorizationCredentials = Depends(security)):
     # Получаем токен из заголовка Authorization
@@ -154,11 +165,25 @@ def get_users(db: Session = Depends(get_session_local),
     else:
         # Если пользователь не супер-админ, возвращаем только его запись
         users = [requesting_user]
-    return users
+
+    result = []
+    for user in users:
+        result.append({
+            "id": str(user.id),
+            "name": user.name,
+            "email": user.email,
+            "role": "superadmin" if user.is_superadmin else "user"
+        })
+
+    return result
 
 
 # Пример маршрута для редактирования пользователя с проверкой токена через HTTPBearer
-@router.put("/users/edit/{user_id}", tags=["User Management"], summary="Edit user")
+@router.put("/users/edit/{user_id}", response_model=schemas.UserUpdateResponse, responses={
+    200: {"description": "User successfully updated", "model": schemas.UserUpdateResponse},
+    403: {"description": "Insufficient rights", "content": {"application/json": {"example": {"detail": "Insufficient rights"}}}},
+    404: {"description": "User not found", "content": {"application/json": {"example": {"detail": "User not found"}}}},
+})
 def edit_user(user_id: str, form_data: schemas.UserUpdate, db: Session = Depends(get_session_local), credentials: HTTPAuthorizationCredentials = Depends(security)):
     # Проверяем права через токен
     token = credentials.credentials
@@ -176,12 +201,23 @@ def edit_user(user_id: str, form_data: schemas.UserUpdate, db: Session = Depends
         raise HTTPException(status_code=404, detail="User not found")
 
     logger.log_message(f"User {user.email} has been updated.")
-    return {"detail": "User successfully updated", "user": user}
+    return {
+        "detail": "User successfully updated",
+        "user": {
+            "id": str(user.id),
+            "name": user.name,
+            "email": user.email
+        }
+    }
 
 # Пример маршрута для удаления пользователя с проверкой токена через HTTPBearer
 
 
-@router.delete("/users/delete/{user_id}", tags=["User Management"], summary="Delete user")
+@router.delete("/users/delete/{user_id}", responses={
+    200: {"description": "User successfully deleted", "content": {"application/json": {"example": {"detail": "User successfully deleted"}}}},
+    403: {"description": "Insufficient rights or attempt to delete own account", "content": {"application/json": {"example": {"detail": "Insufficient rights"}}}},
+    404: {"description": "User not found", "content": {"application/json": {"example": {"detail": "User not found"}}}},
+})
 def delete_user(user_id: str,
                 credentials: HTTPAuthorizationCredentials = Depends(security),
                 db: Session = Depends(get_session_local)):
@@ -194,6 +230,11 @@ def delete_user(user_id: str,
     if not requesting_user.is_superadmin:
         raise HTTPException(status_code=403, detail="Insufficient rights")
 
+        # Проверяем, пытается ли супер-админ удалить свой собственный аккаунт
+    if str(requesting_user.id) == user_id:
+        raise HTTPException(
+            status_code=403, detail="Super admin cannot delete own account")
+
     # Удаление пользователя
     user = crud.delete_user(db, user_id)
     if not user:
@@ -201,16 +242,4 @@ def delete_user(user_id: str,
 
     logger.log_message(
         f"Super admin {requesting_user.email} deleted user {user.email}.")
-    return {"detail": "User successfully deleted", "user": user.email}
-
-
-@router.get("/get-user-token/{user_id}", tags=["Authorization"], summary="Get token for user", include_in_schema=False)
-def get_user_token(user_id: str, db: Session = Depends(get_session_local)):
- # Запрашиваем последний активный токен пользователя
-    user_token = db.query(database.Token).filter(
-        database.Token.user_id == user_id).order_by(database.Token.created_at.desc()).first()
-    if not user_token:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Token not found")
-
-    return {"access_token": user_token.token}
+    return {"detail": "User successfully deleted"}
