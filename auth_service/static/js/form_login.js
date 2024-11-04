@@ -76,7 +76,6 @@ async function loadStorePage() {
     const userId = localStorage.getItem("user_id");
 
     if (!userId) {
-        console.error("User ID отсутствует в localStorage. Перенаправление на страницу логина.");
         window.location.href = '/login';
         return;
     }

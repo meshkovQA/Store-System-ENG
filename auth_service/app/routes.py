@@ -107,6 +107,7 @@ def login_for_access_token(form_data: schemas.Login, db: Session = Depends(datab
     logger.log_message(f"User is logged in: {form_data.email}")
 
     return {
+        "user_id": user_id_str,
         "message": "User successfully logged in",
         "access_token": access_token,
         "token_type": "bearer"

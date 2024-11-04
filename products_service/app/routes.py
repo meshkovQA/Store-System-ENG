@@ -99,6 +99,8 @@ def delete_product(product_id: str, db: Session = Depends(get_session_local), cr
     logger.log_message(f"Deleting product with id {product_id}")
     return crud.delete_product(db, product_id)
 
+# ---- CRUD операции для поставщиков (Supplier) ----
+
 
 @router.post("/suppliers/", response_model=schemas.Supplier, tags=["Suppliers Service"], summary="Create a new supplier")
 def create_supplier(supplier: schemas.SupplierCreate, db: Session = Depends(get_session_local), credentials: HTTPAuthorizationCredentials = Depends(security)):

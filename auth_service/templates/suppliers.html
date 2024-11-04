@@ -5,45 +5,63 @@
 {% block content %}
 <h2>Управление поставщиками</h2>
 
-<!-- Форма создания поставщика -->
-<div class="card mb-4">
-    <div class="card-body">
-        <h5 class="card-title">Добавить нового поставщика</h5>
-        <form id="create-supplier-form">
-            <div class="mb-3">
-                <label for="name" class="form-label">Название поставщика</label>
-                <input type="text" class="form-control" id="name" required>
+<!-- Кнопка для открытия модального окна добавления поставщика -->
+<button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#addSupplierModal">
+    Добавить нового поставщика
+</button>
+
+<!-- Форма поиска поставщика по названию -->
+<div class="mb-3">
+    <input type="text" class="form-control" id="search-name" placeholder="Введите название для поиска">
+    <button class="btn btn-secondary mt-2" onclick="searchSupplier()">Найти</button>
+</div>
+
+<!-- Модальное окно добавления нового поставщика -->
+<div class="modal fade" id="addSupplierModal" tabindex="-1" aria-labelledby="addSupplierModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addSupplierModalLabel">Создание нового поставщика</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="mb-3">
-                <label for="contact_name" class="form-label">Контактное лицо</label>
-                <input type="text" class="form-control" id="contact_name" required>
+            <div class="modal-body">
+                <form id="create-supplier-form-modal">
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Название поставщика</label>
+                        <input type="text" class="form-control" id="name" required minlength="3" maxlength="100">
+                    </div>
+                    <div class="mb-3">
+                        <label for="contact_name" class="form-label">Контактное лицо</label>
+                        <input type="text" class="form-control" id="contact_name" maxlength="100" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="contact_email" class="form-label">Email</label>
+                        <input type="email" class="form-control" id="contact_email" maxlength="100" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="phone_number" class="form-label">Телефон</label>
+                        <input type="text" class="form-control" id="phone_number" maxlength="15">
+                    </div>
+                    <div class="mb-3">
+                        <label for="address" class="form-label">Адрес</label>
+                        <input type="text" class="form-control" id="address" maxlength="200">
+                    </div>
+                    <div class="mb-3">
+                        <label for="country" class="form-label">Страна</label>
+                        <input type="text" class="form-control" id="country" maxlength="50">
+                    </div>
+                    <div class="mb-3">
+                        <label for="city" class="form-label">Город</label>
+                        <input type="text" class="form-control" id="city">
+                    </div>
+                    <div class="mb-3">
+                        <label for="website" class="form-label">Вебсайт</label>
+                        <input type="text" class="form-control" id="website">
+                    </div>
+                    <button type="submit" class="btn btn-primary">Создать поставщика</button>
+                </form>
             </div>
-            <div class="mb-3">
-                <label for="contact_email" class="form-label">Email</label>
-                <input type="email" class="form-control" id="contact_email" required>
-            </div>
-            <div class="mb-3">
-                <label for="phone_number" class="form-label">Телефон</label>
-                <input type="text" class="form-control" id="phone_number">
-            </div>
-            <div class="mb-3">
-                <label for="address" class="form-label">Адрес</label>
-                <input type="text" class="form-control" id="address">
-            </div>
-            <div class="mb-3">
-                <label for="country" class="form-label">Страна</label>
-                <input type="text" class="form-control" id="country">
-            </div>
-            <div class="mb-3">
-                <label for="city" class="form-label">Город</label>
-                <input type="text" class="form-control" id="city">
-            </div>
-            <div class="mb-3">
-                <label for="website" class="form-label">Вебсайт</label>
-                <input type="text" class="form-control" id="website">
-            </div>
-            <button type="submit" class="btn btn-primary">Создать поставщика</button>
-        </form>
+        </div>
     </div>
 </div>
 
