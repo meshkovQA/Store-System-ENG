@@ -15,8 +15,13 @@ Base = declarative_base()
 
 
 def init_db():
-    # Импортировать модели здесь, чтобы они были зарегистрированы перед созданием таблиц
-    Base.metadata.create_all(bind=engine)
+
+    # Создаем таблицы поэтапно
+    Base.metadata.tables['suppliers'].create(bind=engine, checkfirst=True)
+    Base.metadata.tables['products'].create(bind=engine, checkfirst=True)
+    Base.metadata.tables['warehouses'].create(bind=engine, checkfirst=True)
+    Base.metadata.tables['product_warehouses'].create(
+        bind=engine, checkfirst=True)
 
 
 def get_session_local():
@@ -25,6 +30,22 @@ def get_session_local():
         yield db
     finally:
         db.close()
+
+
+class Supplier(Base):
+    __tablename__ = "suppliers"
+
+    supplier_id = Column(UUID(as_uuid=True), primary_key=True,
+                         # Уникальный ID поставщика (UUID)
+                         default=uuid.uuid4, unique=True, index=True)
+    name = Column(String, index=True)  # Название поставщика
+    contact_name = Column(String)  # Имя контактного лица
+    contact_email = Column(String)  # Email контактного лица
+    phone_number = Column(String)  # Номер телефона поставщика
+    address = Column(String)  # Адрес поставщика
+    country = Column(String)  # Страна поставщика
+    city = Column(String)  # Город поставщика
+    website = Column(String)  # Вебсайт поставщика
 
 
 class Product(Base):
@@ -37,8 +58,8 @@ class Product(Base):
     category = Column(String)           # Категория товара
     price = Column(Float)               # Цена товара
     stock_quantity = Column(Integer)    # Количество на складе
-    supplier_name = Column(UUID, ForeignKey(
-        'suppliers.supplier_id'))      # Поставщик товара
+    supplier_id = Column(UUID(as_uuid=True), ForeignKey(
+        "suppliers.supplier_id"), nullable=False)    # Поставщик товара
     is_available = Column(Boolean)      # Доступность для заказа
     created_at = Column(DateTime)       # Дата добавления товара
     updated_at = Column(DateTime)       # Дата последнего обновления информации
@@ -47,7 +68,7 @@ class Product(Base):
     manufacturer = Column(String)       # Производитель товара
     image_url = Column(String)          # Ссылка на изображение товара
     # ID пользователя, добавившего товар
-    user_id = Column(UUID(as_uuid=True))
+    user_id = Column(String, nullable=False)
 
 
 class Warehouse(Base):
@@ -75,26 +96,3 @@ class ProductWarehouse(Base):
     warehouse_id = Column(UUID, ForeignKey(
         'warehouses.warehouse_id'), index=True)
     quantity = Column(Integer)          # Количество данного товара на складе
-
-
-class Supplier(Base):
-    __tablename__ = "suppliers"
-
-    supplier_id = Column(UUID(as_uuid=True), primary_key=True,
-                         # Уникальный ID поставщика (UUID)
-                         default=uuid.uuid4, unique=True, index=True)
-    name = Column(String, index=True)  # Название поставщика
-
-    contact_name = Column(String)  # Имя контактного лица
-
-    contact_email = Column(String)  # Email контактного лица
-
-    phone_number = Column(String)  # Номер телефона поставщика
-
-    address = Column(String)  # Адрес поставщика
-
-    country = Column(String)  # Страна поставщика
-
-    city = Column(String)  # Город поставщика
-
-    website = Column(String)  # Вебсайт поставщика

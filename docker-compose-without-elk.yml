@@ -1,6 +1,24 @@
 version: "3.9"
 
 services:
+  # Redis - хранилище для очереди продуктов на одобрение
+  redis:
+    image: redis:6.2
+    container_name: redis
+    ports:
+      - "6379:6379"
+    networks:
+      - app_network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.2'
+          memory: 256MB
+      restart_policy:
+        condition: on-failure
+        max_attempts: 3
+        delay: 5s
+        window: 20s
   # Kafka - брокер сообщений
   kafka:
     image: apache/kafka:3.8.0
@@ -106,6 +124,7 @@ services:
         condition: service_healthy
     environment:
       DATABASE_URL: postgresql://storage_admin:THw7l0bxvPPkWUhP@db:5432/strg_users_db
+      REDIS_HOST: redis
     ports:
       - "8001:8000" # Открыть порт для FastAPI или другого веб-сервиса
     networks:
@@ -133,6 +152,7 @@ services:
         condition: service_healthy
     environment:
       DATABASE_URL: postgresql://storage_admin:THw7l0bxvPPkWUhP@db_products:5432/strg_products_db
+      REDIS_HOST: redis
     ports:
       - "8002:8000" # Открываем порт для сервиса продуктов
     networks:

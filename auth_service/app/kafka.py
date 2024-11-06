@@ -1,32 +1,29 @@
-# auth_kafka.py
 import json
-from kafka import KafkaProducer
-from app import logger  # Импортируем логгер
+from kafka import KafkaConsumer
+from app import logger  # Логгер для вывода информации
+# Импорт функции для добавления продукта
+from app.approval_queue import add_product_to_pending
 
-# Настройка Kafka продюсера
-producer = KafkaProducer(
-    bootstrap_servers=['kafka:9092'],  # Адрес Kafka сервера
-    value_serializer=lambda v: json.dumps(v).encode(
-        'utf-8')  # Сериализация данных в JSON
+# Конфигурация Kafka консюмера
+consumer = KafkaConsumer(
+    'product_topic',  # Название топика
+    bootstrap_servers=['kafka:9092'],
+    value_deserializer=lambda x: json.loads(x.decode('utf-8'))
 )
-# Пример данных для отправки
 
 
-def create_auth_topic_kafka(access_token: str, user_email: str, user_id: str, action: str, topic: str = 'auth_topic'):
-    # Формируем сообщение для отправки в Kafka
-    message = {
-        "token": access_token,  # Передаем токен, который был создан в роуте
-        "user_id": user_id,
-        "action": action,
-        "description": "User action for Kafka"
-    }
-
-    # Логируем создание и отправку сообщения
-    logger.log_message(f"""Sending message to Kafka: Action: {
-                       action}, User: {user_email}, User ID: {user_id}""")
-
-    # Отправляем сообщение в топик Kafka
-    producer.send(topic, message)
-
-    producer.flush()
-    logger.log_message("Message sent to Kafka")
+def listen_for_product_approval_requests():
+    """
+    Обрабатывает входящие заявки из топика Kafka и добавляет их в очередь одобрения.
+    """
+    logger.log_message("Starting to listen for product approval requests...")
+    for message in consumer:
+        logger.log_message(f"New message received from Kafka topic: {message}")
+        product_id = message.value.get('product_id')
+        logger.log_message(f"Product ID got from kafka: {product_id}")
+        if product_id:
+            add_product_to_pending(product_id)  # Добавляем продукт в очередь
+            logger.log_message(
+                f"Received product approval request for ID: {product_id}")
+        else:
+            logger.log_message("Received message without product ID.")

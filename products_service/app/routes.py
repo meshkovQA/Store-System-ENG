@@ -5,7 +5,6 @@ from uuid import UUID
 from app import crud, schemas, database, auth, logger
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from app.database import get_session_local
-from app.kafka import get_token_and_user_from_kafka
 
 
 router = APIRouter()
@@ -13,39 +12,31 @@ router = APIRouter()
 # Создаем объект security для использования схемы авторизации Bearer
 security = HTTPBearer()
 
-
-# ---- Маршруты для CRUD операций с товарами ----
-@router.get("/test-kafka", summary="Тестовый роут для чтения сообщений из Kafka")
-async def test_kafka_consumer():
-    """
-    Маршрут для тестирования потребления сообщений из Kafka.
-    Читает первое доступное сообщение и возвращает его.
-    """
-    # Читаем сообщение из Kafka и возвращаем его в ответе
-    return await get_token_and_user_from_kafka()
+# ---- Маршруты для CRUD операций с продуктами ----
 
 
 @router.post("/products/", response_model=schemas.Product, status_code=status.HTTP_201_CREATED, tags=["Products Service"], summary="Create a new product")
 async def create_product(product: schemas.ProductCreate, db: Session = Depends(get_session_local), credentials: HTTPAuthorizationCredentials = Depends(security)):
     token = credentials.credentials
-    user_id = await get_token_and_user_from_kafka()
     user_data = auth.verify_token_in_other_service(
         token)  # Проверяем токен через auth.py
+    logger.log_message(
+        f"User {user_data}")
     if not user_data:
         logger.log_message("Invalid token or unauthorized access")
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
                             detail="Invalid token or unauthorized access")
-    logger.log_message(f"User {user_id} is creating a new product")
-    return crud.create_product(db=db, name=product.name, description=product.description, user_id=user_id,
+
+    logger.log_message(f"User {user_data} is creating a new product")
+    return crud.create_product(db=db, name=product.name, description=product.description, user_id=user_data,
                                category=product.category, price=product.price, stock_quantity=product.stock_quantity,
                                supplier_id=product.supplier_id, image_url=product.image_url, weight=product.weight,
                                dimensions=product.dimensions, manufacturer=product.manufacturer)
 
 
-@router.get("/products/", response_model=list[schemas.Product], tags=["Products Service"], summary="Get all products")
+@router.get("/products/", response_model=list[schemas.ProductResponse], tags=["Products Service"], summary="Get all products")
 def get_products(credentials: HTTPAuthorizationCredentials = Depends(security), db: Session = Depends(get_session_local)):
     token = credentials.credentials
-    # token = await get_token_and_user_from_kafka()
     user_data = auth.verify_token_in_other_service(
         token)  # Проверяем токен через auth.py
     if not user_data:
@@ -59,7 +50,6 @@ def get_products(credentials: HTTPAuthorizationCredentials = Depends(security), 
 @router.get("/products/{product_id}", response_model=schemas.Product, tags=["Products Service"], summary="Get product by ID")
 def get_product(product_id: str, db: Session = Depends(get_session_local), credentials: HTTPAuthorizationCredentials = Depends(security)):
     token = credentials.credentials
-    # token = get_token_and_user_from_kafka()
     user_data = auth.verify_token_in_other_service(
         token)  # Проверяем токен через auth.py
     if not user_data:
@@ -74,17 +64,35 @@ def get_product(product_id: str, db: Session = Depends(get_session_local), crede
 async def update_product(product_id: str, product: schemas.ProductUpdate, db: Session = Depends(get_session_local), credentials: HTTPAuthorizationCredentials = Depends(security)):
     token = credentials.credentials
     user_data = auth.verify_token_in_other_service(token)
-    user_id = await get_token_and_user_from_kafka()  # Проверяем токен через auth.py
     if not user_data:
         logger.log_message("Invalid token or unauthorized access")
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
                             detail="Invalid token or unauthorized access")
+
+    user_id = user_data.get("user_id") if "user_id" in user_data else None
     logger.log_message(
         f"""User {user_id} is updating product with id {product_id}, new name: {product.name}, new description: {product.description}, new price: {product.price}""")
     return crud.update_product(db=db, product_id=product_id, name=product.name, description=product.description, user_id=user_id,
                                category=product.category, price=product.price, stock_quantity=product.stock_quantity,
                                supplier_id=product.supplier_id, image_url=product.image_url, weight=product.weight,
                                dimensions=product.dimensions, manufacturer=product.manufacturer)
+
+
+@router.patch("/products/{product_id}", response_model=schemas.Product, tags=["Products Service"], summary="Partially update availablity of product by ID")
+async def partial_update_product(product_id: str, availability_data: schemas.ProductAvailabilityUpdate, db: Session = Depends(get_session_local), credentials: HTTPAuthorizationCredentials = Depends(security)):
+    token = credentials.credentials
+    user_data = auth.verify_token_in_other_service(token)
+    if not user_data:
+        logger.log_message("Invalid token or unauthorized access")
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                            detail="Invalid token or unauthorized access")
+
+    user_id = user_data.get("user_id") if "user_id" in user_data else None
+    logger.log_message(
+        f"User {user_id} is partially updating product with id {product_id}")
+
+    # Обновите только поле is_available в crud
+    return crud.update_product_availability(db=db, product_id=product_id, is_available=availability_data.is_available)
 
 
 @router.delete("/products/{product_id}", tags=["Products Service"], summary="Delete product by ID")
@@ -99,10 +107,23 @@ def delete_product(product_id: str, db: Session = Depends(get_session_local), cr
     logger.log_message(f"Deleting product with id {product_id}")
     return crud.delete_product(db, product_id)
 
+
+@router.get("/search_products/", response_model=list[schemas.Product], tags=["Products Service"], summary="Search products by name")
+def search_products(name: str, db: Session = Depends(get_session_local), credentials: HTTPAuthorizationCredentials = Depends(security)):
+    token = credentials.credentials
+    user_data = auth.verify_token_in_other_service(token)
+    if not user_data:
+        logger.log_message("Invalid token or unauthorized access")
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                            detail="Invalid token or unauthorized access")
+
+    logger.log_message(f"Searching products with name containing '{name}'")
+    return crud.search_products_by_name(db, name)
+
 # ---- CRUD операции для поставщиков (Supplier) ----
 
 
-@router.post("/suppliers/", response_model=schemas.Supplier, tags=["Suppliers Service"], summary="Create a new supplier")
+@router.post("/suppliers/", response_model=schemas.Supplier, tags=["Suppliers Service"], status_code=status.HTTP_201_CREATED, summary="Create a new supplier")
 def create_supplier(supplier: schemas.SupplierCreate, db: Session = Depends(get_session_local), credentials: HTTPAuthorizationCredentials = Depends(security)):
     token = credentials.credentials
     user_data = auth.verify_token_in_other_service(
@@ -172,6 +193,19 @@ def delete_supplier(supplier_id: str, db: Session = Depends(get_session_local), 
     logger.log_message(f"Deleting supplier with id {supplier_id}")
     return crud.delete_supplier(db, supplier_id)
 
+
+@router.get("/search_suppliers/", response_model=list[schemas.Supplier], tags=["Suppliers Service"], summary="Search suppliers by name")
+def search_suppliers(name: str, db: Session = Depends(get_session_local), credentials: HTTPAuthorizationCredentials = Depends(security)):
+    token = credentials.credentials
+    user_data = auth.verify_token_in_other_service(token)
+    if not user_data:
+        logger.log_message("Invalid token or unauthorized access")
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                            detail="Invalid token or unauthorized access")
+
+    logger.log_message(f"Searching suppliers with name containing '{name}'")
+    return crud.search_suppliers_by_name(db, name)
+
 # ---- CRUD операции для складов (Warehouses) ----
 
 
@@ -186,6 +220,19 @@ def get_warehouse_by_id(warehouse_id: UUID, db: Session = Depends(get_session_lo
                             detail="Invalid token or unauthorized access")
     logger.log_message(f"Getting warehouse with id {warehouse_id}")
     return crud.get_warehouse_by_id(db, warehouse_id=str(warehouse_id))
+
+
+@router.get("/warehouses/", response_model=list[schemas.Warehouse], tags=["Warehouses Service"], summary="Get all warehouses")
+def get_all_warehouses(db: Session = Depends(get_session_local), credentials: HTTPAuthorizationCredentials = Depends(security)):
+    token = credentials.credentials
+    user_data = auth.verify_token_in_other_service(token)
+    if not user_data:
+        logger.log_message("Invalid token or unauthorized access")
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                            detail="Invalid token or unauthorized access")
+
+    logger.log_message("Getting all warehouses")
+    return crud.get_all_warehouses(db)
 
 
 @router.post("/warehouses/", response_model=schemas.Warehouse, tags=["Warehouses Service"], summary="Create a new warehouse")
@@ -213,7 +260,7 @@ def create_warehouse(warehouse: schemas.WarehouseCreate, db: Session = Depends(g
 
 
 @router.patch("/warehouses/{warehouse_id}", response_model=schemas.Warehouse, tags=["Warehouses Service"], summary="Update warehouse by ID")
-def patch_warehouse(warehouse_id: UUID, warehouse: schemas.WarehouseUpdate, db: Session = Depends(get_session_local), credentials: HTTPAuthorizationCredentials = Depends(security)):
+def patch_warehouse(warehouse_id: str, warehouse: schemas.WarehouseUpdate, db: Session = Depends(get_session_local), credentials: HTTPAuthorizationCredentials = Depends(security)):
     token = credentials.credentials
     user_data = auth.verify_token_in_other_service(
         token)
@@ -222,7 +269,8 @@ def patch_warehouse(warehouse_id: UUID, warehouse: schemas.WarehouseUpdate, db: 
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
                             detail="Invalid token or unauthorized access")
     updates = warehouse.dict(exclude_unset=True)
-    return crud.patch_warehouse(db=db, warehouse_id=str(warehouse_id), updates=updates)
+    logger.log_message(f"Updating warehouse with id {warehouse_id}")
+    return crud.patch_warehouse(db=db, warehouse_id=warehouse_id, updates=updates)
 
 
 @router.delete("/warehouses/{warehouse_id}", tags=["Warehouses Service"], summary="Delete warehouse by ID")

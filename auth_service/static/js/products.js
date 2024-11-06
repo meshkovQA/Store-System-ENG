@@ -1,67 +1,217 @@
-document.addEventListener("DOMContentLoaded", function () {
-    initialize();
+//products.js
+document.addEventListener("DOMContentLoaded", async function () {
+    const token = await getTokenFromDatabase();
 
-    document.getElementById("create-product-form").addEventListener("submit", async (event) => {
+    if (!token) {
+        // Перенаправляем на страницу логина, если токен отсутствует
+        window.location.href = '/login';
+        return;
+    }
+
+
+    initializeProducts();
+
+    document.querySelector("#add-new-product-btn").addEventListener("click", openAddProductModal);
+
+    document.getElementById("add-product-form").addEventListener("submit", async (event) => {
         event.preventDefault();
+        // Сброс сообщений об ошибках
+        document.getElementById("nameError").style.display = 'none';
+        document.getElementById("descriptionError").style.display = 'none';
+        document.getElementById("categoryError").style.display = 'none';
+        document.getElementById("priceError").style.display = 'none';
+        document.getElementById("stockQuantityError").style.display = 'none';
+        document.getElementById("supplierError").style.display = 'none';
+        document.getElementById("imageError").style.display = 'none';
+        document.getElementById("weightError").style.display = 'none';
+        document.getElementById("dimensionsError").style.display = 'none';
+        document.getElementById("manufacturerError").style.display = 'none';
 
-        // Получаем токен из базы данных
-        const token = await getTokenFromDatabase();
+        let valid = true;
 
-        const name = document.getElementById("name").value;
-        const description = document.getElementById("description").value;
-        const category = document.getElementById("category").value;
-        const price = parseFloat(document.getElementById("price").value);
-        const stock_quantity = parseInt(document.getElementById("stock_quantity").value);
-        const supplier_id = document.getElementById("supplier_id").value;
+        // Название продукта: обязательное, 3-100 символов, только буквы и цифры
+        let name = document.getElementById("add-name").value.trim();
+        if (!/^[а-яА-Яa-zA-Z0-9\s]{3,100}$/.test(name)) {
+            document.getElementById("nameError").style.display = 'block';
+            valid = false;
+        }
 
-        await fetch("http://localhost:8002/products/", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${token}`
-            },
-            body: JSON.stringify({
-                name, description, category, price, stock_quantity, supplier_id
-            })
-        });
+        // Описание: не более 500 символов
+        let description = document.getElementById("add-description").value.trim();
+        if (description.length > 500) {
+            document.getElementById("descriptionError").style.display = 'block';
+            valid = false;
+        }
 
-        document.getElementById("create-product-form").reset();
-        const modal = new bootstrap.Modal(document.getElementById("addProductModal"));
-        modal.hide();
-        loadProducts(token);
+        // Категория: не более 50 символов, только буквы и цифры
+        let category = document.getElementById("add-category").value.trim();
+        if (category && (category.length > 50 || !/^[а-яА-Яa-zA-Z0-9\s]*$/.test(category))) {
+            document.getElementById("categoryError").style.display = 'block';
+            valid = false;
+        }
+
+
+        // Цена: обязательное, положительное число с двумя знаками после запятой, максимум 10 цифр
+        let price = document.getElementById("add-price").value;
+        if (!price || isNaN(price) || parseFloat(price) <= 0 || !/^\d+(\.\d{1,2})?$/.test(price) || price.length > 10) {
+            document.getElementById("priceError").style.display = 'block';
+            valid = false;
+        }
+
+        // Количество на складе: обязательное, целое число, >= 0
+        let stockQuantity = document.getElementById("add-stock-quantity").value;
+        if (!/^\d+$/.test(stockQuantity) || parseInt(stockQuantity) < 0) {
+            document.getElementById("stockQuantityError").style.display = 'block';
+            valid = false;
+        }
+
+        // Поставщик: обязательное поле (проверка на выбранное значение)
+        let supplierId = document.getElementById("add-supplier-id").value;
+        if (!supplierId) {
+            document.getElementById("supplierError").style.display = 'block';
+            valid = false;
+        }
+
+        // Габариты: максимум 100 символов, допускаются цифры и символ "x"
+        let dimensions = document.getElementById("add-dimensions").value.trim();
+        if (dimensions && !/^[\dx\s]{1,100}$/.test(dimensions)) {
+            document.getElementById("dimensionsError").style.display = 'block';
+            valid = false;
+        }
+
+        // Если все проверки пройдены, отправляем данные на сервер
+        if (valid) {
+            createProduct();
+        }
+    });
+    document.getElementById("edit-product-form").addEventListener("submit", async (event) => {
+        event.preventDefault();
+        if (validateProductForm("edit")) {
+            const productId = document.getElementById("edit-product-id").value;
+            await updateProduct(productId);
+        }
+    });
+
+    document.getElementById("products-table").addEventListener("click", (event) => {
+        const target = event.target;
+        const productId = target.dataset.id;
+
+        if (target.classList.contains("btn-warning")) {
+            openEditProductModal(productId);
+        } else if (target.classList.contains("btn-danger")) {
+            const confirmed = confirm("Вы уверены, что хотите удалить продукт?");
+            if (confirmed) deleteProduct(productId);
+        }
     });
 });
 
-async function initialize() {
-    const token = await getTokenFromDatabase();
-    await loadProducts(token);
-    await loadSuppliers(token);
-}
+// Функция для валидации полей формы
+function validateProductForm(formPrefix) {
+    let isValid = true;
+    let errorMessage = "";
 
-// Функция для получения токена из базы данных
-async function getTokenFromDatabase() {
-    const userId = localStorage.getItem("user_id"); // Извлекаем текущий ID пользователя из localStorage
+    // Получаем значения полей
+    const name = document.getElementById(`${formPrefix}-name`).value.trim();
+    const description = document.getElementById(`${formPrefix}-description`).value.trim();
+    const supplierId = document.getElementById(`${formPrefix}-supplier-id`).value;
+    const price = document.getElementById(`${formPrefix}-price`).value;
+    const stockQuantity = document.getElementById(`${formPrefix}-stock-quantity`).value;
+    const weight = document.getElementById(`${formPrefix}-weight`).value;
 
-    if (!userId) {
-        console.error("User ID не найден в localStorage. Перенаправление на страницу логина.");
-        window.location.href = '/login';
-        return null;
+    // Проверка обязательных полей
+    if (!name) {
+        errorMessage += "Название продукта является обязательным.\n";
+        isValid = false;
+    }
+    if (!description) {
+        errorMessage += "Описание является обязательным.\n";
+        isValid = false;
+    }
+    if (!supplierId) {
+        errorMessage += "Необходимо выбрать поставщика.\n";
+        isValid = false;
     }
 
-    const response = await fetch(`/get-user-token/${userId}`, {
+    // Проверка числовых полей
+    if (price && isNaN(parseFloat(price))) {
+        errorMessage += "Цена должна быть числом с плавающей точкой, например, 29.99.\n";
+        isValid = false;
+    }
+    if (stockQuantity && isNaN(parseInt(stockQuantity))) {
+        errorMessage += "Количество на складе должно быть целым числом.\n";
+        isValid = false;
+    }
+    if (weight && isNaN(parseFloat(weight))) {
+        errorMessage += "Вес продукта должен быть числом.\n";
+        isValid = false;
+    }
+
+    // Отображение сообщений об ошибках
+    if (!isValid) {
+        alert(errorMessage);
+    }
+    return isValid;
+}
+
+function openAddProductModal() {
+    document.getElementById("add-product-form").reset();
+    loadSuppliers("#add-supplier-id");  // Загрузка списка поставщиков для выбора
+    $("#addProductModal").modal("show");
+}
+
+async function openEditProductModal(productId) {
+    const token = await getTokenFromDatabase();
+    const response = await fetch(`http://localhost:8002/products/${productId}`, {
         headers: {
-            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/json"
         }
     });
 
     if (!response.ok) {
-        console.error("Ошибка при получении токена:", response.status);
+        console.error("Ошибка при получении данных продукта:", response.status);
+        return;
+    }
+
+    const product = await response.json();
+
+    document.getElementById("edit-product-id").value = product.product_id;
+    document.getElementById("edit-name").value = product.name;
+    document.getElementById("edit-description").value = product.description;
+    document.getElementById("edit-category").value = product.category || "";
+    document.getElementById("edit-price").value = product.price || "";
+    document.getElementById("edit-stock-quantity").value = product.stock_quantity || "";
+    loadSuppliers("#edit-supplier-id", product.supplier_id);  // Загрузка списка поставщиков с текущим значением
+    document.getElementById("edit-weight").value = product.weight || "";
+    document.getElementById("edit-dimensions").value = product.dimensions || "";
+    document.getElementById("edit-manufacturer").value = product.manufacturer || "";
+
+    $("#editProductModal").modal("show");
+}
+
+async function getTokenFromDatabase() {
+    const userId = localStorage.getItem("user_id");
+    const response = await fetch(`/get-user-token/${userId}`, {
+        headers: { "Content-Type": "application/json" }
+    });
+
+    const data = await response.json();
+    const token = data.access_token;
+    const expiresAt = new Date(data.expires_at);
+
+    // Проверяем истечение срока действия токена
+    if (new Date() >= expiresAt) {
+        console.log("Token expired. Redirecting to login page.");
         window.location.href = '/login';
         return null;
     }
 
-    const data = await response.json();
-    return data.access_token;
+    return token;
+}
+
+async function initializeProducts() {
+    const token = await getTokenFromDatabase();
+    await loadProducts(token);
 }
 
 async function loadProducts(token) {
@@ -72,12 +222,75 @@ async function loadProducts(token) {
         }
     });
 
-    if (!response.ok) {
-        console.error("Ошибка при загрузке продуктов:", response.status);
-        return;
-    }
-
     const products = await response.json();
+    renderProductsTable(products);
+}
+
+async function createProduct() {
+    const token = await getTokenFromDatabase();
+    const productData = {
+        name: document.getElementById("add-name").value.trim(),
+        description: document.getElementById("add-description").value.trim(),
+        category: document.getElementById("add-category").value.trim(),
+        price: parseFloat(document.getElementById("add-price").value) || null,
+        stock_quantity: parseInt(document.getElementById("add-stock-quantity").value) || null,
+        supplier_id: document.getElementById("add-supplier-id").value,
+        weight: parseFloat(document.getElementById("add-weight").value) || null,
+        dimensions: document.getElementById("add-dimensions").value.trim(),
+        manufacturer: document.getElementById("add-manufacturer").value.trim(),
+    };
+
+    await fetch("http://localhost:8002/products/", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify(productData)
+    });
+
+    document.getElementById("add-product-form").reset();
+    loadProducts(token);
+    $("#addProductModal").modal("hide");
+}
+
+async function updateProduct(productId) {
+    const token = await getTokenFromDatabase();
+    const productData = {
+        name: document.getElementById("edit-name").value.trim(),
+        description: document.getElementById("edit-description").value.trim(),
+        category: document.getElementById("edit-category").value.trim(),
+        price: parseFloat(document.getElementById("edit-price").value) || null,
+        stock_quantity: parseInt(document.getElementById("edit-stock-quantity").value) || null,
+        supplier_id: document.getElementById("edit-supplier-id").value,
+        weight: parseFloat(document.getElementById("edit-weight").value) || null,
+        dimensions: document.getElementById("edit-dimensions").value.trim(),
+        manufacturer: document.getElementById("edit-manufacturer").value.trim(),
+    };
+
+    await fetch(`http://localhost:8002/products/${productId}`, {
+        method: "PUT",
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify(productData)
+    });
+
+    $("#editProductModal").modal("hide");
+    loadProducts(token);
+}
+
+async function deleteProduct(productId) {
+    const token = await getTokenFromDatabase();
+    await fetch(`http://localhost:8002/products/${productId}`, {
+        method: "DELETE",
+        headers: { "Authorization": `Bearer ${token}` }
+    });
+    loadProducts(token);
+}
+
+function renderProductsTable(products) {
     const tableBody = document.querySelector("#products-table tbody");
     tableBody.innerHTML = "";
 
@@ -86,18 +299,19 @@ async function loadProducts(token) {
         row.innerHTML = `
             <td>${product.name}</td>
             <td>${product.description}</td>
-            <td>${product.category}</td>
-            <td>${product.price}</td>
+            <td>${product.category || ""}</td>
+            <td>${product.price || ""}</td>
             <td>
-                <button class="btn btn-sm btn-warning">Edit</button>
-                <button class="btn btn-sm btn-danger">Delete</button>
+                <button class="btn btn-sm btn-warning" data-id="${product.product_id}">Редактировать</button>
+                <button class="btn btn-sm btn-danger" data-id="${product.product_id}">Удалить</button>
             </td>
         `;
         tableBody.appendChild(row);
     });
 }
 
-async function loadSuppliers(token) {
+async function loadSuppliers(selectorId, selectedSupplierId = null) {
+    const token = await getTokenFromDatabase();
     const response = await fetch("http://localhost:8002/suppliers/", {
         headers: {
             "Authorization": `Bearer ${token}`,
@@ -105,19 +319,34 @@ async function loadSuppliers(token) {
         }
     });
 
-    if (!response.ok) {
-        console.error("Ошибка при загрузке поставщиков:", response.status);
-        return;
-    }
-
     const suppliers = await response.json();
-    const supplierSelect = document.getElementById("supplier_id");
+    const select = document.querySelector(selectorId);
+    select.innerHTML = "";
 
-    supplierSelect.innerHTML = "";
     suppliers.forEach((supplier) => {
         const option = document.createElement("option");
-        option.value = supplier.supplier_id;
-        option.text = supplier.name;
-        supplierSelect.appendChild(option);
+        option.value = supplier.id;
+        option.textContent = supplier.name;
+        if (supplier.id === selectedSupplierId) option.selected = true;
+        select.appendChild(option);
     });
+}
+
+async function searchProduct() {
+    const token = await getTokenFromDatabase();
+    const searchQuery = document.getElementById("search-name").value.trim();
+
+    const response = await fetch(`http://localhost:8002/search_products?name=${encodeURIComponent(searchQuery)}`, {
+        headers: {
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/json"
+        }
+    });
+
+    if (response.ok) {
+        const products = await response.json();
+        renderProductsTable(products);
+    } else {
+        console.error("Ошибка при поиске продукта:", response.status);
+    }
 }

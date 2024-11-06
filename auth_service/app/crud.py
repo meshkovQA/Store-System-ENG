@@ -1,6 +1,6 @@
 # crud.py
 from sqlalchemy.orm import Session
-from app.models import User
+from app.models import User, Token
 from app.schemas import UserCreate
 from app.auth import get_password_hash
 import uuid
@@ -91,3 +91,7 @@ def delete_user(db: Session, user_id: str):  # Удаление пользова
     logger.log_message(
         f"User {user.email} has been deleted from the database")
     return user
+
+
+def get_user_token(db: Session, user_id: str):
+    return db.query(Token).filter(Token.user_id == user_id).first()

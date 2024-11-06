@@ -8,11 +8,13 @@ from sqlalchemy.orm import Session
 from app import crud, schemas, database, auth, logger
 from fastapi.responses import JSONResponse
 from app.database import get_session_local
-from app.kafka import create_auth_topic_kafka
+import requests
+import redis
 
 
 router = APIRouter()
 templates = Jinja2Templates(directory="templates")
+redis_client = redis.Redis(host='redis', port=6379, db=0)
 
 # Создаем объект security для использования схемы авторизации Bearer
 security = HTTPBearer()
@@ -28,9 +30,8 @@ async def verify_token_route(credentials: HTTPAuthorizationCredentials = Depends
     except HTTPException as e:
         raise HTTPException(status_code=e.status_code, detail=e.detail)
 
+
 # Рендеринг страницы регистрации
-
-
 @router.get("/register/", include_in_schema=False)
 def register_page(request: Request):
     return templates.TemplateResponse("register.html", {"request": request})
@@ -39,7 +40,7 @@ def register_page(request: Request):
 @router.post("/register/", response_model=schemas.RegistrationResponse, status_code=status.HTTP_201_CREATED, responses={
     201: {"description": "User successfully created", "model": schemas.RegistrationResponse},
     422: {"description": "Email already registered or invalid data"},
-})
+}, tags=["Profile"], summary="Register new user")
 def register_user(user: schemas.UserCreate, db: Session = Depends(database.get_session_local)):
     user_email = user.email.lower()
     db_user = crud.get_user_by_email(db, email=user_email)
@@ -80,6 +81,23 @@ def register_user(user: schemas.UserCreate, db: Session = Depends(database.get_s
         }
     )
 
+# Получение токена для пользователя
+
+
+@router.get("/get-user-token/{user_id}", response_model=schemas.Token, tags=["Profile"], summary="Get user token")
+def get_user_token(user_id: str, db: Session = Depends(database.get_session_local)):
+    # Попробуем получить токен из базы данных
+    token_record = crud.get_user_token(db, user_id=user_id)
+    logger.log_message(f"Token for user {user_id} found in DB.")
+    if not token_record:
+        logger.log_message(f"Token for user {user_id} not found in DB.")
+        raise HTTPException(status_code=404, detail="Token not found")
+
+    return {
+        "access_token": token_record.token,
+        "token_type": "bearer"
+    }
+
 
 # Рендеринг страницы авторизации
 @router.get("/login/", include_in_schema=False)
@@ -88,7 +106,7 @@ def register_page(request: Request):
 
 
 # Авторизация пользователя и перенаправление на страницу store
-@router.post("/login/",  response_model=schemas.LoginResponse, responses={
+@router.post("/login/", response_model=schemas.LoginResponse, tags=["Profile"], summary="Login in system", responses={
     200: {"description": "User successfully logged in", "model": schemas.LoginResponse},
     400: {"description": "Invalid email or password"}
 })
@@ -99,11 +117,10 @@ def login_for_access_token(form_data: schemas.Login, db: Session = Depends(datab
                            form_data.email}""")
         raise HTTPException(
             status_code=400, detail="Invalid email or password")
+
     user_id_str = str(user.id)
-    # Создаем access_token
     access_token = auth.create_access_token(
-        data={"sub": user_id_str, "is_superadmin": user.is_superadmin}, db=db
-    )
+        data={"sub": user_id_str, "is_superadmin": user.is_superadmin}, db=db)
     logger.log_message(f"User is logged in: {form_data.email}")
 
     return {
@@ -115,7 +132,7 @@ def login_for_access_token(form_data: schemas.Login, db: Session = Depends(datab
 
 
 # Повышение прав до супер-админа (только для супер-админа)
-@router.put("/users/promote/{user_id}", status_code=200, responses={
+@router.put("/users/promote/{user_id}", status_code=200, tags=["Superadmin"], summary="Promote to superadmin", responses={
     200: {"description": "User successfully promoted to super admin", "content": {"application/json": {"example": {"detail": "User successfully promoted to super admin"}}}},
     403: {"description": "Insufficient rights", "content": {"application/json": {"example": {"detail": "Insufficient rights"}}}},
     404: {"description": "User not found", "content": {"application/json": {"example": {"detail": "User not found"}}}},
@@ -129,28 +146,30 @@ def promote_user_to_superadmin(user_id: str,
 
     # Проверяем токен
     token_data = auth.verify_token(token, db=db)
-    requesting_user = crud.get_user_by_email(db, token_data["sub"])
+    requesting_user = crud.get_user_by_id(db, uuid.UUID(token_data["sub"]))
 
     # Проверяем права (только супер-админ может повышать других пользователей)
     if not requesting_user.is_superadmin:
         raise HTTPException(status_code=403, detail="Insufficient rights")
 
-    # Повышаем пользователя до супер-админа
-    user = crud.promote_to_superadmin(db, user_id)
+    user = crud.get_user_by_id(db, uuid.UUID(user_id))
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
-    # Проверяем, является ли пользователь уже супер-админом
+    # Проверяем, является ли изменяемый пользователь уже супер-админом
     if user.is_superadmin:
         raise HTTPException(
             status_code=422, detail="This user is already a super admin")
+
+    # Повышаем пользователя до супер-админа
+    crud.promote_to_superadmin(db, user_id)
 
     logger.log_message(f"User {user.email} promoted to super admin.")
     return {"detail": "User successfully promoted to super admin"}
 
 
 # Получение списка пользователей (только для супер-админа)
-@router.get("/users/", response_model=list[schemas.UserResponse])
+@router.get("/users/", response_model=list[schemas.UserResponse], tags=["Superadmin"], summary="Get users")
 def get_users(db: Session = Depends(get_session_local),
               credentials: HTTPAuthorizationCredentials = Depends(security)):
     # Получаем токен из заголовка Authorization
@@ -184,7 +203,7 @@ def get_users(db: Session = Depends(get_session_local),
     200: {"description": "User successfully updated", "model": schemas.UserUpdateResponse},
     403: {"description": "Insufficient rights", "content": {"application/json": {"example": {"detail": "Insufficient rights"}}}},
     404: {"description": "User not found", "content": {"application/json": {"example": {"detail": "User not found"}}}},
-})
+}, tags=["Superadmin"], summary="Edit user")
 def edit_user(user_id: str, form_data: schemas.UserUpdate, db: Session = Depends(get_session_local), credentials: HTTPAuthorizationCredentials = Depends(security)):
     # Проверяем права через токен
     token = credentials.credentials
@@ -218,7 +237,7 @@ def edit_user(user_id: str, form_data: schemas.UserUpdate, db: Session = Depends
     200: {"description": "User successfully deleted", "content": {"application/json": {"example": {"detail": "User successfully deleted"}}}},
     403: {"description": "Insufficient rights or attempt to delete own account", "content": {"application/json": {"example": {"detail": "Insufficient rights"}}}},
     404: {"description": "User not found", "content": {"application/json": {"example": {"detail": "User not found"}}}},
-})
+}, tags=["Superadmin"], summary="Delete user")
 def delete_user(user_id: str,
                 credentials: HTTPAuthorizationCredentials = Depends(security),
                 db: Session = Depends(get_session_local)):
@@ -244,3 +263,49 @@ def delete_user(user_id: str,
     logger.log_message(
         f"Super admin {requesting_user.email} deleted user {user.email}.")
     return {"detail": "User successfully deleted"}
+
+
+@router.get("/get-pending-products/", summary="Get list of products pending approval")
+def get_pending_products(
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+    db: Session = Depends(database.get_session_local)
+):
+    # Проверка токена и прав доступа
+    token = credentials.credentials
+    token_data = auth.verify_token(token, db=db)
+    requesting_user = crud.get_user_by_id(db, uuid.UUID(token_data["sub"]))
+
+    if not requesting_user.is_superadmin:
+        raise HTTPException(
+            status_code=403, detail="Insufficient rights to view pending products")
+
+    products_data = []
+
+    # Получение списка продуктов из Redis
+    pending_product_ids = redis_client.smembers("pending_products")
+    logger.log_message(f"""Pending product IDs retrieved from Redis: {
+                       pending_product_ids}""")
+
+    for product_id in pending_product_ids:
+        product_id = product_id.decode('utf-8')
+        try:
+            response = requests.get(
+                f"http://products_service:8000/products/{product_id}",
+                headers={
+                    "Authorization": f"Bearer {token}",
+                    "Content-Type": "application/json"
+                },
+                timeout=5
+            )
+            logger.log_message(f"""Making request to http://localhost:8002/products/{
+                               product_id} with headers: {{'Authorization': 'Bearer {token}', 'Content-Type': 'application/json'}}""")
+            if response.status_code == 200:
+                products_data.append(response.json())
+            else:
+                logger.log_message(f"""Failed to fetch product data for ID {
+                                   product_id}: {response.status_code}""")
+        except requests.RequestException as e:
+            logger.log_message(f"""Error fetching product data for ID {
+                               product_id}: {e}""")
+
+    return products_data

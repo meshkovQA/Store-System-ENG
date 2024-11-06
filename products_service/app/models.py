@@ -6,6 +6,30 @@ from sqlalchemy.ext.declarative import declarative_base
 Base = declarative_base()
 
 
+class Supplier(Base):
+    __tablename__ = "suppliers"
+
+    # Уникальный ID поставщика (UUID)
+    supplier_id = Column(UUID(as_uuid=True), primary_key=True,
+                         default=uuid.uuid4, unique=True, index=True)
+    # Название поставщика
+    name = Column(String, index=True)
+    # Имя контактного лица
+    contact_name = Column(String)
+    # Email контактного лица
+    contact_email = Column(String)
+    # Номер телефона поставщика
+    phone_number = Column(String)
+    # Адрес поставщика
+    address = Column(String)
+    # Страна поставщика
+    country = Column(String)
+    # Город поставщика
+    city = Column(String)
+    # Вебсайт поставщика
+    website = Column(String)
+
+
 class Product(Base):
     __tablename__ = "products"
 
@@ -13,12 +37,12 @@ class Product(Base):
                         default=uuid.uuid4, unique=True, index=True)
     name = Column(String, index=True)
     description = Column(String)
-    user_id = Column(UUID, index=True)
+    user_id = Column(String)
     category = Column(String)           # Категория товара
     price = Column(Float)               # Цена товара
     stock_quantity = Column(Integer)    # Количество на складе
-    supplier_name = Column(UUID, ForeignKey(
-        'suppliers.supplier_id'))      # Поставщик товара
+    supplier_id = Column(UUID(as_uuid=True), ForeignKey(
+        "suppliers.supplier_id"), nullable=False)     # Поставщик товара
     is_available = Column(Boolean)      # Доступность для заказа
     created_at = Column(DateTime)       # Дата добавления товара
     updated_at = Column(DateTime)       # Дата последнего обновления информации
@@ -53,27 +77,3 @@ class ProductWarehouse(Base):
     warehouse_id = Column(UUID, ForeignKey(
         'warehouses.warehouse_id'), index=True)
     quantity = Column(Integer)          # Количество данного товара на складе
-
-
-class Supplier(Base):
-    __tablename__ = "suppliers"
-
-    # Уникальный ID поставщика (UUID)
-    supplier_id = Column(UUID(as_uuid=True), primary_key=True,
-                         default=uuid.uuid4, unique=True, index=True)
-    # Название поставщика
-    name = Column(String, index=True)
-    # Имя контактного лица
-    contact_name = Column(String)
-    # Email контактного лица
-    contact_email = Column(String)
-    # Номер телефона поставщика
-    phone_number = Column(String)
-    # Адрес поставщика
-    address = Column(String)
-    # Страна поставщика
-    country = Column(String)
-    # Город поставщика
-    city = Column(String)
-    # Вебсайт поставщика
-    website = Column(String)

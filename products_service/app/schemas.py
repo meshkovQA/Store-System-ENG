@@ -12,11 +12,32 @@ class ProductBase(BaseModel):
     category: Optional[constr(max_length=50)] = None
     price: condecimal(gt=0, max_digits=10, decimal_places=2)
     stock_quantity: conint(ge=0)
-    supplier_id: UUID
+    supplier_id: str
     image_url: Optional[constr(max_length=255)] = None
     weight: Optional[condecimal(gt=0, max_digits=6, decimal_places=2)] = None
     dimensions: Optional[constr(max_length=100)] = None
     manufacturer: Optional[constr(max_length=100)] = None
+
+
+class ProductResponse(BaseModel):
+    product_id: str
+    user_id: str
+    name: str
+    description: str
+    category: str
+    price: float
+    stock_quantity: int
+    supplier_id: str  # Преобразуем UUID в строку
+    is_available: bool
+    created_at: datetime
+    updated_at: datetime
+    image_url: str
+    weight: float
+    dimensions: str
+    manufacturer: str
+
+    class Config:
+        orm_mode = True
 
 
 class ProductCreate(ProductBase):
@@ -34,6 +55,10 @@ class Product(ProductBase):
 
     class Config:
         orm_mode = True
+
+
+class ProductAvailabilityUpdate(BaseModel):
+    is_available: bool
 
 
 # ---- Схемы для поставщиков (Supplier) ----
@@ -74,7 +99,11 @@ class Supplier(SupplierBase):
         orm_mode = True
 
 
+class SupplierSearch(BaseModel):
+    name: Optional[constr(min_length=1, max_length=100)] = None
+
 # ---- Схемы для складов (Warehouse) ----
+
 
 class WarehouseBase(BaseModel):
     location: constr(min_length=1, max_length=100)
@@ -93,7 +122,18 @@ class WarehouseCreate(WarehouseBase):
 
 
 class WarehouseUpdate(WarehouseBase):
-    pass
+    location: constr(min_length=1, max_length=100)
+    manager_name: Optional[constr(max_length=100)] = None
+    capacity: conint(gt=0)
+    current_stock: conint(ge=0)
+    contact_number: Optional[constr(max_length=15)] = None
+    email: Optional[constr(max_length=100)] = None
+    is_active: bool
+    area_size: Optional[condecimal(
+        gt=0, max_digits=7, decimal_places=2)] = None
+
+    class Config:
+        orm_mode = True
 
 
 class Warehouse(WarehouseBase):

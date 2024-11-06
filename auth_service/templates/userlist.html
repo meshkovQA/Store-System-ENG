@@ -1,0 +1,31 @@
+<!-- user_list.html -->
+{% extends "layout.html" %}
+
+{% block title %}Список пользователей{% endblock %}
+
+{% block content %}
+<h2>Список пользователей</h2>
+
+<!-- Поисковая строка для фильтрации пользователей -->
+<div class="mb-3">
+    <input type="text" id="search" class="form-control" placeholder="Поиск по имени или email">
+</div>
+
+<!-- Таблица для отображения списка пользователей -->
+<table class="table table-striped mt-4">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Имя</th>
+            <th>Email</th>
+            <th>Роль</th>
+            <th>Действия</th>
+        </tr>
+    </thead>
+    <tbody id="userTableBody">
+        <!-- Данные будут загружены через JS -->
+    </tbody>
+</table>
+
+<script src="/static/js/userlist.js"></script>
+{% endblock %}

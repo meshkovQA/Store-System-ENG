@@ -6,7 +6,7 @@
 <h2>Управление поставщиками</h2>
 
 <!-- Кнопка для открытия модального окна добавления поставщика -->
-<button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#addSupplierModal">
+<button id="add-new-supplier-btn" class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#addSupplierModal">
     Добавить нового поставщика
 </button>
 
@@ -16,7 +16,7 @@
     <button class="btn btn-secondary mt-2" onclick="searchSupplier()">Найти</button>
 </div>
 
-<!-- Модальное окно добавления нового поставщика -->
+<!-- Модальное окно для добавления нового поставщика -->
 <div class="modal fade" id="addSupplierModal" tabindex="-1" aria-labelledby="addSupplierModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -25,40 +25,90 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <form id="create-supplier-form-modal">
+                <form id="add-supplier-form">
                     <div class="mb-3">
-                        <label for="name" class="form-label">Название поставщика</label>
-                        <input type="text" class="form-control" id="name" required minlength="3" maxlength="100">
+                        <label for="add-name" class="form-label">Название поставщика</label>
+                        <input type="text" class="form-control" id="add-name" required minlength="3" maxlength="100">
                     </div>
                     <div class="mb-3">
-                        <label for="contact_name" class="form-label">Контактное лицо</label>
-                        <input type="text" class="form-control" id="contact_name" maxlength="100" required>
+                        <label for="add-contact_name" class="form-label">Контактное лицо</label>
+                        <input type="text" class="form-control" id="add-contact_name" maxlength="100" required>
                     </div>
                     <div class="mb-3">
-                        <label for="contact_email" class="form-label">Email</label>
-                        <input type="email" class="form-control" id="contact_email" maxlength="100" required>
+                        <label for="add-contact_email" class="form-label">Email</label>
+                        <input type="email" class="form-control" id="add-contact_email" maxlength="100" required>
                     </div>
                     <div class="mb-3">
-                        <label for="phone_number" class="form-label">Телефон</label>
-                        <input type="text" class="form-control" id="phone_number" maxlength="15">
+                        <label for="add-phone_number" class="form-label">Телефон</label>
+                        <input type="text" class="form-control" id="add-phone_number" maxlength="15">
                     </div>
                     <div class="mb-3">
-                        <label for="address" class="form-label">Адрес</label>
-                        <input type="text" class="form-control" id="address" maxlength="200">
+                        <label for="add-address" class="form-label">Адрес</label>
+                        <input type="text" class="form-control" id="add-address" maxlength="200">
                     </div>
                     <div class="mb-3">
-                        <label for="country" class="form-label">Страна</label>
-                        <input type="text" class="form-control" id="country" maxlength="50">
+                        <label for="add-country" class="form-label">Страна</label>
+                        <input type="text" class="form-control" id="add-country" maxlength="50">
                     </div>
                     <div class="mb-3">
-                        <label for="city" class="form-label">Город</label>
-                        <input type="text" class="form-control" id="city">
+                        <label for="add-city" class="form-label">Город</label>
+                        <input type="text" class="form-control" id="add-city">
                     </div>
                     <div class="mb-3">
-                        <label for="website" class="form-label">Вебсайт</label>
-                        <input type="text" class="form-control" id="website">
+                        <label for="add-website" class="form-label">Вебсайт</label>
+                        <input type="text" class="form-control" id="add-website">
                     </div>
                     <button type="submit" class="btn btn-primary">Создать поставщика</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно для редактирования поставщика -->
+<div class="modal fade" id="editSupplierModal" tabindex="-1" aria-labelledby="editSupplierModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editSupplierModalLabel">Редактирование поставщика</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="edit-supplier-form">
+                    <input type="hidden" id="edit-supplier-id">
+                    <div class="mb-3">
+                        <label for="edit-name" class="form-label">Название поставщика</label>
+                        <input type="text" class="form-control" id="edit-name" required minlength="3" maxlength="100">
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit-contact_name" class="form-label">Контактное лицо</label>
+                        <input type="text" class="form-control" id="edit-contact_name" maxlength="100" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit-contact_email" class="form-label">Email</label>
+                        <input type="email" class="form-control" id="edit-contact_email" maxlength="100" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit-phone_number" class="form-label">Телефон</label>
+                        <input type="text" class="form-control" id="edit-phone_number" maxlength="15">
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit-address" class="form-label">Адрес</label>
+                        <input type="text" class="form-control" id="edit-address" maxlength="200">
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit-country" class="form-label">Страна</label>
+                        <input type="text" class="form-control" id="edit-country" maxlength="50">
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit-city" class="form-label">Город</label>
+                        <input type="text" class="form-control" id="edit-city">
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit-website" class="form-label">Вебсайт</label>
+                        <input type="text" class="form-control" id="edit-website">
+                    </div>
+                    <button type="submit" class="btn btn-primary">Сохранить изменения</button>
                 </form>
             </div>
         </div>
