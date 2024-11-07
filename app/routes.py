@@ -172,30 +172,36 @@ def get_users(db: Session = Depends(get_session_local),
     404: {"description": "User not found", "content": {"application/json": {"example": {"detail": "User not found"}}}},
 })
 def edit_user(user_id: str, form_data: schemas.UserUpdate, db: Session = Depends(get_session_local), credentials: HTTPAuthorizationCredentials = Depends(security)):
-    # Проверяем права через токен
-    token = credentials.credentials
-    user_data_from_token = auth.verify_token(token)
+    try:
+        # Проверяем права через токен
+        token = credentials.credentials
+        user_data_from_token = auth.verify_token(token)
 
-    # Проверяем права (например, только супер-админ может изменять пользователей)
-    requesting_user = crud.get_user_by_email(db, user_data_from_token["sub"])
+        # Проверяем права (например, только супер-админ может изменять пользователей)
+        requesting_user = crud.get_user_by_email(
+            db, user_data_from_token["sub"])
 
-    if not requesting_user.is_superadmin:
-        raise HTTPException(status_code=403, detail="Insufficient rights")
+        if not requesting_user.is_superadmin:
+            raise HTTPException(status_code=403, detail="Insufficient rights")
 
-    user = crud.edit_user(db, user_id, form_data)
+        user = crud.edit_user(db, user_id, form_data)
 
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
 
-    logger.log_message(f"User {user.email} has been updated.")
-    return {
-        "detail": "User successfully updated",
-        "user": {
-            "id": str(user.id),
-            "name": user.name,
-            "email": user.email
+        logger.log_message(f"User {user.email} has been updated.")
+
+        return {
+            "detail": "User successfully updated",
+            "user": {
+                "id": user.id,
+                "name": user.name,
+                "email": user.email
+            }
         }
-    }
+    except Exception as e:
+        logger.log_message(f"An error occurred: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal Server Error")
 
 # Пример маршрута для удаления пользователя с проверкой токена через HTTPBearer
 

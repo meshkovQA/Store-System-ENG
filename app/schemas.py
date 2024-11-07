@@ -3,6 +3,7 @@ from pydantic import BaseModel
 from pydantic import BaseModel, EmailStr, constr, validator, Field
 import re
 from typing import Optional
+from uuid import UUID
 
 
 class UserCreate(BaseModel):
@@ -51,7 +52,7 @@ class RegistrationResponse(BaseModel):
 
 
 class User(BaseModel):
-    id: int
+    id: UUID
     name: str
     email: EmailStr
 
@@ -76,8 +77,9 @@ class Token(BaseModel):
 
 
 class UserUpdate(BaseModel):
-    email: EmailStr  # Позволяет изменить email
-    name: constr(min_length=3, max_length=50)   # Позволяет изменить имя
+    email: Optional[EmailStr]  # Email является необязательным
+    # Имя также является необязательным
+    name: Optional[constr(min_length=3, max_length=50)]
 
     @validator("name")
     def validate_name(cls, value):
@@ -102,11 +104,8 @@ class UserUpdate(BaseModel):
 
 
 class UserUpdateResponse(BaseModel):
-    message: str = Field("User successfully updated",
-                         example="User successfully updated")
-    user_id: str = Field(..., example="uuid-1234-5678-90ab-cdef")
-    email: str = Field(..., example="john.doe@example.com")
-    name: str = Field(..., example="John Doe")
+    detail: str
+    user: User
 
 
 class UserResponse(BaseModel):
