@@ -13,27 +13,6 @@ document.addEventListener("DOMContentLoaded", async function () {
     loadPendingProducts(token);
 });
 
-// Получение токена из базы данных
-async function getTokenFromDatabase() {
-    const userId = localStorage.getItem("user_id");
-    const response = await fetch(`/get-user-token/${userId}`, {
-        headers: { "Content-Type": "application/json" }
-    });
-
-    const data = await response.json();
-    const token = data.access_token;
-    const expiresAt = new Date(data.expires_at);
-
-    // Проверяем истечение срока действия токена
-    if (new Date() >= expiresAt) {
-        console.log("Token expired. Redirecting to login page.");
-        window.location.href = '/login';
-        return null;
-    }
-
-    return token;
-}
-
 // Функция для загрузки списка продуктов, ожидающих одобрения
 async function loadPendingProducts(token) {
     try {

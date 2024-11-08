@@ -1,4 +1,5 @@
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 from uuid import uuid4
 from . import models
 from fastapi import HTTPException
@@ -340,7 +341,9 @@ def get_products_in_warehouse(db: Session, warehouse_id: str):
         if not warehouse:
             raise HTTPException(status_code=404, detail="Warehouse not found")
 
-        return db.query(models.ProductWarehouse).filter(models.ProductWarehouse.warehouse_id == warehouse_id).all()
+        products = db.query(models.ProductWarehouse).filter(
+            models.ProductWarehouse.warehouse_id == warehouse_id).all()
+        return products
     except SQLAlchemyError as e:
         raise HTTPException(
             status_code=500, detail=f"Database error: {str(e)}")

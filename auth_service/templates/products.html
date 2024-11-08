@@ -3,17 +3,19 @@
 {% block title %}Управление продуктами{% endblock %}
 
 {% block content %}
-<h2>Управление продуктами</h2>
+<h2 class="text-center my-4">Управление продуктами</h2>
 
 <!-- Кнопка для открытия модального окна добавления продукта -->
-<button id="add-new-product-btn" class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#addProductModal">
-    Добавить новый продукт
-</button>
+ <div class="text-end mb-3">
+    <button id="add-new-product-btn" class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#addProductModal">
+        Добавить новый продукт
+    </button>
+</div>
 
 <!-- Форма поиска продукта по названию -->
-<div class="mb-3">
+<div class="input-group mb-4">
     <input type="text" class="form-control" id="search-name" placeholder="Введите название для поиска">
-    <button class="btn btn-secondary mt-2" onclick="searchProduct()">Найти</button>
+    <button class="btn btn-outline-secondary" onclick="searchProduct()">Найти</button>
 </div>
 
 <!-- Модальное окно для добавления нового продукта -->
@@ -30,7 +32,7 @@
                 <form id="add-product-form">
                     <div class="mb-3">
                         <label for="add-name" class="form-label">Название продукта</label>
-                        <input type="text" class="form-control" id="add-name" required>
+                        <input type="text" class="form-control" id="add-name" placeholder="Введите название продукта" required>
                         <small id="nameError" class="text-danger" style="display: none;">
                             Название продукта обязательно, от 3 до 100 символов, только буквы и цифры.
                         </small>
@@ -38,7 +40,7 @@
 
                     <div class="mb-3">
                         <label for="add-description" class="form-label">Описание</label>
-                        <input type="text" class="form-control" id="add-description">
+                        <input type="text" class="form-control" id="add-description" placeholder="Введите описание">
                         <small id="descriptionError" class="text-danger" style="display: none;">
                             Описание не должно превышать 500 символов.
                         </small>
@@ -46,23 +48,23 @@
 
                     <div class="mb-3">
                         <label for="add-category" class="form-label">Категория</label>
-                        <input type="text" class="form-control" id="add-category">
+                        <input type="text" class="form-control" id="add-category" placeholder="Введите категорию">
                         <small id="categoryError" class="text-danger" style="display: none;">
                             Категория должна быть до 50 символов, только буквы и цифры.
                         </small>
                     </div>
 
                     <div class="mb-3">
-                        <label for="add-price" class="form-label">Цена</label>
-                        <input type="number" class="form-control" id="add-price" step="0.01" required>
+                        <label for="add-price" class="form-label">Цена (руб)</label>
+                        <input type="number" class="form-control" id="add-price" step="0.01" placeholder="Введите цену за 1 штуку продукта" required>
                         <small id="priceError" class="text-danger" style="display: none;">
                             Цена обязательна, положительное число с двумя знаками после запятой, максимум 10 цифр.
                         </small>
                     </div>
 
                     <div class="mb-3">
-                        <label for="add-stock-quantity" class="form-label">Количество на складе</label>
-                        <input type="number" class="form-control" id="add-stock-quantity" required>
+                        <label for="add-stock-quantity" class="form-label">Количество продукта</label>
+                        <input type="number" class="form-control" id="add-stock-quantity" placeholder="Введите количество продукта" required >
                         <small id="stockQuantityError" class="text-danger" style="display: none;">
                             Количество должно быть целым числом, не меньше 0.
                         </small>
@@ -85,16 +87,16 @@
                     </div>
 
                     <div class="mb-3">
-                        <label for="add-weight" class="form-label">Вес продукта</label>
-                        <input type="number" class="form-control" id="add-weight" step="0.01">
+                        <label for="add-weight" class="form-label">Вес партии продукта (кг)</label>
+                        <input type="number" class="form-control" id="add-weight" step="0.01" placeholder="Введите вес партии продукта">
                         <small id="weightError" class="text-danger" style="display: none;">
                             Вес должен быть положительным числом, максимум 6 цифр (включая 2 знака после запятой).
                         </small>
                     </div>
 
                     <div class="mb-3">
-                        <label for="add-dimensions" class="form-label">Габариты продукта</label>
-                        <input type="text" class="form-control" id="add-dimensions">
+                        <label for="add-dimensions" class="form-label">Габариты продукта (1х1х1 метра)</label>
+                        <input type="text" class="form-control" id="add-dimensions" placeholder="Введите габариты в формате 1х1х1">
                         <small id="dimensionsError" class="text-danger" style="display: none;">
                             Габариты должны содержать до 100 символов и допускают только цифры и символ "х".
                         </small>
@@ -102,7 +104,7 @@
 
                     <div class="mb-3">
                         <label for="add-manufacturer" class="form-label">Производитель</label>
-                        <input type="text" class="form-control" id="add-manufacturer">
+                        <input type="text" class="form-control" id="add-manufacturer" placeholder="Введите производителя продукта">
                         <small id="manufacturerError" class="text-danger" style="display: none;">
                             Производитель может содержать только буквы и цифры, максимум 100 символов.
                         </small>
@@ -128,23 +130,23 @@
                     <input type="hidden" id="edit-product-id">
                     <div class="mb-3">
                         <label for="edit-name" class="form-label">Название продукта</label>
-                        <input type="text" class="form-control" id="edit-name" required>
+                        <input type="text" class="form-control" id="edit-name" placeholder="Введите название продукта" required>
                     </div>
                     <div class="mb-3">
                         <label for="edit-description" class="form-label">Описание</label>
-                        <input type="text" class="form-control" id="edit-description" required>
+                        <input type="text" class="form-control" id="edit-description" placeholder="Введите описание" required>
                     </div>
                     <div class="mb-3">
                         <label for="edit-category" class="form-label">Категория</label>
-                        <input type="text" class="form-control" id="edit-category">
+                        <input type="text" class="form-control" id="edit-category" placeholder="Введите категорию">
                     </div>
                     <div class="mb-3">
-                        <label for="edit-price" class="form-label">Цена</label>
-                        <input type="number" class="form-control" id="edit-price" step="0.01">
+                        <label for="edit-price" class="form-label">Цена (руб)</label>
+                        <input type="number" class="form-control" id="edit-price" step="0.01" placeholder="Введите цену за 1 штуку продукта">
                     </div>
                     <div class="mb-3">
                         <label for="edit-stock-quantity" class="form-label">Количество на складе</label>
-                        <input type="number" class="form-control" id="edit-stock-quantity">
+                        <input type="number" class="form-control" id="edit-stock-quantity" placeholder="Введите количество продукта">
                     </div>
                     <div class="mb-3">
                         <label for="edit-supplier-id" class="form-label">Поставщик</label>
@@ -157,16 +159,16 @@
                         <input type="file" class="form-control" id="edit-image-url" accept=".png, .jpeg, .jpg">
                     </div>
                     <div class="mb-3">
-                        <label for="edit-weight" class="form-label">Вес продукта</label>
-                        <input type="number" class="form-control" id="edit-weight" step="0.01">
+                        <label for="edit-weight" class="form-label">Вес продукта (кг)</label>
+                        <input type="number" class="form-control" id="edit-weight" step="0.01" placeholder="Введите вес партии продукта">
                     </div>
                     <div class="mb-3">
-                        <label for="edit-dimensions" class="form-label">Габариты продукта</label>
-                        <input type="text" class="form-control" id="edit-dimensions">
+                        <label for="edit-dimensions" class="form-label">Габариты продукта (1х1х1 метра)</label>
+                        <input type="text" class="form-control" id="edit-dimensions" placeholder="Введите габариты в формате 1х1х1">
                     </div>
                     <div class="mb-3">
                         <label for="edit-manufacturer" class="form-label">Производитель</label>
-                        <input type="text" class="form-control" id="edit-manufacturer">
+                        <input type="text" class="form-control" id="edit-manufacturer" placeholder="Введите производителя продукта">
                     </div>
                     <button type="submit" class="btn btn-primary">Сохранить изменения</button>
                 </form>
@@ -176,17 +178,18 @@
 </div>
 
 <!-- Таблица продуктов -->
-<div class="card">
+<div class="card shadow-sm">
     <div class="card-body">
-        <h5 class="card-title">Список продуктов</h5>
-        <table class="table table-striped" id="products-table">
-            <thead>
+        <h5 class="card-title mb-3">Список продуктов</h5>
+        <table class="table align-middle" id="products-table">
+            <thead class="table-light">
                 <tr>
-                    <th>Название</th>
-                    <th>Описание</th>
-                    <th>Категория</th>
-                    <th>Цена</th>
-                    <th>Действия</th>
+                    <th scope="col">ID</th>
+                    <th scope="col">Название</th>
+                    <th scope="col">Описание</th>
+                    <th scope="col">Категория</th>
+                    <th scope="col">Цена</th>
+                    <th scope="col" class="text-center">Действия</th>
                 </tr>
             </thead>
             <tbody>

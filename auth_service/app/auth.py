@@ -12,31 +12,42 @@ from app.models import Token
 SECRET_KEY = SECRET_KEY
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
+REFRESH_TOKEN_EXPIRE_DAYS = 7
 
 
-def create_access_token(data: dict, db: Session):
+def create_tokens(data: dict, db: Session):
     user_id = data.get("sub")
 
     # Удаляем старый токен для пользователя
     db.query(Token).filter(Token.user_id == user_id).delete()
     db.commit()
 
-    # Генерируем и сохраняем новый токен
+    # Создаем access token
     to_encode = data.copy()
-    expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    to_encode.update({"exp": expire})
-    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    access_expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    to_encode.update({"exp": access_expire})
+    access_token = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
+    # Создаем refresh token с более длительным сроком действия
+    refresh_expire = datetime.utcnow() + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
+    refresh_token_data = data.copy()
+    refresh_token_data.update({"exp": refresh_expire})
+    refresh_token = jwt.encode(
+        refresh_token_data, SECRET_KEY, algorithm=ALGORITHM)
+
+    # Сохраняем токены в БД
     new_token = Token(
-        token=encoded_jwt,
+        access_token=access_token,
+        refresh_token=refresh_token,
         user_id=user_id,
-        expires_at=expire  # Заполняем время истечения токена
+        expires_at=access_expire,
+        refresh_expires_at=refresh_expire
     )
     db.add(new_token)
     db.commit()
 
-    logger.log_message(f"Created new token for: {user_id}")
-    return encoded_jwt
+    logger.log_message(f"Created new access and refresh tokens for: {user_id}")
+    return {"access_token": access_token, "refresh_token": refresh_token}
 
 
 def verify_token(token: str, db: Session):
@@ -47,8 +58,8 @@ def verify_token(token: str, db: Session):
 
         # Проверяем, что токен активен, существует и не истек
         token_record = db.query(Token).filter(
-            Token.user_id == user_id, Token.token == token).first()
-        if not token_record or token_record.expires_at < datetime.utcnow():
+            Token.user_id == user_id, Token.access_token == token).first()
+        if not token_record:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Inactive, expired, or invalid token"
@@ -64,6 +75,45 @@ def verify_token(token: str, db: Session):
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid token"
         )
+
+
+def refresh_access_token(refresh_token: str, db: Session):
+    """
+    Проверяет refresh token и возвращает новый access token, если refresh token действителен.
+    """
+    try:
+        # Декодируем refresh token и извлекаем user_id
+        payload = jwt.decode(refresh_token, SECRET_KEY, algorithms=[ALGORITHM])
+        user_id = payload.get("sub")
+
+        # Проверка наличия токена в БД и его срока действия
+        token_record = db.query(Token).filter(
+            Token.user_id == user_id,
+            Token.refresh_token == refresh_token,
+            Token.refresh_expires_at > datetime.utcnow()
+        ).first()
+
+        if not token_record:
+            raise HTTPException(
+                status_code=403, detail="Invalid or expired refresh token")
+
+        # Генерируем новый access token
+        new_access_token = jwt.encode(
+            {"sub": user_id, "exp": datetime.utcnow(
+            ) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)},
+            SECRET_KEY,
+            algorithm=ALGORITHM
+        )
+
+        # Обновляем access token в БД
+        token_record.access_token = new_access_token
+        token_record.expires_at = datetime.utcnow(
+        ) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+        db.commit()
+
+        return {"access_token": new_access_token}
+    except JWTError:
+        raise HTTPException(status_code=403, detail="Invalid refresh token")
 
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")

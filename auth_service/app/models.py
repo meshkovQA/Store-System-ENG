@@ -22,6 +22,8 @@ class Token(Base):
     __tablename__ = "tokens"
 
     user_id = Column(String, primary_key=True, index=True)
-    token = Column(String, unique=True)
+    access_token = Column(String, unique=True)
+    refresh_token = Column(String, unique=True)
     created_at = Column(DateTime, default=datetime.utcnow)
-    expires_at = Column(DateTime)
+    expires_at = Column(DateTime)  # Время истечения access token
+    refresh_expires_at = Column(DateTime)  # Время истечения refresh token

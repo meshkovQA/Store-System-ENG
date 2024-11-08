@@ -1,10 +1,14 @@
 //user_list.js
+// Объявляем переменные для списка всех пользователей и количества пользователей на странице
+let allUsers = [];
+const usersPerPage = 10;
+
+// Загружаем токен и получаем список пользователей при загрузке страницы
 document.addEventListener("DOMContentLoaded", async function () {
     console.log("Page loaded, starting token retrieval...");
     const token = await getTokenFromDatabase();
 
     if (!token) {
-
         console.log("No token found, redirecting to login page.");
         // Перенаправляем на страницу логина, если токен отсутствует
         window.location.href = '/login';
@@ -15,27 +19,6 @@ document.addEventListener("DOMContentLoaded", async function () {
         getUserList(token);
     }
 });
-
-//Получение токена из базы данных
-async function getTokenFromDatabase() {
-    const userId = localStorage.getItem("user_id");
-    const response = await fetch(`/get-user-token/${userId}`, {
-        headers: { "Content-Type": "application/json" }
-    });
-
-    const data = await response.json();
-    const token = data.access_token;
-    const expiresAt = new Date(data.expires_at);
-
-    // Проверяем истечение срока действия токена
-    if (new Date() >= expiresAt) {
-        console.log("Token expired. Redirecting to login page.");
-        window.location.href = '/login';
-        return null;
-    }
-
-    return token;
-}
 
 
 // Функция для получения списка пользователей с API
@@ -55,7 +38,9 @@ function getUserList(token) {
         .then(data => {
             console.log("User list data:", data);  // Лог данных
             if (Array.isArray(data)) {
-                renderUserTable(data);
+                allUsers = data;  // Сохраняем всех пользователей
+                renderUserTable(allUsers.slice(0, usersPerPage));  // Показываем первую страницу
+                renderPagination(Math.ceil(allUsers.length / usersPerPage));
             } else {
                 console.error("User list is not in expected format");
             }
@@ -96,6 +81,27 @@ function renderUserTable(users) {
             promoteUserToSuperadmin(userId);
         });
     });
+}
+
+// Функция для рендеринга элементов управления страницей
+function renderPagination(totalPages) {
+    const paginationContainer = document.getElementById('paginationContainer');
+    paginationContainer.innerHTML = '';
+
+    for (let page = 1; page <= totalPages; page++) {
+        const pageItem = document.createElement('li');
+        pageItem.className = 'page-item';
+        pageItem.innerHTML = `<a class="page-link" href="#">${page}</a>`;
+
+        pageItem.addEventListener('click', (e) => {
+            e.preventDefault();
+            const start = (page - 1) * usersPerPage;
+            const end = start + usersPerPage;
+            renderUserTable(allUsers.slice(start, end));
+        });
+
+        paginationContainer.appendChild(pageItem);
+    }
 }
 
 // Поиск по таблице пользователей

@@ -13,6 +13,7 @@ from app.database import get_session_local
 from app.auth import verify_token
 import threading
 import uuid
+import requests
 
 app = FastAPI(
     # Укажите название вашего микросервиса здесь
@@ -85,6 +86,17 @@ async def pending_approval_page(request: Request):
 @app.get("/user-list", response_class=HTMLResponse, include_in_schema=False)
 def get_user_list(request: Request):
     return templates.TemplateResponse("userlist.html", {"request": request})
+
+
+@app.get("/warehouses_detail/{warehouse_id}", response_class=HTMLResponse, include_in_schema=False)
+def warehouse_page(
+        warehouse_id: str, request: Request):
+
+    # Передаем данные о складе и продуктах в шаблон
+    return templates.TemplateResponse("product_in_warehouse.html", {
+        "request": request,
+        "warehouse": warehouse_id,
+    })
 
 
 # Обновляем OpenAPI-схему для отображения Bearer токена в Swagger UI

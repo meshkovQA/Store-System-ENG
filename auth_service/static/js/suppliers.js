@@ -30,9 +30,9 @@ document.addEventListener("DOMContentLoaded", async function () {
         const target = event.target;
         const supplierId = target.dataset.id;
 
-        if (target.classList.contains("btn-warning")) {
+        if (target.classList.contains("btn-outline-warning")) {
             openEditModal(supplierId);
-        } else if (target.classList.contains("btn-danger")) {
+        } else if (target.classList.contains("btn-outline-danger")) {
             const confirmed = confirm("Вы уверены, что хотите удалить поставщика?");
             if (confirmed) deleteSupplier(supplierId);
         }
@@ -70,27 +70,6 @@ async function openEditModal(supplierId) {
 
     // Открываем модальное окно для редактирования
     $("#editSupplierModal").modal("show");
-}
-
-//Получение токена из базы данных
-async function getTokenFromDatabase() {
-    const userId = localStorage.getItem("user_id");
-    const response = await fetch(`/get-user-token/${userId}`, {
-        headers: { "Content-Type": "application/json" }
-    });
-
-    const data = await response.json();
-    const token = data.access_token;
-    const expiresAt = new Date(data.expires_at);
-
-    // Проверяем истечение срока действия токена
-    if (new Date() >= expiresAt) {
-        console.log("Token expired. Redirecting to login page.");
-        window.location.href = '/login';
-        return null;
-    }
-
-    return token;
 }
 
 //Использование токена для инициализации поставщиков
@@ -215,9 +194,9 @@ function renderSuppliersTable(suppliers) {
             <td>${supplier.country}</td>
             <td>${supplier.city}</td>
             <td>${supplier.website}</td>
-            <td>
-                <button class="btn btn-sm btn-warning" data-id="${supplier.supplier_id}">Редактировать</button>
-                <button class="btn btn-sm btn-danger" data-id="${supplier.supplier_id}">Удалить</button>
+            <td class="text-center">
+                <button class="btn btn-sm btn-outline-warning mt-2" data-id="${supplier.supplier_id}">Редактировать</button>
+                <button class="btn btn-sm btn-outline-danger mt-2" data-id="${supplier.supplier_id}">Удалить</button>
             </td>
         `;
         tableBody.appendChild(row);

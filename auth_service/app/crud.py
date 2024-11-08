@@ -1,7 +1,7 @@
 # crud.py
 from sqlalchemy.orm import Session
 from app.models import User, Token
-from app.schemas import UserCreate
+from app.schemas import UserCreate, UserUpdate
 from app.auth import get_password_hash
 import uuid
 from app import logger, schemas
@@ -62,21 +62,20 @@ def get_user_by_id(db: Session, user_id: uuid.UUID):
     return db.query(User).filter(User.id == user_id).first()
 
 
-def edit_user(db: Session, user_id: str, user_data: schemas.UserUpdate):  # Редактирование пользователя
+def edit_user(db: Session, user_id: str, user_data: UserUpdate):
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
         return None
 
-    if user_data.email:
+    # Обновляем только те поля, которые переданы в запросе
+    if user_data.email is not None:
         user.email = user_data.email
-    if user_data.name:
+    if user_data.name is not None:
         user.name = user_data.name
 
-    # При необходимости можно добавить другие поля для редактирования
     db.commit()
     db.refresh(user)
-    logger.log_message(
-        f"User {user.email} has been updated in the database")
+    logger.log_message(f"User {user.email} has been updated in the database")
     return user
 
 

@@ -20,15 +20,37 @@ redis_client = redis.Redis(host='redis', port=6379, db=0)
 security = HTTPBearer()
 
 
-@router.get("/verify-token/", summary="Verify the validity of a token", include_in_schema=False)
-async def verify_token_route(credentials: HTTPAuthorizationCredentials = Depends(security)):
-    token = credentials.credentials
-    # Проверяем токен
+@router.get("/get-user-token/{user_id}", response_model=schemas.Token, tags=["Profile"], summary="Get user token")
+def get_user_token(user_id: str, db: Session = Depends(database.get_session_local)):
+    # Попробуем получить токен из базы данных
+    token_record = crud.get_user_token(db, user_id=user_id)
+    logger.log_message(f"Token for user {user_id} found in DB.")
+    if not token_record:
+        logger.log_message(f"Token for user {user_id} not found in DB.")
+        raise HTTPException(status_code=404, detail="Token not found")
+
+    return {
+        "access_token": token_record.access_token,
+        "token_type": "bearer"
+    }
+
+
+@router.post("/refresh-token", response_model=schemas.TokenResponseSchema, include_in_schema=False)
+async def refresh_token_endpoint(request: Request, db: Session = Depends(get_session_local)):
     try:
-        payload = auth.verify_token(token)
-        return {"status": "Token is valid", "payload": payload}
+        body = await request.json()
+        refresh_token = body.get("refresh_token")
+
+        if not refresh_token:
+            raise HTTPException(
+                status_code=422, detail="Refresh token is required")
+
+        # Получаем новый access token
+        new_token_data = auth.refresh_access_token(refresh_token, db)
+        return new_token_data
+
     except HTTPException as e:
-        raise HTTPException(status_code=e.status_code, detail=e.detail)
+        return {"detail": e.detail}
 
 
 # Рендеринг страницы регистрации
@@ -42,61 +64,48 @@ def register_page(request: Request):
     422: {"description": "Email already registered or invalid data"},
 }, tags=["Profile"], summary="Register new user")
 def register_user(user: schemas.UserCreate, db: Session = Depends(database.get_session_local)):
-    user_email = user.email.lower()
-    db_user = crud.get_user_by_email(db, email=user_email)
-    if db_user:
-        logger.log_message(f"""Registration failed: email {
-                           user.email} is already existed.""")
-        raise HTTPException(
-            status_code=422, detail="Email already registered")
+    try:
+        user_email = user.email.lower()
+        db_user = crud.get_user_by_email(db, email=user_email)
+        if db_user:
+            logger.log_message(f"""Registration failed: email {
+                user.email} is already existed.""")
+            raise HTTPException(
+                status_code=422, detail="Email already registered")
 
-    # Проверка имени пользователя
-    if not user.name.strip():
-        raise HTTPException(
-            status_code=422, detail="Name contains invalid characters."
-        )
-    # Проверка пароля
-    if not user.password.strip():
-        raise HTTPException(
-            status_code=422, detail="Password contains invalid characters."
-        )
-    # Проверка email
-    if not user.email.strip():
-        raise HTTPException(
-            status_code=422, detail="Invalid email format."
-        )
+        # Проверка имени пользователя
+        if not user.name.strip():
+            raise HTTPException(
+                status_code=422, detail="Name contains invalid characters."
+            )
+        # Проверка пароля
+        if not user.password.strip():
+            raise HTTPException(
+                status_code=422, detail="Password contains invalid characters."
+            )
+        # Проверка email
+        if not user.email.strip():
+            raise HTTPException(
+                status_code=422, detail="Invalid email format."
+            )
 
-    # Суперадмин не может быть установлен через регистрацию
-    created_user = crud.create_user(db=db, user=user.copy(
-        update={"email": user_email}), is_superadmin=False)
-    logger.log_message(f"User is registered: {user.email}")
+        # Суперадмин не может быть установлен через регистрацию
+        created_user = crud.create_user(db=db, user=user.copy(
+            update={"email": user_email}), is_superadmin=False)
+        logger.log_message(f"User is registered: {user.email}")
 
-    # Перенаправляем на страницу авторизации
-    return JSONResponse(
-        content={
+        # Перенаправляем на страницу авторизации
+        return {
             "message": "User successfully created",
-            "user_id": str(created_user.id),
-            "email": created_user.email,
-            "name": created_user.name
+            "user": {
+                "id": created_user.id,
+                "name": created_user.name,
+                "email": created_user.email
+            }
         }
-    )
-
-# Получение токена для пользователя
-
-
-@router.get("/get-user-token/{user_id}", response_model=schemas.Token, tags=["Profile"], summary="Get user token")
-def get_user_token(user_id: str, db: Session = Depends(database.get_session_local)):
-    # Попробуем получить токен из базы данных
-    token_record = crud.get_user_token(db, user_id=user_id)
-    logger.log_message(f"Token for user {user_id} found in DB.")
-    if not token_record:
-        logger.log_message(f"Token for user {user_id} not found in DB.")
-        raise HTTPException(status_code=404, detail="Token not found")
-
-    return {
-        "access_token": token_record.token,
-        "token_type": "bearer"
-    }
+    except Exception as e:
+        logger.log_message(f"An error occurred: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal Server Error")
 
 
 # Рендеринг страницы авторизации
@@ -119,14 +128,15 @@ def login_for_access_token(form_data: schemas.Login, db: Session = Depends(datab
             status_code=400, detail="Invalid email or password")
 
     user_id_str = str(user.id)
-    access_token = auth.create_access_token(
+    tokens = auth.create_tokens(
         data={"sub": user_id_str, "is_superadmin": user.is_superadmin}, db=db)
     logger.log_message(f"User is logged in: {form_data.email}")
 
     return {
         "user_id": user_id_str,
         "message": "User successfully logged in",
-        "access_token": access_token,
+        "access_token": tokens["access_token"],
+        "refresh_token": tokens["refresh_token"],
         "token_type": "bearer"
     }
 
@@ -205,30 +215,36 @@ def get_users(db: Session = Depends(get_session_local),
     404: {"description": "User not found", "content": {"application/json": {"example": {"detail": "User not found"}}}},
 }, tags=["Superadmin"], summary="Edit user")
 def edit_user(user_id: str, form_data: schemas.UserUpdate, db: Session = Depends(get_session_local), credentials: HTTPAuthorizationCredentials = Depends(security)):
-    # Проверяем права через токен
-    token = credentials.credentials
-    token_data = auth.verify_token(token, db=db)
+    try:
+        # Проверяем права через токен
+        token = credentials.credentials
+        user_data_from_token = auth.verify_token(token)
 
-    # Проверяем права (например, только супер-админ может изменять пользователей)
-    requesting_user = crud.get_user_by_id(db, uuid.UUID(token_data["sub"]))
+        # Проверяем права (например, только супер-админ может изменять пользователей)
+        requesting_user = crud.get_user_by_email(
+            db, user_data_from_token["sub"])
 
-    if not requesting_user.is_superadmin:
-        raise HTTPException(status_code=403, detail="Insufficient rights")
+        if not requesting_user.is_superadmin:
+            raise HTTPException(status_code=403, detail="Insufficient rights")
 
-    user = crud.edit_user(db, user_id, form_data)
+        user = crud.edit_user(db, user_id, form_data)
 
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
 
-    logger.log_message(f"User {user.email} has been updated.")
-    return {
-        "detail": "User successfully updated",
-        "user": {
-            "id": str(user.id),
-            "name": user.name,
-            "email": user.email
+        logger.log_message(f"User {user.email} has been updated.")
+
+        return {
+            "detail": "User successfully updated",
+            "user": {
+                "id": user.id,
+                "name": user.name,
+                "email": user.email
+            }
         }
-    }
+    except Exception as e:
+        logger.log_message(f"An error occurred: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal Server Error")
 
 # Пример маршрута для удаления пользователя с проверкой токена через HTTPBearer
 

@@ -43,18 +43,15 @@ class UserCreate(BaseModel):
         orm_mode = True  # Для работы с ORM (если используется SQLAlchemy)
 
 
-class RegistrationResponse(BaseModel):
-    message: str = Field("User successfully created",
-                         example="User successfully created")
-    user_id: str = Field(..., example="uuid-1234-5678-90ab-cdef")
-    email: str = Field(..., example="john.doe@example.com")
-    name: str = Field(..., example="John Doe")
-
-
 class User(BaseModel):
     id: UUID
     name: str
     email: EmailStr
+
+
+class RegistrationResponse(BaseModel):
+    message: str
+    user: User
 
 
 class Login(BaseModel):  # Модель для аутентификации пользователя (логин)
@@ -71,10 +68,11 @@ class LoginResponse(BaseModel):
 
 
 class LoginResponse(BaseModel):
+    user_id: str
     message: str
     access_token: str
-    token_type: str
-    user_id: str
+    refresh_token: str
+    token_type: str = "bearer"
 
     class Config:
         schema_extra = {
@@ -92,9 +90,14 @@ class Token(BaseModel):
     token_type: str
 
 
+class TokenResponseSchema(BaseModel):
+    access_token: str
+
+
 class UserUpdate(BaseModel):
-    email: EmailStr  # Позволяет изменить email
-    name: constr(min_length=3, max_length=50)   # Позволяет изменить имя
+    email: Optional[EmailStr]  # Email является необязательным
+    # Имя также является необязательным
+    name: Optional[constr(min_length=3, max_length=50)]
 
     @validator("name")
     def validate_name(cls, value):
@@ -119,11 +122,8 @@ class UserUpdate(BaseModel):
 
 
 class UserUpdateResponse(BaseModel):
-    message: str = Field("User successfully updated",
-                         example="User successfully updated")
-    user_id: str = Field(..., example="uuid-1234-5678-90ab-cdef")
-    email: str = Field(..., example="john.doe@example.com")
-    name: str = Field(..., example="John Doe")
+    detail: str
+    user: User
 
 
 class UserResponse(BaseModel):

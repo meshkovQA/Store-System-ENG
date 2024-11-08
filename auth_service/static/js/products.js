@@ -3,11 +3,9 @@ document.addEventListener("DOMContentLoaded", async function () {
     const token = await getTokenFromDatabase();
 
     if (!token) {
-        // Перенаправляем на страницу логина, если токен отсутствует
-        window.location.href = '/login';
+        // Если токен недействителен, перенаправление на страницу логина уже выполнено
         return;
     }
-
 
     initializeProducts();
 
@@ -96,9 +94,9 @@ document.addEventListener("DOMContentLoaded", async function () {
         const target = event.target;
         const productId = target.dataset.id;
 
-        if (target.classList.contains("btn-warning")) {
+        if (target.classList.contains("btn-outline-warning")) {
             openEditProductModal(productId);
-        } else if (target.classList.contains("btn-danger")) {
+        } else if (target.classList.contains("btn-outline-danger")) {
             const confirmed = confirm("Вы уверены, что хотите удалить продукт?");
             if (confirmed) deleteProduct(productId);
         }
@@ -179,34 +177,14 @@ async function openEditProductModal(productId) {
     document.getElementById("edit-name").value = product.name;
     document.getElementById("edit-description").value = product.description;
     document.getElementById("edit-category").value = product.category || "";
-    document.getElementById("edit-price").value = product.price || "";
+    document.getElementById("edit-price").value = product.price + " руб" || "";
     document.getElementById("edit-stock-quantity").value = product.stock_quantity || "";
     loadSuppliers("#edit-supplier-id", product.supplier_id);  // Загрузка списка поставщиков с текущим значением
-    document.getElementById("edit-weight").value = product.weight || "";
-    document.getElementById("edit-dimensions").value = product.dimensions || "";
+    document.getElementById("edit-weight").value = product.weight + " кг" || "";
+    document.getElementById("edit-dimensions").value = product.dimensions + " метра" || "";
     document.getElementById("edit-manufacturer").value = product.manufacturer || "";
 
     $("#editProductModal").modal("show");
-}
-
-async function getTokenFromDatabase() {
-    const userId = localStorage.getItem("user_id");
-    const response = await fetch(`/get-user-token/${userId}`, {
-        headers: { "Content-Type": "application/json" }
-    });
-
-    const data = await response.json();
-    const token = data.access_token;
-    const expiresAt = new Date(data.expires_at);
-
-    // Проверяем истечение срока действия токена
-    if (new Date() >= expiresAt) {
-        console.log("Token expired. Redirecting to login page.");
-        window.location.href = '/login';
-        return null;
-    }
-
-    return token;
 }
 
 async function initializeProducts() {
@@ -297,13 +275,14 @@ function renderProductsTable(products) {
     products.forEach((product) => {
         const row = document.createElement("tr");
         row.innerHTML = `
+            <td>${product.product_id}</td>
             <td>${product.name}</td>
             <td>${product.description}</td>
             <td>${product.category || ""}</td>
-            <td>${product.price || ""}</td>
-            <td>
-                <button class="btn btn-sm btn-warning" data-id="${product.product_id}">Редактировать</button>
-                <button class="btn btn-sm btn-danger" data-id="${product.product_id}">Удалить</button>
+            <td>${product.price + " руб" || ""}</td>
+            <td class="text-center">
+                <button class="btn btn-sm btn-outline-warning mt-2" data-id="${product.product_id}">Редактировать</button>
+                <button class="btn btn-sm btn-outline-danger mt-2" data-id="${product.product_id}">Удалить</button>
             </td>
         `;
         tableBody.appendChild(row);
