@@ -19,6 +19,12 @@ document.addEventListener("DOMContentLoaded", async function () {
     loadWarehouseInfo(warehouseId);
     // Загрузка информации о продуктах на складе
     loadProducts(warehouseId);
+
+    // Инициализация события для добавления продукта
+    document.getElementById("add-product-form").addEventListener("submit", async (event) => {
+        event.preventDefault();
+        await addProductToWarehouse(warehouseId);
+    });
 });
 
 // Функция для извлечения warehouse_id из URL
@@ -112,19 +118,17 @@ function openAddProductModal() {
 }
 
 // Обработка добавления нового продукта
-document.getElementById("add-product-form").addEventListener("submit", async (event) => {
-    event.preventDefault();
+async function addProductToWarehouse(warehouseId) {
     const token = await getTokenFromDatabase();
     const productId = document.getElementById("product-id").value;
     const quantity = parseInt(document.getElementById("product-quantity").value);
 
-    const response = await fetch(`http://localhost:8002/productinwarehouses/${warehouseId}/${productId}`, {
+    const response = await fetch(`http://localhost:8002/productinwarehouses?warehouse_id=${warehouseId}&product_id=${productId}&quantity=${quantity}`, {
         method: "POST",
         headers: {
             "Authorization": `Bearer ${token}`,
             "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ quantity })
+        }
     });
 
     if (response.ok) {
@@ -134,7 +138,7 @@ document.getElementById("add-product-form").addEventListener("submit", async (ev
     } else {
         alert("Ошибка добавления товара");
     }
-});
+}
 
 // Пагинация
 function renderPagination(totalPages, currentPage) {

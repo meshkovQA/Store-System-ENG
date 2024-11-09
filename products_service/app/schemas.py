@@ -24,17 +24,17 @@ class ProductResponse(BaseModel):
     user_id: str
     name: str
     description: str
-    category: str
-    price: float
+    category: Optional[str] = None
+    price: Optional[float] = None
     stock_quantity: int
     supplier_id: str  # Преобразуем UUID в строку
     is_available: bool
     created_at: datetime
     updated_at: datetime
-    image_url: str
-    weight: float
-    dimensions: str
-    manufacturer: str
+    image_url: Optional[str] = None
+    weight: Optional[float] = None
+    dimensions: Optional[str] = None
+    manufacturer: Optional[str] = None
 
     class Config:
         orm_mode = True

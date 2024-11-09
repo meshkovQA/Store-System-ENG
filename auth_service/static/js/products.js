@@ -144,6 +144,11 @@ function validateProductForm(formPrefix) {
         isValid = false;
     }
 
+    if (!supplierId || supplierId === "undefined") {
+        alert("Пожалуйста, выберите поставщика.");
+        return;
+    }
+
     // Отображение сообщений об ошибках
     if (!isValid) {
         alert(errorMessage);
@@ -206,17 +211,21 @@ async function loadProducts(token) {
 
 async function createProduct() {
     const token = await getTokenFromDatabase();
+    const supplierId = document.getElementById("add-supplier-id").value;
+    console.log("Selected Supplier ID:", supplierId);
+
     const productData = {
         name: document.getElementById("add-name").value.trim(),
         description: document.getElementById("add-description").value.trim(),
         category: document.getElementById("add-category").value.trim(),
         price: parseFloat(document.getElementById("add-price").value) || null,
         stock_quantity: parseInt(document.getElementById("add-stock-quantity").value) || null,
-        supplier_id: document.getElementById("add-supplier-id").value,
+        supplier_id: supplierId,  // Передаем выбранный supplier_id
         weight: parseFloat(document.getElementById("add-weight").value) || null,
         dimensions: document.getElementById("add-dimensions").value.trim(),
         manufacturer: document.getElementById("add-manufacturer").value.trim(),
     };
+    console.log("Supplier ID:", productData.supplier_id);
 
     await fetch("http://localhost:8002/products/", {
         method: "POST",
@@ -300,15 +309,16 @@ async function loadSuppliers(selectorId, selectedSupplierId = null) {
 
     const suppliers = await response.json();
     const select = document.querySelector(selectorId);
-    select.innerHTML = "";
+    select.innerHTML = `<option value="" disabled selected>Выберите поставщика</option>`;
 
     suppliers.forEach((supplier) => {
         const option = document.createElement("option");
-        option.value = supplier.id;
+        option.value = supplier.supplier_id;
         option.textContent = supplier.name;
         if (supplier.id === selectedSupplierId) option.selected = true;
         select.appendChild(option);
     });
+    console.log("Поставщики загружены в выпадающий список:", suppliers);
 }
 
 async function searchProduct() {

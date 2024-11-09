@@ -24,27 +24,27 @@
                 <form id="add-warehouse-form">
                     <div class="mb-3">
                         <label for="add-location" class="form-label">Местоположение</label>
-                        <input type="text" class="form-control" id="add-location" required>
+                        <input type="text" class="form-control" id="add-location" placeholder="Введите местоположение склада" required>
                     </div>
                     <div class="mb-3">
                         <label for="add-manager-name" class="form-label">Имя управляющего</label>
-                        <input type="text" class="form-control" id="add-manager-name">
+                        <input type="text" class="form-control" id="add-manager-name" placeholder="Введите Имя Фамилию управляющего">
                     </div>
                     <div class="mb-3">
                         <label for="add-capacity" class="form-label">Вместимость (куб.м)</label>
-                        <input type="number" class="form-control" id="add-capacity" required>
+                        <input type="number" class="form-control" id="add-capacity" placeholder="Введите вместимость склада" required>
                     </div>
                     <div class="mb-3">
-                        <label for="add-current-stock" class="form-label">Текущий запас</label>
-                        <input type="number" class="form-control" id="add-current-stock" value="0">
+                        <label for="add-current-stock" class="form-label">Количество товаров</label>
+                        <input type="number" class="form-control" id="add-current-stock" value="0" readonly>
                     </div>
                     <div class="mb-3">
                         <label for="add-contact-number" class="form-label">Контактный телефон</label>
-                        <input type="text" class="form-control" id="add-contact-number">
+                        <input type="text" class="form-control" id="add-contact-number" placeholder="Введите телефон склада (+79009999999)">
                     </div>
                     <div class="mb-3">
                         <label for="add-email" class="form-label">Контактный email</label>
-                        <input type="email" class="form-control" id="add-email">
+                        <input type="email" class="form-control" id="add-email" placeholder="Введите email склада">
                     </div>
                     <div class="mb-3">
                         <label for="add-is-active" class="form-label">Активность</label>
@@ -55,7 +55,7 @@
                     </div>
                     <div class="mb-3">
                         <label for="add-area-size" class="form-label">Площадь (кв.м)</label>
-                        <input type="number" class="form-control" id="add-area-size">
+                        <input type="number" class="form-control" id="add-area-size" placeholder="Введите площадь склада">
                     </div>
                     <button type="submit" class="btn btn-primary">Создать склад</button>
                 </form>
@@ -77,27 +77,27 @@
                     <input type="hidden" id="edit-warehouse-id">
                     <div class="mb-3">
                         <label for="edit-location" class="form-label">Местоположение</label>
-                        <input type="text" class="form-control" id="edit-location" required>
+                        <input type="text" class="form-control" id="edit-location" placeholder="Введите местоположение склада" required>
                     </div>
                     <div class="mb-3">
                         <label for="edit-manager-name" class="form-label">Имя управляющего</label>
-                        <input type="text" class="form-control" id="edit-manager-name">
+                        <input type="text" class="form-control" id="edit-manager-name" placeholder="Введите Имя Фамилию управляющего">
                     </div>
                     <div class="mb-3">
                         <label for="edit-capacity" class="form-label">Вместимость (куб.м)</label>
-                        <input type="number" class="form-control" id="edit-capacity" required>
+                        <input type="number" class="form-control" id="edit-capacity" placeholder="Введите вместимость склада" required>
                     </div>
                     <div class="mb-3">
-                        <label for="edit-current-stock" class="form-label">Текущий запас</label>
+                        <label for="edit-current-stock" class="form-label">Количество товаров</label>
                         <input type="number" class="form-control" id="edit-current-stock">
                     </div>
                     <div class="mb-3">
                         <label for="edit-contact-number" class="form-label">Контактный телефон</label>
-                        <input type="text" class="form-control" id="edit-contact-number">
+                        <input type="text" class="form-control" id="edit-contact-number" placeholder="Введите телефон склада (+79009999999)">
                     </div>
                     <div class="mb-3">
                         <label for="edit-email" class="form-label">Контактный email</label>
-                        <input type="email" class="form-control" id="edit-email">
+                        <input type="email" class="form-control" id="edit-email"  placeholder="Введите email склада">
                     </div>
                     <div class="mb-3">
                         <label for="edit-is-active" class="form-label">Активность</label>
@@ -141,7 +141,7 @@
                         <input type="number" class="form-control" id="view-capacity" readonly>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Текущий запас</label>
+                        <label class="form-label">Количество товаров</label>
                         <input type="number" class="form-control" id="view-current-stock" readonly>
                     </div>
                     <div class="mb-3">

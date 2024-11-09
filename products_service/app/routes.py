@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Query
 import asyncio
 from sqlalchemy.orm import Session
 from uuid import UUID
@@ -301,28 +301,24 @@ def get_products_in_warehouse(warehouse_id: UUID, db: Session = Depends(get_sess
     return crud.get_products_in_warehouse(db, warehouse_id=str(warehouse_id))
 
 
-@router.post("/productinwarehouses/{warehouse_id}{product_id}", response_model=schemas.ProductWarehouse, tags=["Product Warehouses Service"], summary="Add product to warehouse")
+@router.post("/productinwarehouses", response_model=schemas.ProductWarehouse, tags=["Product Warehouses Service"], summary="Add product to warehouse")
 def add_product_to_warehouse(
-        warehouse_id: UUID,
-        product_id: UUID,
-        quantity: int,
-        db: Session = Depends(get_session_local), credentials: HTTPAuthorizationCredentials = Depends(security)
+        warehouse_id: UUID = Query(...),
+        product_id: UUID = Query(...),
+        quantity: int = Query(...),
+        db: Session = Depends(get_session_local),
+        credentials: HTTPAuthorizationCredentials = Depends(security)
 ):
     token = credentials.credentials
-    user_data = auth.verify_token_in_other_service(
-        token)  # Проверяем токен через auth.py
+    user_data = auth.verify_token_in_other_service(token)
     if not user_data:
         logger.log_message("Invalid token or unauthorized access")
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
                             detail="Invalid token or unauthorized access")
-    logger.log_message(f"""Adding product {
-                       product_id} to warehouse {warehouse_id} with quantity {quantity}""")
-    return crud.add_product_to_warehouse(
-        db=db,
-        product_id=str(product_id),
-        warehouse_id=str(warehouse_id),
-        quantity=quantity
-    )
+
+    logger.log_message(f"""Adding product {product_id} to warehouse {
+                       warehouse_id} with quantity {quantity}""")
+    return crud.add_product_to_warehouse(db=db, product_id=str(product_id), warehouse_id=str(warehouse_id), quantity=quantity)
 
 
 @router.put("/productinwarehouses/{product_id}", response_model=schemas.ProductWarehouse, tags=["Product Warehouses Service"], summary="Update product in warehouse")

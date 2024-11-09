@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from uuid import uuid4
-from . import models
+from . import models, logger
 from fastapi import HTTPException
 from sqlalchemy.exc import SQLAlchemyError
 from datetime import datetime
@@ -36,6 +36,8 @@ def create_product(db: Session, user_id: str, name: str, description: str, categ
             dimensions=dimensions,
             manufacturer=manufacturer
         )
+
+        logger.log_message(f"Received supplier_id: {supplier_id}")
         db.add(new_product)
         db.commit()
         db.refresh(new_product)
@@ -138,6 +140,10 @@ def delete_product(db: Session, product_id: str):
         db.rollback()
         raise HTTPException(
             status_code=500, detail=f"Database error: {str(e)}")
+
+
+def search_products_by_name(db: Session, name: str):
+    return db.query(models.Product).filter(models.Product.name.ilike(f"%{name}%")).all()
 
 # ---- CRUD операции для поставщиков (Suppliers) ----
 
@@ -325,7 +331,13 @@ def add_product_to_warehouse(db: Session, product_id: str, warehouse_id: str, qu
             quantity=quantity
         )
         db.add(new_record)
+
+        # Обновление количества товаров на складе
+        warehouse.current_stock = (warehouse.current_stock or 0) + quantity
+        warehouse.updated_at = datetime.utcnow()  # Обновляем timestamp
+
         db.commit()
+        db.refresh(warehouse)  # Обновление экземпляра склада
         return new_record
     except SQLAlchemyError as e:
         db.rollback()
