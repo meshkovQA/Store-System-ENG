@@ -1,6 +1,6 @@
 # routes.py
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status, Path
 import uuid
 from fastapi.responses import RedirectResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
@@ -144,13 +144,25 @@ def login_for_access_token(form_data: schemas.Login, db: Session = Depends(datab
 # Повышение прав до супер-админа (только для супер-админа)
 @router.put("/users/promote/{user_id}", status_code=200, tags=["Superadmin"], summary="Promote to superadmin", responses={
     200: {"description": "User successfully promoted to super admin", "content": {"application/json": {"example": {"detail": "User successfully promoted to super admin"}}}},
+    400: {"description": "Bad Request - User ID is required", "content": {"application/json": {"example": {"detail": "User ID is required"}}}},
     403: {"description": "Insufficient rights", "content": {"application/json": {"example": {"detail": "Insufficient rights"}}}},
     404: {"description": "User not found", "content": {"application/json": {"example": {"detail": "User not found"}}}},
     422: {"description": "This user is already a super admin", "content": {"application/json": {"example": {"detail": "This user is already a super admin"}}}},
+    422: {"description": "Invalid UUID format", "content": {"application/json": {"example": {"detail": "Invalid UUID format"}}}},
 })
 def promote_user_to_superadmin(user_id: str,
                                db: Session = Depends(get_session_local),
                                credentials: HTTPAuthorizationCredentials = Depends(security)):
+    # Проверка, что user_id не пустой
+    if not user_id.strip():
+        raise HTTPException(status_code=400, detail="User ID is required")
+
+    # Проверка, что user_id имеет корректный формат UUID
+    try:
+        user_uuid = uuid.UUID(user_id)
+    except ValueError:
+        raise HTTPException(status_code=422, detail="Invalid UUID format")
+
     # Получаем токен из заголовка Authorization
     token = credentials.credentials
 
@@ -162,7 +174,7 @@ def promote_user_to_superadmin(user_id: str,
     if not requesting_user.is_superadmin:
         raise HTTPException(status_code=403, detail="Insufficient rights")
 
-    user = crud.get_user_by_id(db, uuid.UUID(user_id))
+    user = crud.get_user_by_id(db, user_uuid)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
@@ -172,9 +184,11 @@ def promote_user_to_superadmin(user_id: str,
             status_code=422, detail="This user is already a super admin")
 
     # Повышаем пользователя до супер-админа
-    crud.promote_to_superadmin(db, user_id)
+    promoted_user = crud.promote_to_superadmin(db, user_uuid)
+    if not promoted_user:
+        raise HTTPException(status_code=404, detail="User not found")
 
-    logger.log_message(f"User {user.email} promoted to super admin.")
+    logger.log_message(f"User {promoted_user.email} promoted to super admin.")
     return {"detail": "User successfully promoted to super admin"}
 
 
@@ -211,52 +225,85 @@ def get_users(db: Session = Depends(get_session_local),
 # Пример маршрута для редактирования пользователя с проверкой токена через HTTPBearer
 @router.put("/users/edit/{user_id}", response_model=schemas.UserUpdateResponse, responses={
     200: {"description": "User successfully updated", "model": schemas.UserUpdateResponse},
+    400: {"description": "Bad Request - User ID is required", "content": {"application/json": {"example": {"detail": "User ID is required"}}}},
     403: {"description": "Insufficient rights", "content": {"application/json": {"example": {"detail": "Insufficient rights"}}}},
     404: {"description": "User not found", "content": {"application/json": {"example": {"detail": "User not found"}}}},
+    422: {"description": "Invalid UUID format", "content": {"application/json": {"example": {"detail": "Invalid UUID format"}}}},
+    422: {"description": "Email already registered", "content": {"application/json": {"example": {"detail": "Email already registered"}}}},
 }, tags=["Superadmin"], summary="Edit user")
 def edit_user(user_id: str, form_data: schemas.UserUpdate, db: Session = Depends(get_session_local), credentials: HTTPAuthorizationCredentials = Depends(security)):
+
+    # Проверка, что user_id не пустой
+    if not user_id.strip():
+        raise HTTPException(status_code=400, detail="User ID is required")
+
+    # Проверка корректности UUID
     try:
-        # Проверяем права через токен
-        token = credentials.credentials
-        user_data_from_token = auth.verify_token(token)
+        user_uuid = uuid.UUID(user_id)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid UUID format")
 
-        # Проверяем права (например, только супер-админ может изменять пользователей)
-        requesting_user = crud.get_user_by_email(
-            db, user_data_from_token["sub"])
+    # Получаем токен и проверяем права
+    token = credentials.credentials
+    token_data = auth.verify_token(token, db=db)
+    requesting_user = crud.get_user_by_id(db, uuid.UUID(token_data["sub"]))
 
-        if not requesting_user.is_superadmin:
-            raise HTTPException(status_code=403, detail="Insufficient rights")
+    # Проверка на права (только супер-админ может изменять пользователей)
+    if not requesting_user.is_superadmin:
+        raise HTTPException(status_code=403, detail="Insufficient rights")
 
-        user = crud.edit_user(db, user_id, form_data)
+    # Проверяем, существует ли пользователь с таким user_id
+    user = crud.get_user_by_id(db, user_uuid)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
 
-        if not user:
-            raise HTTPException(status_code=404, detail="User not found")
+    # Проверка на уникальность email
+    if form_data.email:
+        existing_user = crud.get_user_by_email(db, form_data.email)
+        if existing_user and existing_user.id != user.id:
+            raise HTTPException(
+                status_code=422, detail="Email already registered")
 
-        logger.log_message(f"User {user.email} has been updated.")
+    # Обновляем информацию пользователя
+    updated_user = crud.edit_user(db, user_uuid, form_data)
+    if not updated_user:
+        raise HTTPException(status_code=404, detail="User not found")
 
-        return {
-            "detail": "User successfully updated",
-            "user": {
-                "id": user.id,
-                "name": user.name,
-                "email": user.email
-            }
+    logger.log_message(f"User {user.email} has been updated.")
+
+    return {
+        "detail": "User successfully updated",
+        "user": {
+            "id": user.id,
+            "name": user.name,
+            "email": user.email
         }
-    except Exception as e:
-        logger.log_message(f"An error occurred: {str(e)}")
-        raise HTTPException(status_code=500, detail="Internal Server Error")
+    }
 
 # Пример маршрута для удаления пользователя с проверкой токена через HTTPBearer
 
 
 @router.delete("/users/delete/{user_id}", responses={
     200: {"description": "User successfully deleted", "content": {"application/json": {"example": {"detail": "User successfully deleted"}}}},
+    400: {"description": "Bad Request - User ID is required", "content": {"application/json": {"example": {"detail": "User ID is required"}}}},
     403: {"description": "Insufficient rights or attempt to delete own account", "content": {"application/json": {"example": {"detail": "Insufficient rights"}}}},
     404: {"description": "User not found", "content": {"application/json": {"example": {"detail": "User not found"}}}},
+    422: {"description": "Invalid UUID format", "content": {"application/json": {"example": {"detail": "Invalid UUID format"}}}},
 }, tags=["Superadmin"], summary="Delete user")
 def delete_user(user_id: str,
                 credentials: HTTPAuthorizationCredentials = Depends(security),
                 db: Session = Depends(get_session_local)):
+
+    # Проверка, что user_id не пустой
+    if not user_id.strip():
+        raise HTTPException(status_code=400, detail="User ID is required")
+
+    # Проверка корректности UUID
+    try:
+        user_uuid = uuid.UUID(user_id)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid UUID format")
+
     # Извлекаем и проверяем токен
     token = credentials.credentials
     token_data = auth.verify_token(token, db=db)
@@ -266,13 +313,13 @@ def delete_user(user_id: str,
     if not requesting_user.is_superadmin:
         raise HTTPException(status_code=403, detail="Insufficient rights")
 
-        # Проверяем, пытается ли супер-админ удалить свой собственный аккаунт
+    # Проверяем, пытается ли супер-админ удалить свой собственный аккаунт
     if str(requesting_user.id) == user_id:
         raise HTTPException(
             status_code=403, detail="Super admin cannot delete own account")
 
     # Удаление пользователя
-    user = crud.delete_user(db, user_id)
+    user = crud.delete_user(db, user_uuid)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 

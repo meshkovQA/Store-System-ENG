@@ -28,11 +28,15 @@ document.addEventListener('DOMContentLoaded', function () {
         document.getElementById('successMessage').style.display = 'none';
 
         // Валидация имени пользователя
+        const sqlScriptPattern = /(\b(SELECT|INSERT|UPDATE|DELETE|DROP|UNION|ALTER|SCRIPT|<script|alert|onload|onerror)\b)/i;
         if (username.trim() === "" || /^\s/.test(username)) {
             showError('usernameError', "Имя не может содержать только пробелы или начинаться с пробела.");
             valid = false;
         } else if (username.length < 3 || username.length > 50) {
             showError('usernameError', "Имя пользователя должно быть от 3 до 50 символов.");
+            valid = false;
+        } else if (sqlScriptPattern.test(username)) {
+            showError('usernameError', "Имя не может содержать запрещенные символы или SQL/скриптовые команды.");
             valid = false;
         }
 
@@ -73,8 +77,14 @@ document.addEventListener('DOMContentLoaded', function () {
             })
                 .then(response => {
                     if (response.status === 201) {
-                        // Если регистрация успешна, перенаправляем на страницу логина
-                        window.location.href = "/login";
+                        // Показать сообщение об успешной регистрации
+                        const successMessage = document.getElementById('successMessage');
+                        successMessage.style.display = 'block';
+
+                        // Ждем 3 секунды перед перенаправлением
+                        setTimeout(() => {
+                            window.location.href = "/login";
+                        }, 3000);
                     } else {
                         return response.json().then(data => {
                             // Если возникла ошибка, отображаем сообщение об ошибке
