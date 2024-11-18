@@ -74,8 +74,9 @@ document.addEventListener("DOMContentLoaded", async function () {
 
         // Вес продукта
         let weight = document.getElementById("add-weight").value;
+        weight = weight.replace(',', '.'); // Заменяем запятую на точку
         if (weight) {
-            if (!/^\d{1,4}(\.\d{1,2})?$/.test(weight) || parseFloat(weight) <= 0) {
+            if (!/^\d{1,4}(\.\d{1,2})?$/.test(weight) || parseFloat(weight) <= 0 || parseFloat(price) > 1000000 || !/^\d{1,7}\.\d{2}$/.test(price)) {
                 console.log("Invalid weight input");  // Лог ошибки веса
                 document.getElementById("weightError").style.display = 'block';
                 valid = false;
@@ -168,11 +169,14 @@ document.addEventListener("DOMContentLoaded", async function () {
         }
 
         // Вес продукта
-        let weight = document.getElementById("edit-weight").value;
-        if (weight && (!/^\d{1,4}(\.\d{1,2})?$/.test(weight) || parseFloat(weight) <= 0)) {
-            console.log("Invalid weight input");  // Лог ошибки веса
-            document.getElementById("editweightError").style.display = 'block';
-            valid = false;
+        let weight = document.getElementById("add-weight").value;
+        weight = weight.replace(',', '.'); // Заменяем запятую на точку
+        if (weight) {
+            if (!/^\d{1,4}(\.\d{1,2})?$/.test(weight) || parseFloat(weight) <= 0 || parseFloat(price) > 1000000 || !/^\d{1,7}\.\d{2}$/.test(price)) {
+                console.log("Invalid weight input");  // Лог ошибки веса
+                document.getElementById("weightError").style.display = 'block';
+                valid = false;
+            }
         }
 
         // Габариты
@@ -278,7 +282,7 @@ async function createProduct() {
         price: document.getElementById("add-price").value.trim() || null,
         stock_quantity: parseInt(document.getElementById("add-stock-quantity").value) || null,
         supplier_id: supplierId,  // Передаем выбранный supplier_id
-        weight: parseFloat(document.getElementById("add-weight").value) || null,
+        weight: document.getElementById("add-weight").value || null,
         dimensions: document.getElementById("add-dimensions").value.trim(),
         manufacturer: document.getElementById("add-manufacturer").value.trim(),
     };
@@ -306,7 +310,7 @@ async function updateProduct(productId) {
         price: document.getElementById("edit-price").value.trim() || null,
         stock_quantity: parseInt(document.getElementById("edit-stock-quantity").value) || null,
         supplier_id: document.getElementById("edit-supplier-id").value,
-        weight: parseFloat(document.getElementById("edit-weight").value) || null,
+        weight: document.getElementById("edit-weight").value || null,
         dimensions: document.getElementById("edit-dimensions").value.trim(),
         manufacturer: document.getElementById("edit-manufacturer").value.trim(),
     };
