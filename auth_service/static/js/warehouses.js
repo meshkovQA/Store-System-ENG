@@ -15,14 +15,139 @@ document.addEventListener("DOMContentLoaded", async function () {
     // Обработчик для создания нового склада
     document.getElementById("add-warehouse-form").addEventListener("submit", async (event) => {
         event.preventDefault();
-        await createWarehouse();
+
+        // Сброс сообщений об ошибках
+        const errorFields = ["addLocationError", "addManagerNameError", "addCapacityError", "addContactNumberError", "addEmailError", "addIsActiveError", "addAreaSizeError"];
+        errorFields.forEach(id => document.getElementById(id).style.display = 'none');
+
+        let valid = true;
+
+        // Местоположение склада (location)
+        let location = document.getElementById("add-location").value.trim();
+        if (!location || location.length > 255) {
+            document.getElementById("addLocationError").style.display = 'block';
+            valid = false;
+        }
+
+        // Имя управляющего (manager_name)
+        let managerName = document.getElementById("add-manager-name").value.trim();
+        if (managerName && (managerName.length > 100 || !/^[A-Za-zА-Яа-я\s]+$/.test(managerName))) {
+            document.getElementById("addManagerNameError").style.display = 'block';
+            valid = false;
+        }
+
+        // Вместимость склада (capacity)
+        let capacity = document.getElementById("add-capacity").value.trim();
+        if (!capacity || isNaN(capacity) || parseFloat(capacity) <= 0) {
+            document.getElementById("addCapacityError").style.display = 'block';
+            valid = false;
+        }
+
+        // Контактный телефон (contact_number)
+        let contactNumber = document.getElementById("add-contact-number").value.trim();
+        if (contactNumber && (contactNumber.length > 15 || !/^\+?\d+$/.test(contactNumber))) {
+            document.getElementById("addContactNumberError").style.display = 'block';
+            valid = false;
+        }
+
+        // Контактный email (email)
+        let email = document.getElementById("add-email").value.trim();
+        if (email && (email.length > 255 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))) {
+            document.getElementById("addEmailError").style.display = 'block';
+            valid = false;
+        }
+
+        // Активность склада (is_active)
+        let isActive = document.getElementById("add-is-active").value;
+        if (isActive !== "active" && isActive !== "inactive") {
+            document.getElementById("addIsActiveError").style.display = 'block';
+            valid = false;
+        }
+
+        // Площадь склада (area_size)
+        let areaSize = document.getElementById("add-area-size").value.trim();
+        areaSize = areaSize.replace(',', '.'); // Заменяем запятую на точку
+
+
+        if (areaSize && (isNaN(areaSize) || parseFloat(areaSize) <= 0 || parseFloat(price) > 1000000 || !/^\d{1,7}\.\d{2}$/.test(price))) {
+            document.getElementById("addAreaSizeError").style.display = 'block';
+            valid = false;
+        }
+
+        if (valid) {
+            await createWarehouse();
+            $("#addWarehouseModal").modal("hide");
+        }
     });
 
     // Обработчик для редактирования склада
     document.getElementById("edit-warehouse-form").addEventListener("submit", async (event) => {
         event.preventDefault();
-        const warehouseId = document.getElementById("edit-warehouse-id").value;
-        await updateWarehouse(warehouseId);
+
+        // Сброс сообщений об ошибках
+        const errorFields = ["editLocationError", "editManagerNameError", "editCapacityError", "editContactNumberError", "editEmailError", "editIsActiveError", "editAreaSizeError"];
+        errorFields.forEach(id => document.getElementById(id).style.display = 'none');
+
+        let valid = true;
+
+        // Местоположение склада (location)
+        let location = document.getElementById("edit-location").value.trim();
+        if (!location || location.length > 255) {
+            document.getElementById("editLocationError").style.display = 'block';
+            valid = false;
+        }
+
+        // Имя управляющего (manager_name)
+        let managerName = document.getElementById("edit-manager-name").value.trim();
+        if (managerName && (managerName.length > 100 || !/^[A-Za-zА-Яа-я\s]+$/.test(managerName))) {
+            document.getElementById("editManagerNameError").style.display = 'block';
+            valid = false;
+        }
+
+        // Вместимость склада (capacity)
+        let capacity = document.getElementById("edit-capacity").value.trim();
+        if (!capacity || isNaN(capacity) || parseFloat(capacity) <= 0) {
+            document.getElementById("editCapacityError").style.display = 'block';
+            valid = false;
+        }
+
+        // Контактный телефон (contact_number)
+        let contactNumber = document.getElementById("edit-contact-number").value.trim();
+        if (contactNumber && (contactNumber.length > 15 || !/^\+?\d+$/.test(contactNumber))) {
+            document.getElementById("editContactNumberError").style.display = 'block';
+            valid = false;
+        }
+
+        // Контактный email (email)
+        let email = document.getElementById("edit-email").value.trim();
+        if (email && (email.length > 255 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))) {
+            document.getElementById("editEmailError").style.display = 'block';
+            valid = false;
+        }
+
+        // Активность склада (is_active)
+        let isActive = document.getElementById("edit-is-active").value;
+        if (isActive !== "active" && isActive !== "inactive") {
+            document.getElementById("editIsActiveError").style.display = 'block';
+            valid = false;
+        }
+
+        // Площадь склада (area_size)
+        // Площадь склада (area_size)
+        let areaSize = document.getElementById("add-area-size").value.trim();
+        areaSize = areaSize.replace(',', '.'); // Заменяем запятую на точку
+
+
+        if (areaSize && (isNaN(areaSize) || parseFloat(areaSize) <= 0 || parseFloat(price) > 1000000 || !/^\d{1,7}\.\d{2}$/.test(price))) {
+            document.getElementById("addAreaSizeError").style.display = 'block';
+            valid = false;
+        }
+
+        if (valid) {
+            const warehouseId = document.getElementById("edit-warehouse-id").value;
+            await updateWarehouse(warehouseId);
+            $("#editWarehouseModal").modal("hide");
+        }
     });
 
     // Добавляем обработчик для кнопок "Посмотреть", "Редактировать" и "Удалить" в таблице
@@ -59,12 +184,12 @@ async function openViewWarehouseModal(warehouseId) {
     document.getElementById("view-warehouse-id").value = warehouse.warehouse_id;
     document.getElementById("view-location").value = warehouse.location;
     document.getElementById("view-manager-name").value = warehouse.manager_name || "";
-    document.getElementById("view-capacity").value = warehouse.capacity + " куб.м";
+    document.getElementById("view-capacity").value = warehouse.capacity;
     document.getElementById("view-current-stock").value = warehouse.current_stock || 0;
     document.getElementById("view-contact-number").value = warehouse.contact_number || "";
     document.getElementById("view-email").value = warehouse.email || "";
     document.getElementById("view-is-active").value = warehouse.is_active ? "Активен" : "Неактивен";
-    document.getElementById("view-area-size").value = warehouse.area_size + " кв.м" || "";
+    document.getElementById("view-area-size").value = warehouse.area_size || "";
 
     // Открытие модального окна
     $("#viewWarehouseModal").modal("show");

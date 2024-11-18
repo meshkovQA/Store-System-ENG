@@ -31,7 +31,8 @@ def create_product(db: Session, user_id: str, name: str, description: str, categ
             is_available=False,  # Или по умолчанию, если нужно
             created_at=datetime.utcnow(),  # Установка текущего времени
             updated_at=datetime.utcnow(),  # Установка текущего времени
-            image_url=image_url,
+            # Преобразование image_url к строке
+            image_url=str(image_url) if image_url else None,
             weight=weight,
             dimensions=dimensions,
             manufacturer=manufacturer
@@ -80,7 +81,7 @@ def get_product_by_id(db: Session, product_id: str):
     return product
 
 
-def update_product(db: Session, product_id: str, user_id: str, name: str, description: str, category: str, price: float, stock_quantity: int, supplier_id: str, image_url: str, weight: float, dimensions: str, manufacturer: str):
+def update_product(db: Session, product_id: str, name: str, description: str, category: str, price: float, stock_quantity: int, supplier_id: str, image_url: str, weight: float, dimensions: str, manufacturer: str):
     try:
         product = db.query(models.Product).filter(
             models.Product.product_id == product_id).first()
@@ -93,14 +94,13 @@ def update_product(db: Session, product_id: str, user_id: str, name: str, descri
         if not supplier:
             raise HTTPException(status_code=404, detail="Supplier not found")
 
-        product.user_id = user_id
         product.name = name
         product.description = description
         product.category = category
         product.price = price
         product.stock_quantity = stock_quantity
         product.supplier_id = supplier_id
-        product.image_url = image_url
+        product.image_url = str(image_url) if image_url else None
         product.weight = weight
         product.dimensions = dimensions
         product.manufacturer = manufacturer
@@ -160,7 +160,7 @@ def create_supplier(db: Session, name: str, contact_name: str, contact_email: st
             address=address,
             country=country,
             city=city,
-            website=website
+            website=str(website) if website else None
         )
         db.add(new_supplier)
         db.commit()
@@ -202,7 +202,11 @@ def patch_supplier(db: Session, supplier_id: str, updates: dict):
         # Обновляем только те поля, которые переданы в словаре updates
         for key, value in updates.items():
             if hasattr(supplier, key):
-                setattr(supplier, key, value)
+                # Если поле 'website', преобразуем значение в строку
+                if key == 'website' and value is not None:
+                    setattr(supplier, key, str(value))
+                else:
+                    setattr(supplier, key, value)
 
         db.commit()
         db.refresh(supplier)

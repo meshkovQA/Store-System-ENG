@@ -31,7 +31,7 @@
 
                 <form id="add-product-form">
                     <div class="mb-3">
-                        <label for="add-name" class="form-label">Название продукта</label>
+                        <label for="add-name" class="form-label">Название продукта (обязательно)</label>
                         <input type="text" class="form-control" id="add-name" placeholder="Введите название продукта" required>
                         <small id="nameError" class="text-danger" style="display: none;">
                             Название продукта обязательно, от 3 до 100 символов, только буквы и цифры.
@@ -55,15 +55,15 @@
                     </div>
 
                     <div class="mb-3">
-                        <label for="add-price" class="form-label">Цена (руб)</label>
-                        <input type="number" class="form-control" id="add-price" step="0.01" placeholder="Введите цену за 1 штуку продукта" required>
+                        <label for="add-price" class="form-label">Цена (руб)(обязательно)</label>
+                        <input type="text" class="form-control" id="add-price" placeholder="Введите цену за 1 штуку продукта в формате 0.00" required>
                         <small id="priceError" class="text-danger" style="display: none;">
-                            Цена обязательна, положительное число с двумя знаками после запятой, максимум 10 цифр.
+                            Цена обязательна, положительное число в формате 0.00, максимум 10 цифр.
                         </small>
                     </div>
 
                     <div class="mb-3">
-                        <label for="add-stock-quantity" class="form-label">Количество продукта</label>
+                        <label for="add-stock-quantity" class="form-label">Количество продукта (обязательно)</label>
                         <input type="number" class="form-control" id="add-stock-quantity" placeholder="Введите количество продукта" required >
                         <small id="stockQuantityError" class="text-danger" style="display: none;">
                             Количество должно быть целым числом, не меньше 0.
@@ -71,7 +71,7 @@
                     </div>
 
                     <div class="mb-3">
-                        <label for="add-supplier-id" class="form-label">Поставщик</label>
+                        <label for="add-supplier-id" class="form-label">Поставщик (обязательно)</label>
                         <select class="form-control" id="add-supplier-id" required></select>
                         <small id="supplierError" class="text-danger" style="display: none;">
                             Необходимо выбрать поставщика с действительным UUID.
@@ -98,7 +98,7 @@
                         <label for="add-dimensions" class="form-label">Габариты продукта (1х1х1 метра)</label>
                         <input type="text" class="form-control" id="add-dimensions" placeholder="Введите габариты в формате 1х1х1">
                         <small id="dimensionsError" class="text-danger" style="display: none;">
-                            Габариты должны содержать до 100 символов и допускают только цифры и символ "х".
+                            Габариты должны быть в формате "число x число x число", например, "1x2x3", и содержать не более 100 символов.
                         </small>
                     </div>
 
@@ -129,27 +129,42 @@
                 <form id="edit-product-form">
                     <input type="hidden" id="edit-product-id">
                     <div class="mb-3">
-                        <label for="edit-name" class="form-label">Название продукта</label>
+                        <label for="edit-name" class="form-label">Название продукта (обязательно)</label>
                         <input type="text" class="form-control" id="edit-name" placeholder="Введите название продукта" required>
+                        <small id="editnameError" class="text-danger" style="display: none;">
+                            Название продукта обязательно, от 3 до 100 символов, только буквы и цифры.
+                        </small>
                     </div>
                     <div class="mb-3">
                         <label for="edit-description" class="form-label">Описание</label>
                         <input type="text" class="form-control" id="edit-description" placeholder="Введите описание" required>
+                        <small id="editdescriptionError" class="text-danger" style="display: none;">
+                            Описание не должно превышать 500 символов.
+                        </small>
                     </div>
                     <div class="mb-3">
                         <label for="edit-category" class="form-label">Категория</label>
                         <input type="text" class="form-control" id="edit-category" placeholder="Введите категорию">
+                        <small id="editcategoryError" class="text-danger" style="display: none;">
+                            Категория должна быть до 50 символов, только буквы и цифры.
+                        </small>
                     </div>
                     <div class="mb-3">
-                        <label for="edit-price" class="form-label">Цена (руб)</label>
-                        <input type="number" class="form-control" id="edit-price" step="0.01" placeholder="Введите цену за 1 штуку продукта">
+                        <label for="edit-price" class="form-label">Цена (руб) (обязательно)</label>
+                        <input type="text" class="form-control" id="edit-price" placeholder="Введите цену за 1 штуку продукта">
+                        <small id="editpriceError" class="text-danger" style="display: none;">
+                            Цена обязательна, положительное число в формате 0.00, максимум 10 цифр.
+                        </small>
                     </div>
                     <div class="mb-3">
-                        <label for="edit-stock-quantity" class="form-label">Количество на складе</label>
+                        <label for="edit-stock-quantity" class="form-label">Количество на складе (обязательно)</label>
                         <input type="number" class="form-control" id="edit-stock-quantity" placeholder="Введите количество продукта">
+                        <small id="editstockQuantityError" class="text-danger" style="display: none;">
+                            Количество должно быть целым числом, не меньше 0.
+                        </small>
                     </div>
                     <div class="mb-3">
-                        <label for="edit-supplier-id" class="form-label">Поставщик</label>
+                        <label for="edit-supplier-id" class="form-label">Поставщик (обязательно)</label>
                         <select class="form-control" id="edit-supplier-id" required>
                             <!-- Поставщики будут загружены через JS -->
                         </select>
@@ -157,18 +172,30 @@
                     <div class="mb-3">
                         <label for="edit-image-url" class="form-label">Изображение продукта</label>
                         <input type="file" class="form-control" id="edit-image-url" accept=".png, .jpeg, .jpg">
+                        <small id="editimageError" class="text-danger" style="display: none;">
+                            Формат изображения должен быть .png, .jpeg или .jpg.
+                        </small>
                     </div>
                     <div class="mb-3">
                         <label for="edit-weight" class="form-label">Вес продукта (кг)</label>
                         <input type="number" class="form-control" id="edit-weight" step="0.01" placeholder="Введите вес партии продукта">
+                        <small id="editweightError" class="text-danger" style="display: none;">
+                            Вес должен быть положительным числом, максимум 6 цифр (включая 2 знака после запятой).
+                        </small>
                     </div>
                     <div class="mb-3">
                         <label for="edit-dimensions" class="form-label">Габариты продукта (1х1х1 метра)</label>
                         <input type="text" class="form-control" id="edit-dimensions" placeholder="Введите габариты в формате 1х1х1">
+                        <small id="editdimensionsError" class="text-danger" style="display: none;">
+                            Габариты должны быть в формате "число x число x число", например, "1x2x3", и содержать не более 100 символов.
+                        </small>
                     </div>
                     <div class="mb-3">
                         <label for="edit-manufacturer" class="form-label">Производитель</label>
                         <input type="text" class="form-control" id="edit-manufacturer" placeholder="Введите производителя продукта">
+                        <small id="editmanufacturerError" class="text-danger" style="display: none;">
+                            Производитель может содержать только буквы и цифры, максимум 100 символов.
+                        </small>
                     </div>
                     <button type="submit" class="btn btn-primary">Сохранить изменения</button>
                 </form>

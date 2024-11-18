@@ -29,36 +29,60 @@
             <div class="modal-body">
                 <form id="add-supplier-form">
                     <div class="mb-3">
-                        <label for="add-name" class="form-label">Название поставщика</label>
+                        <label for="add-name" class="form-label">Название поставщика (обязательно)</label>
                         <input type="text" class="form-control" id="add-name" required minlength="3" maxlength="100" placeholder="Введите Название поставщика">
+                        <small id="addNameError" class="text-danger" style="display: none;">
+                            Название обязательно, от 3 до 100 символов.
+                        </small>
                     </div>
                     <div class="mb-3">
-                        <label for="add-contact_name" class="form-label">Контактное лицо</label>
+                        <label for="add-contact_name" class="form-label">Контактное лицо (обязательно)</label>
                         <input type="text" class="form-control" id="add-contact_name" maxlength="100" placeholder="Укажите контактное лицо" required>
+                        <small id="addContactNameError" class="text-danger" style="display: none;">
+                            Контактное лицо обязательно, максимум 100 символов.
+                        </small>
                     </div>
                     <div class="mb-3">
-                        <label for="add-contact_email" class="form-label">Email</label>
+                        <label for="add-contact_email" class="form-label">Email (обязательно)</label>
                         <input type="email" class="form-control" id="add-contact_email" placeholder="Введите email" maxlength="100" required>
+                        <small id="addContactEmailError" class="text-danger" style="display: none;">
+                            Email обязателен, должен быть валидным и не более 100 символов.
+                        </small>
                     </div>
                     <div class="mb-3">
                         <label for="add-phone_number" class="form-label">Телефон</label>
                         <input type="text" class="form-control" id="add-phone_number" maxlength="15" placeholder="Введите телефон (+79009999999)">
+                        <small id="addPhoneNumberError" class="text-danger" style="display: none;">
+                            Номер телефона должен быть не более 15 символов и содержать только цифры и/или символ '+'.
+                        </small>
                     </div>
                     <div class="mb-3">
                         <label for="add-address" class="form-label">Адрес</label>
                         <input type="text" class="form-control" id="add-address" maxlength="200" placeholder="Введите адрес поставщика">
+                        <small id="addAddressError" class="text-danger" style="display: none;">
+                            Адрес должен быть не более 200 символов, содержать только буквы и цифры.
+                        </small>
                     </div>
                     <div class="mb-3">
                         <label for="add-country" class="form-label">Страна</label>
                         <input type="text" class="form-control" id="add-country" maxlength="50" placeholder="Введите страну поставщика">
+                        <small id="addCountryError" class="text-danger" style="display: none;">
+                            Страна должна быть не более 50 символов и содержать только буквы.
+                        </small>
                     </div>
                     <div class="mb-3">
                         <label for="add-city" class="form-label">Город</label>
                         <input type="text" class="form-control" id="add-city" placeholder="Введите город поставщика">
+                        <small id="addCityError" class="text-danger" style="display: none;">
+                            Город должен быть не более 50 символов и содержать только буквы.
+                        </small>
                     </div>
                     <div class="mb-3">
                         <label for="add-website" class="form-label">Вебсайт</label>
                         <input type="text" class="form-control" id="add-website" placeholder="Укажите веб-сайт">
+                        <small id="addWebsiteError" class="text-danger" style="display: none;">
+                            Веб-сайт должен быть валидным URL и не более 255 символов.
+                        </small>
                     </div>
                     <button type="submit" class="btn btn-primary">Создать поставщика</button>
                 </form>
@@ -79,36 +103,60 @@
                 <form id="edit-supplier-form">
                     <input type="hidden" id="edit-supplier-id">
                     <div class="mb-3">
-                        <label for="edit-name" class="form-label">Название поставщика</label>
+                        <label for="edit-name" class="form-label">Название поставщика (обязательно)</label>
                         <input type="text" class="form-control" id="edit-name" required minlength="3" maxlength="100" placeholder="Введите Название поставщика">
+                        <small id="editNameError" class="text-danger" style="display: none;">
+                            Название обязательно, от 3 до 100 символов.
+                        </small>
                     </div>
                     <div class="mb-3">
-                        <label for="edit-contact_name" class="form-label">Контактное лицо</label>
+                        <label for="edit-contact_name" class="form-label">Контактное лицо (обязательно)</label>
                         <input type="text" class="form-control" id="edit-contact_name" maxlength="100" placeholder="Укажите контактное лицо" required>
+                        <small id="editContactNameError" class="text-danger" style="display: none;">
+                            Контактное лицо обязательно, максимум 100 символов.
+                        </small>
                     </div>
                     <div class="mb-3">
-                        <label for="edit-contact_email" class="form-label">Email</label>
+                        <label for="edit-contact_email" class="form-label">Email (обязательно)</label>
                         <input type="email" class="form-control" id="edit-contact_email" maxlength="100" placeholder="Введите email" required>
+                        <small id="editContactEmailError" class="text-danger" style="display: none;">
+                            Email обязателен, должен быть валидным и не более 100 символов.
+                        </small>
                     </div>
                     <div class="mb-3">
                         <label for="edit-phone_number" class="form-label">Телефон</label>
                         <input type="text" class="form-control" id="edit-phone_number" maxlength="15" placeholder="Введите телефон (+79009999999)">
+                        <small id="editPhoneNumberError" class="text-danger" style="display: none;">
+                            Номер телефона должен быть не более 15 символов и содержать только цифры и/или символ '+'.
+                        </small>
                     </div>
                     <div class="mb-3">
                         <label for="edit-address" class="form-label">Адрес</label>
                         <input type="text" class="form-control" id="edit-address" maxlength="200" placeholder="Введите адрес поставщика">
+                        <small id="editAddressError" class="text-danger" style="display: none;">
+                            Адрес должен быть не более 200 символов, содержать только буквы и цифры.
+                        </small>
                     </div>
                     <div class="mb-3">
                         <label for="edit-country" class="form-label">Страна</label>
                         <input type="text" class="form-control" id="edit-country" maxlength="50" placeholder="Введите страну поставщика">
+                        <small id="editCountryError" class="text-danger" style="display: none;">
+                            Страна должна быть не более 50 символов и содержать только буквы.
+                        </small>
                     </div>
                     <div class="mb-3">
                         <label for="edit-city" class="form-label">Город</label>
                         <input type="text" class="form-control" id="edit-city" placeholder="Введите город поставщика">
+                        <small id="editCityError" class="text-danger" style="display: none;">
+                            Город должен быть не более 50 символов и содержать только буквы.
+                        </small>
                     </div>
                     <div class="mb-3">
                         <label for="edit-website" class="form-label">Вебсайт</label>
                         <input type="text" class="form-control" id="edit-website" placeholder="Укажите веб-сайт">
+                        <small id="editWebsiteError" class="text-danger" style="display: none;">
+                            Веб-сайт должен быть валидным URL и не более 255 символов.
+                        </small>
                     </div>
                     <button type="submit" class="btn btn-primary">Сохранить изменения</button>
                 </form>

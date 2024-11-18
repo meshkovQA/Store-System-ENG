@@ -15,14 +15,174 @@ document.addEventListener("DOMContentLoaded", async function () {
     // Обработчик для создания нового поставщика
     document.getElementById("add-supplier-form").addEventListener("submit", async (event) => {
         event.preventDefault();
-        await createSupplier();
+        // Сброс сообщений об ошибках
+        const errorFields = ["addNameError", "addContactNameError", "addContactEmailError", "addPhoneNumberError", "addAddressError", "addCountryError", "addCityError", "addWebsiteError"];
+        errorFields.forEach(id => document.getElementById(id).style.display = 'none');
+
+        let valid = true;
+
+        // Название
+        let name = document.getElementById("add-name").value.trim();
+        if (!name || name.length < 3 || name.length > 100) {
+            document.getElementById("addNameError").style.display = 'block';
+            valid = false;
+        }
+
+        // Контактное лицо
+        let contactName = document.getElementById("add-contact_name").value.trim();
+        if (!contactName || contactName.length > 100) {
+            document.getElementById("addContactNameError").style.display = 'block';
+            valid = false;
+        }
+
+        // Email контактного лица
+        let contactEmail = document.getElementById("add-contact_email").value.trim();
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!contactEmail || contactEmail.length > 100 || !emailRegex.test(contactEmail)) {
+            document.getElementById("addContactEmailError").style.display = 'block';
+            valid = false;
+        }
+
+        // Номер телефона
+        let phoneNumber = document.getElementById("add-phone_number").value.trim();
+        if (phoneNumber) {
+            const phoneRegex = /^\+?\d{1,15}$/;
+            if (phoneNumber.length > 15 || !phoneRegex.test(phoneNumber)) {
+                document.getElementById("addPhoneNumberError").style.display = 'block';
+                valid = false;
+            }
+        }
+
+        // Адрес
+        let address = document.getElementById("add-address").value.trim();
+        if (address) {
+            const addressRegex = /^[A-Za-zА-Яа-я0-9\s]{1,200}$/;
+            if (address.length > 200 || !addressRegex.test(address)) {
+                document.getElementById("addAddressError").style.display = 'block';
+                valid = false;
+            }
+        }
+
+        // Страна
+        let country = document.getElementById("add-country").value.trim();
+        if (country) {
+            const countryRegex = /^[A-Za-zА-Яа-я\s]{1,50}$/;
+            if (country.length > 50 || !countryRegex.test(country)) {
+                document.getElementById("addCountryError").style.display = 'block';
+                valid = false;
+            }
+        }
+
+        // Город
+        let city = document.getElementById("add-city").value.trim();
+        if (city) {
+            const cityRegex = /^[A-Za-zА-Яа-я\s]{1,50}$/;
+            if (city.length > 50 || !cityRegex.test(city)) {
+                document.getElementById("addCityError").style.display = 'block';
+                valid = false;
+            }
+        }
+
+        // Веб-сайт
+        let website = document.getElementById("add-website").value.trim();
+        if (website) {
+            if (website.length > 255 || !isValidURL(website)) {
+                document.getElementById("addWebsiteError").style.display = 'block';
+                valid = false;
+            }
+        }
+
+        if (valid) {
+            await createSupplier();
+            $("#addSupplierModal").modal("hide");
+        }
     });
 
     // Обработчик для редактирования поставщика
     document.getElementById("edit-supplier-form").addEventListener("submit", async (event) => {
         event.preventDefault();
-        const supplierId = document.getElementById("edit-supplier-id").value;
-        await updateSupplier(supplierId);
+        // Сброс сообщений об ошибках
+        const errorFields = ["editNameError", "editContactNameError", "editContactEmailError", "editPhoneNumberError", "editAddressError", "editCountryError", "editCityError", "editWebsiteError"];
+        errorFields.forEach(id => document.getElementById(id).style.display = 'none');
+
+        let valid = true;
+
+        // Название
+        let name = document.getElementById("edit-name").value.trim();
+        if (!name || name.length < 3 || name.length > 100) {
+            document.getElementById("editNameError").style.display = 'block';
+            valid = false;
+        }
+
+        // Контактное лицо
+        let contactName = document.getElementById("edit-contact_name").value.trim();
+        if (!contactName || contactName.length > 100) {
+            document.getElementById("editContactNameError").style.display = 'block';
+            valid = false;
+        }
+
+        // Email контактного лица
+        let contactEmail = document.getElementById("edit-contact_email").value.trim();
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!contactEmail || contactEmail.length > 100 || !emailRegex.test(contactEmail)) {
+            document.getElementById("editContactEmailError").style.display = 'block';
+            valid = false;
+        }
+
+        // Номер телефона
+        let phoneNumber = document.getElementById("edit-phone_number").value.trim();
+        if (phoneNumber) {
+            const phoneRegex = /^\+?\d{1,15}$/;
+            if (phoneNumber.length > 15 || !phoneRegex.test(phoneNumber)) {
+                document.getElementById("editPhoneNumberError").style.display = 'block';
+                valid = false;
+            }
+        }
+
+        // Адрес
+        let address = document.getElementById("edit-address").value.trim();
+        if (address) {
+            const addressRegex = /^[A-Za-zА-Яа-я0-9\s]{1,200}$/;
+            if (address.length > 200 || !addressRegex.test(address)) {
+                document.getElementById("editAddressError").style.display = 'block';
+                valid = false;
+            }
+        }
+
+        // Страна
+        let country = document.getElementById("edit-country").value.trim();
+        if (country) {
+            const countryRegex = /^[A-Za-zА-Яа-я\s]{1,50}$/;
+            if (country.length > 50 || !countryRegex.test(country)) {
+                document.getElementById("editCountryError").style.display = 'block';
+                valid = false;
+            }
+        }
+
+        // Город
+        let city = document.getElementById("edit-city").value.trim();
+        if (city) {
+            const cityRegex = /^[A-Za-zА-Яа-я\s]{1,50}$/;
+            if (city.length > 50 || !cityRegex.test(city)) {
+                document.getElementById("editCityError").style.display = 'block';
+                valid = false;
+            }
+        }
+
+        // Веб-сайт
+        let website = document.getElementById("edit-website").value.trim();
+        if (website) {
+            if (website.length > 255 || !isValidURL(website)) {
+                document.getElementById("editWebsiteError").style.display = 'block';
+                valid = false;
+            }
+        }
+
+        if (valid) {
+            const supplierId = document.getElementById("edit-supplier-id").value;
+            await updateSupplier(supplierId);
+            $("#editSupplierModal").modal("hide");
+        }
     });
 
     // Добавляем обработчик для кнопок "Редактировать" и "Удалить" в таблице
@@ -201,4 +361,13 @@ function renderSuppliersTable(suppliers) {
         `;
         tableBody.appendChild(row);
     });
+}
+
+function isValidURL(string) {
+    try {
+        new URL(string);
+        return true;
+    } catch (_) {
+        return false;
+    }
 }

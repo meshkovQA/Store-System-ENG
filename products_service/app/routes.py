@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, Query
 import asyncio
 from sqlalchemy.orm import Session
 from uuid import UUID
-from app import crud, schemas, database, auth, logger
+from app import crud, schemas, database, auth, logger, models
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from app.database import get_session_local
 
@@ -26,6 +26,20 @@ async def create_product(product: schemas.ProductCreate, db: Session = Depends(g
         logger.log_message("Invalid token or unauthorized access")
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
                             detail="Invalid token or unauthorized access")
+
+    # Проверка валидности supplier_id как UUID
+    try:
+        UUID(str(product.supplier_id))
+    except ValueError:
+        raise HTTPException(
+            status_code=422, detail="Invalid format for Supplier id")
+
+    # Проверка на существование продукта с таким же названием
+    existing_product = db.query(models.Product).filter(
+        models.Product.name == product.name).first()
+    if existing_product:
+        raise HTTPException(
+            status_code=422, detail="This product is already existed")
 
     logger.log_message(f"User {user_data} is creating a new product")
     return crud.create_product(db=db, name=product.name, description=product.description, user_id=user_data,
@@ -56,8 +70,20 @@ def get_product(product_id: str, db: Session = Depends(get_session_local), crede
         logger.log_message("Invalid token or unauthorized access")
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
                             detail="Invalid token or unauthorized access")
+
+    # Проверка, что product_id не пустой
+    if not product_id.strip():
+        raise HTTPException(status_code=400, detail="Product ID is required")
+
+    # Проверка корректности UUID
+    try:
+        product_uuid = UUID(product_id)
+    except ValueError:
+        raise HTTPException(
+            status_code=400, detail="Invalid UUID format for Product ID")
+
     logger.log_message(f"Getting product with id {product_id}")
-    return crud.get_product_by_id(db, product_id)
+    return crud.get_product_by_id(db, product_uuid)
 
 
 @router.put("/products/{product_id}", response_model=schemas.Product, tags=["Products Service"], summary="Update product by ID")
@@ -70,9 +96,21 @@ async def update_product(product_id: str, product: schemas.ProductUpdate, db: Se
                             detail="Invalid token or unauthorized access")
 
     user_id = user_data.get("user_id") if "user_id" in user_data else None
+
+    # Проверка, что product_id не пустой
+    if not product_id.strip():
+        raise HTTPException(status_code=400, detail="Product ID is required")
+
+    # Проверка корректности UUID
+    try:
+        product_uuid = UUID(product_id)
+    except ValueError:
+        raise HTTPException(
+            status_code=400, detail="Invalid UUID format for Product ID")
+
     logger.log_message(
         f"""User {user_id} is updating product with id {product_id}, new name: {product.name}, new description: {product.description}, new price: {product.price}""")
-    return crud.update_product(db=db, product_id=product_id, name=product.name, description=product.description, user_id=user_id,
+    return crud.update_product(db=db, product_id=product_uuid, name=product.name, description=product.description,
                                category=product.category, price=product.price, stock_quantity=product.stock_quantity,
                                supplier_id=product.supplier_id, image_url=product.image_url, weight=product.weight,
                                dimensions=product.dimensions, manufacturer=product.manufacturer)
@@ -88,11 +126,23 @@ async def partial_update_product(product_id: str, availability_data: schemas.Pro
                             detail="Invalid token or unauthorized access")
 
     user_id = user_data.get("user_id") if "user_id" in user_data else None
+
+    # Проверка, что product_id не пустой
+    if not product_id.strip():
+        raise HTTPException(status_code=400, detail="Product ID is required")
+
+    # Проверка корректности UUID
+    try:
+        product_uuid = UUID(product_id)
+    except ValueError:
+        raise HTTPException(
+            status_code=400, detail="Invalid UUID format for Product ID")
+
     logger.log_message(
         f"User {user_id} is partially updating product with id {product_id}")
 
     # Обновите только поле is_available в crud
-    return crud.update_product_availability(db=db, product_id=product_id, is_available=availability_data.is_available)
+    return crud.update_product_availability(db=db, product_id=product_uuid, is_available=availability_data.is_available)
 
 
 @router.delete("/products/{product_id}", tags=["Products Service"], summary="Delete product by ID")
@@ -104,8 +154,20 @@ def delete_product(product_id: str, db: Session = Depends(get_session_local), cr
         logger.log_message("Invalid token or unauthorized access")
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
                             detail="Invalid token or unauthorized access")
+
+    # Проверка, что product_id не пустой
+    if not product_id.strip():
+        raise HTTPException(status_code=400, detail="Product ID is required")
+
+    # Проверка корректности UUID
+    try:
+        product_uuid = UUID(product_id)
+    except ValueError:
+        raise HTTPException(
+            status_code=400, detail="Invalid UUID format for Product ID")
+
     logger.log_message(f"Deleting product with id {product_id}")
-    return crud.delete_product(db, product_id)
+    return crud.delete_product(db, product_uuid)
 
 
 @router.get("/search_products/", response_model=list[schemas.Product], tags=["Products Service"], summary="Search products by name")
@@ -132,6 +194,16 @@ def create_supplier(supplier: schemas.SupplierCreate, db: Session = Depends(get_
         logger.log_message("Invalid token or unauthorized access")
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
                             detail="Invalid token or unauthorized access")
+
+    # Проверка на существование поставщика с таким же названием
+    existing_supplier = db.query(models.Supplier).filter(
+        models.Supplier.name == supplier.name).first()
+    if existing_supplier:
+        logger.log_message(f"""Supplier with name '{
+                           supplier.name}' already exists.""")
+        raise HTTPException(
+            status_code=422, detail="This supplier is already existed")
+
     logger.log_message(f"""Creating a new supplier: {supplier.name} {
                        supplier.contact_name}, {supplier.contact_email}, {supplier.phone_number}""")
     return crud.create_supplier(db=db, name=supplier.name, contact_name=supplier.contact_name,
@@ -162,8 +234,20 @@ def get_supplier_by_id(supplier_id: str, db: Session = Depends(get_session_local
         logger.log_message("Invalid token or unauthorized access")
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
                             detail="Invalid token or unauthorized access")
+
+    # Проверка, что supplier_id не пустой
+    if not supplier_id.strip():
+        raise HTTPException(status_code=400, detail="Supplier ID is required")
+
+    # Проверка корректности UUID
+    try:
+        supplier_uuid = UUID(supplier_id)
+    except ValueError:
+        raise HTTPException(
+            status_code=400, detail="Invalid UUID format for Supplier ID")
+
     logger.log_message(f"Getting supplier with ID {supplier_id}")
-    return crud.get_supplier_by_id(db, supplier_id)
+    return crud.get_supplier_by_id(db, supplier_uuid)
 
 
 @router.patch("/suppliers/{supplier_id}", response_model=schemas.Supplier, tags=["Suppliers Service"], summary="Update supplier by ID")
@@ -177,8 +261,20 @@ def patch_supplier(supplier_id: str, supplier: schemas.SupplierUpdate, db: Sessi
                             detail="Invalid token or unauthorized access")
     # Передаем только те поля, которые изменены
     updates = supplier.dict(exclude_unset=True)
+
+    # Проверка, что supplier_id не пустой
+    if not supplier_id.strip():
+        raise HTTPException(status_code=400, detail="Supplier ID is required")
+
+    # Проверка корректности UUID
+    try:
+        supplier_uuid = UUID(supplier_id)
+    except ValueError:
+        raise HTTPException(
+            status_code=400, detail="Invalid UUID format for Supplier ID")
+
     logger.log_message(f"Updating supplier with id {supplier_id}")
-    return crud.patch_supplier(db=db, supplier_id=supplier_id, updates=updates)
+    return crud.patch_supplier(db=db, supplier_id=supplier_uuid, updates=updates)
 
 
 @router.delete("/suppliers/{supplier_id}", tags=["Suppliers Service"], summary="Delete supplier by ID")
@@ -190,8 +286,20 @@ def delete_supplier(supplier_id: str, db: Session = Depends(get_session_local), 
         logger.log_message("Invalid token or unauthorized access")
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
                             detail="Invalid token or unauthorized access")
+
+    # Проверка, что supplier_id не пустой
+    if not supplier_id.strip():
+        raise HTTPException(status_code=400, detail="Supplier ID is required")
+
+    # Проверка корректности UUID
+    try:
+        supplier_uuid = UUID(supplier_id)
+    except ValueError:
+        raise HTTPException(
+            status_code=400, detail="Invalid UUID format for Supplier ID")
+
     logger.log_message(f"Deleting supplier with id {supplier_id}")
-    return crud.delete_supplier(db, supplier_id)
+    return crud.delete_supplier(db, supplier_uuid)
 
 
 @router.get("/search_suppliers/", response_model=list[schemas.Supplier], tags=["Suppliers Service"], summary="Search suppliers by name")
@@ -210,7 +318,7 @@ def search_suppliers(name: str, db: Session = Depends(get_session_local), creden
 
 
 @router.get("/warehouses/{warehouse_id}", response_model=schemas.Warehouse, tags=["Warehouses Service"], summary="Get warehouse by ID")
-def get_warehouse_by_id(warehouse_id: UUID, db: Session = Depends(get_session_local), credentials: HTTPAuthorizationCredentials = Depends(security)):
+def get_warehouse_by_id(warehouse_id: str, db: Session = Depends(get_session_local), credentials: HTTPAuthorizationCredentials = Depends(security)):
     token = credentials.credentials
     user_data = auth.verify_token_in_other_service(
         token)  # Проверяем токен через auth.py
@@ -218,8 +326,19 @@ def get_warehouse_by_id(warehouse_id: UUID, db: Session = Depends(get_session_lo
         logger.log_message("Invalid token or unauthorized access")
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
                             detail="Invalid token or unauthorized access")
+    # Проверка, что warehouse_id не пустой
+    if not warehouse_id:
+        raise HTTPException(status_code=400, detail="Warehouse ID is required")
+
+    # Проверка корректности UUID
+    try:
+        warehouse_uuid = UUID(warehouse_id)
+    except ValueError:
+        raise HTTPException(
+            status_code=400, detail="Invalid UUID format for Warehouse ID")
+
     logger.log_message(f"Getting warehouse with id {warehouse_id}")
-    return crud.get_warehouse_by_id(db, warehouse_id=str(warehouse_id))
+    return crud.get_warehouse_by_id(db, warehouse_id=str(warehouse_uuid))
 
 
 @router.get("/warehouses/", response_model=list[schemas.Warehouse], tags=["Warehouses Service"], summary="Get all warehouses")
@@ -269,8 +388,20 @@ def patch_warehouse(warehouse_id: str, warehouse: schemas.WarehouseUpdate, db: S
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
                             detail="Invalid token or unauthorized access")
     updates = warehouse.dict(exclude_unset=True)
+
+    # Проверка, что warehouse_id не пустой
+    if not warehouse_id.strip():
+        raise HTTPException(status_code=400, detail="Warehouse ID is required")
+
+    # Проверка корректности UUID
+    try:
+        warehouse_uuid = UUID(warehouse_id)
+    except ValueError:
+        raise HTTPException(
+            status_code=400, detail="Invalid UUID format for Warehouse ID")
+
     logger.log_message(f"Updating warehouse with id {warehouse_id}")
-    return crud.patch_warehouse(db=db, warehouse_id=warehouse_id, updates=updates)
+    return crud.patch_warehouse(db=db, warehouse_id=warehouse_uuid, updates=updates)
 
 
 @router.delete("/warehouses/{warehouse_id}", tags=["Warehouses Service"], summary="Delete warehouse by ID")
@@ -282,8 +413,20 @@ def delete_warehouse(warehouse_id: UUID, db: Session = Depends(get_session_local
         logger.log_message("Invalid token or unauthorized access")
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
                             detail="Invalid token or unauthorized access")
+
+        # Проверка, что warehouse_id не пустой
+    if not warehouse_id.strip():
+        raise HTTPException(status_code=400, detail="Warehouse ID is required")
+
+    # Проверка корректности UUID
+    try:
+        warehouse_uuid = UUID(warehouse_id)
+    except ValueError:
+        raise HTTPException(
+            status_code=400, detail="Invalid UUID format for Warehouse ID")
+
     logger.log_message(f"Deleting warehouse with id {warehouse_id}")
-    return crud.delete_warehouse(db, warehouse_id=str(warehouse_id))
+    return crud.delete_warehouse(db, warehouse_id=str(warehouse_uuid))
 
 
 # ---- CRUD операции для товаров на складах (ProductWarehouses) ----

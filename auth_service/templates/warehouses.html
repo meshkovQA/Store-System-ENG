@@ -23,16 +23,25 @@
             <div class="modal-body">
                 <form id="add-warehouse-form">
                     <div class="mb-3">
-                        <label for="add-location" class="form-label">Местоположение</label>
+                        <label for="add-location" class="form-label">Местоположение (обязательно)</label>
                         <input type="text" class="form-control" id="add-location" placeholder="Введите местоположение склада" required>
+                        <small id="addLocationError" class="text-danger" style="display: none;">
+                            Местоположение обязательно, не более 255 символов.
+                        </small>
                     </div>
                     <div class="mb-3">
                         <label for="add-manager-name" class="form-label">Имя управляющего</label>
                         <input type="text" class="form-control" id="add-manager-name" placeholder="Введите Имя Фамилию управляющего">
+                        <small id="addManagerNameError" class="text-danger" style="display: none;">
+                            Максимум 100 символов, только буквы.
+                        </small>
                     </div>
                     <div class="mb-3">
-                        <label for="add-capacity" class="form-label">Вместимость (куб.м)</label>
+                        <label for="add-capacity" class="form-label">Вместимость (куб.м) (обязательно)</label>
                         <input type="number" class="form-control" id="add-capacity" placeholder="Введите вместимость склада" required>
+                        <small id="addCapacityError" class="text-danger" style="display: none;">
+                        Вместимость обязательна, должно быть положительным числом.
+                        </small>
                     </div>
                     <div class="mb-3">
                         <label for="add-current-stock" class="form-label">Количество товаров</label>
@@ -41,10 +50,16 @@
                     <div class="mb-3">
                         <label for="add-contact-number" class="form-label">Контактный телефон</label>
                         <input type="text" class="form-control" id="add-contact-number" placeholder="Введите телефон склада (+79009999999)">
+                        <small id="addContactNumberError" class="text-danger" style="display: none;">
+                            Максимум 15 символов, только цифры и символ '+'.
+                        </small>
                     </div>
                     <div class="mb-3">
                         <label for="add-email" class="form-label">Контактный email</label>
                         <input type="email" class="form-control" id="add-email" placeholder="Введите email склада">
+                        <small id="addEmailError" class="text-danger" style="display: none;">
+                            Максимум 255 символов, должен быть валидным email.
+                        </small>
                     </div>
                     <div class="mb-3">
                         <label for="add-is-active" class="form-label">Активность</label>
@@ -52,10 +67,16 @@
                             <option value="active">Активен</option>
                             <option value="inactive">Неактивен</option>
                         </select>
+                        <small id="addIsActiveError" class="text-danger" style="display: none;">
+                            Пожалуйста, выберите статус активности.
+                        </small>
                     </div>
                     <div class="mb-3">
                         <label for="add-area-size" class="form-label">Площадь (кв.м)</label>
                         <input type="number" class="form-control" id="add-area-size" placeholder="Введите площадь склада">
+                        <small id="addAreaSizeError" class="text-danger" style="display: none;">
+                            Должно быть положительным числом.
+                        </small>
                     </div>
                     <button type="submit" class="btn btn-primary">Создать склад</button>
                 </form>
@@ -76,16 +97,25 @@
                 <form id="edit-warehouse-form">
                     <input type="hidden" id="edit-warehouse-id">
                     <div class="mb-3">
-                        <label for="edit-location" class="form-label">Местоположение</label>
+                        <label for="edit-location" class="form-label">Местоположение (обязательно)</label>
                         <input type="text" class="form-control" id="edit-location" placeholder="Введите местоположение склада" required>
+                        <small id="editLocationError" class="text-danger" style="display: none;">
+                            Местоположение обязательно, не более 255 символов.
+                        </small>
                     </div>
                     <div class="mb-3">
                         <label for="edit-manager-name" class="form-label">Имя управляющего</label>
                         <input type="text" class="form-control" id="edit-manager-name" placeholder="Введите Имя Фамилию управляющего">
+                        <small id="editManagerNameError" class="text-danger" style="display: none;">
+                            Максимум 100 символов, только буквы.
+                        </small>
                     </div>
                     <div class="mb-3">
-                        <label for="edit-capacity" class="form-label">Вместимость (куб.м)</label>
+                        <label for="edit-capacity" class="form-label">Вместимость (куб.м) (обязательно)</label>
                         <input type="number" class="form-control" id="edit-capacity" placeholder="Введите вместимость склада" required>
+                        <small id="editCapacityError" class="text-danger" style="display: none;">
+                            Вместимость обязательна, должно быть положительным числом.
+                        </small>
                     </div>
                     <div class="mb-3">
                         <label for="edit-current-stock" class="form-label">Количество товаров</label>
@@ -94,10 +124,16 @@
                     <div class="mb-3">
                         <label for="edit-contact-number" class="form-label">Контактный телефон</label>
                         <input type="text" class="form-control" id="edit-contact-number" placeholder="Введите телефон склада (+79009999999)">
+                        <small id="editContactNumberError" class="text-danger" style="display: none;">
+                            Максимум 15 символов, только цифры и символ '+'.
+                        </small>
                     </div>
                     <div class="mb-3">
                         <label for="edit-email" class="form-label">Контактный email</label>
                         <input type="email" class="form-control" id="edit-email"  placeholder="Введите email склада">
+                        <small id="editEmailError" class="text-danger" style="display: none;">
+                            Максимум 255 символов, должен быть валидным email.
+                        </small>
                     </div>
                     <div class="mb-3">
                         <label for="edit-is-active" class="form-label">Активность</label>
@@ -105,10 +141,16 @@
                             <option value="active">Активен</option>
                             <option value="inactive">Неактивен</option>
                         </select>
+                        <small id="editIsActiveError" class="text-danger" style="display: none;">
+                            Пожалуйста, выберите статус активности.
+                        </small>
                     </div>
                     <div class="mb-3">
                         <label for="edit-area-size" class="form-label">Площадь (кв.м)</label>
                         <input type="number" class="form-control" id="edit-area-size">
+                        <small id="editAreaSizeError" class="text-danger" style="display: none;">
+                            Должно быть положительным числом.
+                        </small>
                     </div>
                     <button type="submit" class="btn btn-primary">Сохранить изменения</button>
                 </form>
