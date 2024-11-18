@@ -363,6 +363,14 @@ def create_warehouse(warehouse: schemas.WarehouseCreate, db: Session = Depends(g
         logger.log_message("Invalid token or unauthorized access")
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
                             detail="Invalid token or unauthorized access")
+
+    # Проверка на существование продукта с таким же названием
+    existing_warehouse = db.query(models.Warehouse).filter(
+        models.Warehouse.location == warehouse.location).first()
+    if existing_warehouse:
+        raise HTTPException(
+            status_code=422, detail="This warehouse is already exist")
+
     logger.log_message(f"""Creating a new warehouse: {warehouse.location}, {warehouse.manager_name}, {warehouse.capacity}, {
                        warehouse.current_stock}, {warehouse.contact_number}, {warehouse.email}, {warehouse.is_active}, {warehouse.area_size}""")
     return crud.create_warehouse(
