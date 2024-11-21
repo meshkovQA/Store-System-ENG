@@ -57,6 +57,20 @@ services:
     networks:
       - app_network
 
+  kafka-ui:
+    container_name: kafka-ui
+    image: provectuslabs/kafka-ui:latest
+    ports:
+      - 9095:8080
+    depends_on:
+      kafka:
+        condition: service_healthy
+    environment:
+      KAFKA_CLUSTERS_0_NAME: kafka
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
+    networks:
+      - app_network
+
   # Elasticsearch - хранилище логов
   elasticsearch:
     image: elasticsearch:7.17.18

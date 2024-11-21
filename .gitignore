@@ -1,3 +1,4 @@
 /my_env
-/logs
+/auth_service/logs/
+/products_service/logs/
 /docker-data
