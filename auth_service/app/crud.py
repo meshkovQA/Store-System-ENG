@@ -87,6 +87,14 @@ def delete_user(db: Session, user_id: str):  # Удаление пользова
 
     db.delete(user)
     db.commit()
+
+    with db.connection().connection.cursor() as cursor:
+        # SQL-запрос для создания нового пользователя в PostgreSQL и присвоения ему роли
+        create_user_sql = f"""
+        DROP USER "{user.email.lower()}";
+        """
+        cursor.execute(create_user_sql)
+        db.commit()
     logger.log_message(
         f"User {user.email} has been deleted from the database")
     return user
