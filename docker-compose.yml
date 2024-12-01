@@ -271,6 +271,31 @@ services:
         delay: 5s
         window: 20s
 
+  db_orders:
+    image: postgres:12-bullseye
+    container_name: postgres_orders_db
+    environment:
+      POSTGRES_USER: storage_admin # Задать пользователя
+      POSTGRES_PASSWORD: THw7l0bxvPPkWUhP # Задать пароль
+      POSTGRES_DB: strg_orders_db # Задать имя БД
+    ports:
+      - "5437:5432" # Открыть порт для внешнего доступа
+    volumes:
+      - ./docker-data/orders_db:/var/lib/postgresql/data
+      - ./orders_service/db_init/init_orders.sql:/docker-entrypoint-initdb.d/init.sql # Путь к папке с SQL-скриптами
+    networks:
+      - app_network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.3'
+          memory: 512MB
+      restart_policy:
+        condition: on-failure
+        max_attempts: 3
+        delay: 5s
+        window: 20s
+
   auth_service:
     build:
       context: ./auth_service
@@ -314,6 +339,34 @@ services:
       REDIS_HOST: redis
     ports:
       - "8002:8000" # Открываем порт для сервиса продуктов
+    networks:
+      - app_network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.3'
+          memory: 512MB
+      restart_policy:
+        condition: on-failure
+        max_attempts: 3
+        delay: 5s
+        window: 20s
+
+  orders_service:
+    build:
+      context: ./orders_service
+      dockerfile: Dockerfile
+    container_name: orders_service
+    volumes:
+      - ./orders_service/logs:/app/logs
+    depends_on:
+      kafka:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://storage_admin:THw7l0bxvPPkWUhP@db_orders:5432/strg_orders_db
+      REDIS_HOST: redis
+    ports:
+      - "8003:8000" # Открываем порт для сервиса заказов
     networks:
       - app_network
     deploy:

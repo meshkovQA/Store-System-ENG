@@ -3,6 +3,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPBearer
 from app import routes, database, logger, auth
+from app.kafka import start_consumer
 
 app = FastAPI(
     title="Warehouse Management Microservice API",
@@ -24,6 +25,7 @@ app.add_middleware(
 @app.on_event("startup")
 def startup():
     database.init_db()
+    start_consumer()
     logger.log_message("Database initialized.")
 
 
