@@ -192,7 +192,7 @@ def create_supplier(supplier: schemas.SupplierCreate, db: Session = Depends(get_
         token)  # Проверяем токен через auth.py
     if not user_data:
         logger.log_message("Invalid token or unauthorized access")
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
                             detail="Invalid token or unauthorized access")
 
     # Проверка на существование поставщика с таким же названием

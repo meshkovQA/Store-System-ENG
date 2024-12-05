@@ -56,7 +56,8 @@ def create_product(db: Session, user_id: str, name: str, description: str, categ
 
 def get_all_products(db: Session):
     try:
-        products = db.query(models.Product).all()
+        products = db.query(models.Product).filter(
+            models.Product.is_available == True).all()
 
         # Преобразуем UUID поля в строки для каждого продукта
         for product in products:
