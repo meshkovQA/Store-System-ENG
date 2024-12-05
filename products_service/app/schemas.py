@@ -163,7 +163,7 @@ class SupplierBase(BaseModel):
     # Название: обязательное, от 3 до 100 символов
     name: constr(min_length=1, max_length=100)
     # Контактное лицо: обязательное, максимум 100 символов
-    contact_name: Optional[constr(max_length=100)] = None
+    contact_name: constr(max_length=100)
     # Email контактного лица: обязательное, максимум 100 символов, валидный формат email
     contact_email: EmailStr
     # Номер телефона: необязательное, максимум 15 символов, только цифры и символ "+"
