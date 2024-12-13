@@ -6,6 +6,7 @@ from fastapi import HTTPException
 from sqlalchemy.exc import SQLAlchemyError
 from datetime import datetime
 from app.kafka import send_to_kafka
+from uuid import UUID
 
 # ---- CRUD операции для товаров (Products) ----
 
@@ -114,7 +115,7 @@ def update_product(db: Session, product_id: str, name: str, description: str, ca
             status_code=500, detail=f"Database error: {str(e)}")
 
 
-def update_product_availability(db: Session, product_id: str, is_available: bool):
+def update_product_availability(db: Session, product_id: UUID, is_available: bool):
     product = db.query(models.Product).filter(
         models.Product.product_id == product_id).first()
     if not product:

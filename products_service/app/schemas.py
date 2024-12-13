@@ -157,6 +157,12 @@ class ProductAvailabilityUpdate(BaseModel):
     is_available: bool
 
 
+class ProductPatchResponse(BaseModel):
+    product_id: str  # Строка, а не UUID
+    is_available: bool
+    updated_at: datetime
+
+
 # ---- Схемы для поставщиков (Supplier) ----
 
 class SupplierBase(BaseModel):
