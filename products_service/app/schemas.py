@@ -41,7 +41,7 @@ class ProductBase(BaseModel):
 
     @validator("category")
     def validate_category(cls, value):
-        if value:
+        if value is not None:
             # Регулярное выражение для букв и цифр
             pattern = r"^[A-Za-zА-Яа-я0-9]+$"
             if not re.match(pattern, value):
@@ -69,7 +69,7 @@ class ProductBase(BaseModel):
 
     @validator("image_url")
     def validate_image_url(cls, value):
-        if value:
+        if value is not None:
             # Преобразование в строку перед проверкой расширения
             value_str = str(value)
             allowed_extensions = (".png", ".jpeg", ".jpg")
@@ -81,17 +81,19 @@ class ProductBase(BaseModel):
     @validator("weight")
     def validate_weight(cls, value):
         # Проверяем, что значение имеет ровно 2 знака после запятой
-        if value.as_tuple().exponent != -2:
-            raise ValueError("Weight must have exactly two decimal places.")
-        # Проверяем, что количество цифр не превышает 10
-        if len(str(value).replace(".", "")) > 10:
-            raise ValueError(
-                "Weight must not exceed 10 digits including decimal places.")
+        if value is not None:
+            if value.as_tuple().exponent != -2:
+                raise ValueError(
+                    "Weight must have exactly two decimal places.")
+            # Проверяем, что количество цифр не превышает 10
+            if len(str(value).replace(".", "")) > 10:
+                raise ValueError(
+                    "Weight must not exceed 10 digits including decimal places.")
         return value
 
     @validator("dimensions")
     def validate_dimensions(cls, value):
-        if value:
+        if value is not None:
             # Регулярное выражение для цифр и символа "х"
             pattern = r"^[0-9xх]+$"
             if not re.match(pattern, value):
@@ -101,7 +103,7 @@ class ProductBase(BaseModel):
 
     @validator("manufacturer")
     def validate_manufacturer(cls, value):
-        if value:
+        if value is not None:
             # Регулярное выражение для букв и цифр
             pattern = r"^[A-Za-zА-Яа-я0-9]+$"
             if not re.match(pattern, value):
@@ -208,7 +210,7 @@ class SupplierBase(BaseModel):
 
     @validator("phone_number")
     def validate_phone_number(cls, value):
-        if value:
+        if value is not None:
             # Проверка допустимого формата телефона: цифры и символ "+"
             pattern = r"^\+?\d{1,14}$"
             if not re.match(pattern, value):
@@ -218,7 +220,7 @@ class SupplierBase(BaseModel):
 
     @validator("address")
     def validate_address(cls, value):
-        if value:
+        if value is not None:
             # Проверка адреса: только буквы, цифры и пробелы
             pattern = r"^[A-Za-zА-Яа-я0-9\s]+$"
             if not re.match(pattern, value):
@@ -228,7 +230,7 @@ class SupplierBase(BaseModel):
 
     @validator("country")
     def validate_country(cls, value):
-        if value:
+        if value is not None:
             # Проверка страны: только буквы
             pattern = r"^[A-Za-zА-Яа-я]+$"
             if not re.match(pattern, value):
@@ -237,7 +239,7 @@ class SupplierBase(BaseModel):
 
     @validator("city")
     def validate_city(cls, value):
-        if value:
+        if value is not None:
             # Проверка города: только буквы
             pattern = r"^[A-Za-zА-Яа-я\s]+$"
             if not re.match(pattern, value):
@@ -246,8 +248,9 @@ class SupplierBase(BaseModel):
 
     @validator("website")
     def validate_website(cls, value):
-        # Проверка URL уже обеспечена HttpUrl, поэтому дополнительная проверка не требуется.
-        return value
+        if value is not None:
+            # Проверка URL уже обеспечена HttpUrl, поэтому дополнительная проверка не требуется.
+            return value
 
 
 class SupplierCreate(SupplierBase):
@@ -297,13 +300,13 @@ class WarehouseBase(BaseModel):
 
     @validator("manager_name")
     def validate_manager_name(cls, value):
-        if value:
+        if value is not None and value.strip():
             # Проверка: только буквы и пробелы
             pattern = r"^[A-Za-zА-Яа-я\s]+$"
             if not re.match(pattern, value):
                 raise ValueError(
                     "Manager name must contain only letters and spaces.")
-        return value
+        return value or None
 
     @validator("capacity")
     def validate_capacity(cls, value):
@@ -320,7 +323,7 @@ class WarehouseBase(BaseModel):
 
     @validator("contact_number")
     def validate_contact_number(cls, value):
-        if value:
+        if value is not None:
             # Проверка допустимого формата телефона: цифры и символ "+"
             pattern = r"^\+?\d{1,14}$"
             if not re.match(pattern, value):

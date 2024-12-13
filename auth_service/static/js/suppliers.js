@@ -199,6 +199,20 @@ document.addEventListener("DOMContentLoaded", async function () {
     });
 });
 
+function showNotification(message, type = "success", duration = 3000) {
+    const notification = document.getElementById("notification");
+    notification.textContent = message;
+
+    // Устанавливаем класс в зависимости от типа уведомления
+    notification.className = `alert alert-${type}`;
+    notification.style.display = "block";
+
+    // Прячем уведомление через `duration` миллисекунд
+    setTimeout(() => {
+        notification.style.display = "none";
+    }, duration);
+}
+
 // Открытие модального окна для добавления нового поставщика
 function openAddModal() {
     document.getElementById("add-supplier-form").reset();
@@ -279,25 +293,46 @@ async function createSupplier() {
         name: document.getElementById("add-name").value.trim(),
         contact_name: document.getElementById("add-contact_name").value.trim(),
         contact_email: document.getElementById("add-contact_email").value.trim(),
-        phone_number: document.getElementById("add-phone_number").value.trim(),
-        address: document.getElementById("add-address").value.trim(),
-        country: document.getElementById("add-country").value.trim(),
-        city: document.getElementById("add-city").value.trim(),
-        website: document.getElementById("add-website").value.trim()
+        phone_number: document.getElementById("add-phone_number").value.trim() || null,
+        address: document.getElementById("add-address").value.trim() || null,
+        country: document.getElementById("add-country").value.trim() || null,
+        city: document.getElementById("add-city").value.trim() || null,
+        website: document.getElementById("add-website").value.trim() || null,
     };
 
-    await fetch("http://localhost:8002/suppliers/", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}`
-        },
-        body: JSON.stringify(supplierData)
-    });
 
-    document.getElementById("add-supplier-form").reset();
-    loadSuppliers(token);
-    $("#addSupplierModal").modal("hide");
+    try {
+        const response = await fetch("http://localhost:8002/suppliers/", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`
+            },
+            body: JSON.stringify(supplierData)
+        });
+
+        if (response.ok) {
+            // Закрываем модальное окно
+            $("#addSupplierModal").modal("hide");
+
+            // Очищаем форму
+            document.getElementById("add-supplier-form").reset();
+
+            // Обновляем список поставщиков
+            await loadSuppliers(token);
+
+            // Показываем уведомление об успешном добавлении
+            showNotification("Поставщик успешно добавлен!");
+        } else {
+            // Обработка ошибки
+            const errorData = await response.json();
+            console.error("Ошибка при добавлении поставщика:", errorData);
+            showNotification("Ошибка при добавлении поставщика", "danger");
+        }
+    } catch (error) {
+        console.error("Ошибка при выполнении запроса:", error);
+        showNotification("Ошибка при добавлении поставщика", "danger");
+    }
 }
 
 // Обновление поставщика
@@ -307,11 +342,11 @@ async function updateSupplier(supplierId) {
         name: document.getElementById("edit-name").value.trim(),
         contact_name: document.getElementById("edit-contact_name").value.trim(),
         contact_email: document.getElementById("edit-contact_email").value.trim(),
-        phone_number: document.getElementById("edit-phone_number").value.trim(),
-        address: document.getElementById("edit-address").value.trim(),
-        country: document.getElementById("edit-country").value.trim(),
-        city: document.getElementById("edit-city").value.trim(),
-        website: document.getElementById("edit-website").value.trim()
+        phone_number: document.getElementById("edit-phone_number").value.trim() || null,
+        address: document.getElementById("edit-address").value.trim() || null,
+        country: document.getElementById("edit-country").value.trim() || null,
+        city: document.getElementById("edit-city").value.trim() || null,
+        website: document.getElementById("edit-website").value.trim() || null,
     };
 
     await fetch(`http://localhost:8002/suppliers/${supplierId}`, {

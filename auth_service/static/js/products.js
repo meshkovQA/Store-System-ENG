@@ -217,6 +217,19 @@ document.addEventListener("DOMContentLoaded", async function () {
     });
 });
 
+function showNotification(message, type = "success", duration = 3000) {
+    const notification = document.getElementById("notification");
+    notification.textContent = message;
+
+    // Устанавливаем класс в зависимости от типа уведомления
+    notification.className = `alert alert-${type}`;
+    notification.style.display = "block";
+
+    // Прячем уведомление через `duration` миллисекунд
+    setTimeout(() => {
+        notification.style.display = "none";
+    }, duration);
+}
 
 function openAddProductModal() {
     document.getElementById("add-product-form").reset();
@@ -277,42 +290,62 @@ async function createProduct() {
 
     const productData = {
         name: document.getElementById("add-name").value.trim(),
-        description: document.getElementById("add-description").value.trim(),
-        category: document.getElementById("add-category").value.trim(),
+        description: document.getElementById("add-description").value.trim() || null,
+        category: document.getElementById("add-category").value.trim() || null,
         price: document.getElementById("add-price").value.trim() || null,
         stock_quantity: parseInt(document.getElementById("add-stock-quantity").value) || null,
         supplier_id: supplierId,  // Передаем выбранный supplier_id
         weight: document.getElementById("add-weight").value || null,
-        dimensions: document.getElementById("add-dimensions").value.trim(),
-        manufacturer: document.getElementById("add-manufacturer").value.trim(),
+        dimensions: document.getElementById("add-dimensions").value.trim() || null,
+        manufacturer: document.getElementById("add-manufacturer").value.trim() || null,
     };
 
-    await fetch("http://localhost:8002/products/", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}`
-        },
-        body: JSON.stringify(productData)
-    });
+    try {
+        const response = await fetch("http://localhost:8002/products/", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`
+            },
+            body: JSON.stringify(productData)
+        });
 
-    document.getElementById("add-product-form").reset();
-    loadProducts(token);
-    $("#addProductModal").modal("hide");
+        if (response.ok) {
+            // Закрываем всплывающее окно
+            $("#addProductModal").modal("hide");
+
+            // Очищаем форму
+            document.getElementById("add-product-form").reset();
+
+            // Загружаем обновленный список продуктов
+            await loadProducts(token);
+
+            // Показываем уведомление об успешном добавлении
+            showNotification("Продукт успешно добавлен!");
+        } else {
+            // Обработка ошибки
+            const errorData = await response.json();
+            console.error("Ошибка при добавлении продукта:", errorData);
+            showNotification("Ошибка при добавлении продукта", "danger");
+        }
+    } catch (error) {
+        console.error("Ошибка при выполнении запроса:", error);
+        showNotification("Ошибка при добавлении продукта", "danger");
+    }
 }
 
 async function updateProduct(productId) {
     const token = await getTokenFromDatabase();
     const productData = {
         name: document.getElementById("edit-name").value.trim(),
-        description: document.getElementById("edit-description").value.trim(),
-        category: document.getElementById("edit-category").value.trim(),
+        description: document.getElementById("edit-description").value.trim() || null,
+        category: document.getElementById("edit-category").value.trim() || null,
         price: document.getElementById("edit-price").value.trim() || null,
         stock_quantity: parseInt(document.getElementById("edit-stock-quantity").value) || null,
         supplier_id: document.getElementById("edit-supplier-id").value,
         weight: document.getElementById("edit-weight").value || null,
-        dimensions: document.getElementById("edit-dimensions").value.trim(),
-        manufacturer: document.getElementById("edit-manufacturer").value.trim(),
+        dimensions: document.getElementById("edit-dimensions").value.trim() || null,
+        manufacturer: document.getElementById("edit-manufacturer").value.trim() || null,
     };
 
     await fetch(`http://localhost:8002/products/${productId}`, {
