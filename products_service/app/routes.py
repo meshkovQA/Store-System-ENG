@@ -116,7 +116,7 @@ async def update_product(product_id: str, product: schemas.ProductUpdate, db: Se
                                dimensions=product.dimensions, manufacturer=product.manufacturer)
 
 
-@router.patch("/products/{product_id}", response_model=schemas.Product, tags=["Products Service"], summary="Partially update availablity of product by ID")
+@router.patch("/products/{product_id}", response_model=schemas.ProductPatchResponse, tags=["Products Service"], summary="Partially update availablity of product by ID")
 async def partial_update_product(product_id: str, availability_data: schemas.ProductAvailabilityUpdate, db: Session = Depends(get_session_local), credentials: HTTPAuthorizationCredentials = Depends(security)):
     token = credentials.credentials
     user_data = auth.verify_token_in_other_service(token)
@@ -141,8 +141,21 @@ async def partial_update_product(product_id: str, availability_data: schemas.Pro
     logger.log_message(
         f"User {user_id} is partially updating product with id {product_id}")
 
+    # Проверяем is_available на корректность
+    if availability_data.is_available is None:
+        raise HTTPException(
+            status_code=400, detail="Field 'is_available' is required and cannot be null")
+
     # Обновите только поле is_available в crud
-    return crud.update_product_availability(db=db, product_id=product_uuid, is_available=availability_data.is_available)
+    updated_product = crud.update_product_availability(
+        db=db, product_id=product_uuid, is_available=availability_data.is_available)
+
+    return schemas.ProductPatchResponse(
+        # Преобразуем UUID в строку
+        product_id=str(updated_product.product_id),
+        is_available=updated_product.is_available,
+        updated_at=updated_product.updated_at,
+    )
 
 
 @router.delete("/products/{product_id}", tags=["Products Service"], summary="Delete product by ID")
@@ -192,7 +205,7 @@ def create_supplier(supplier: schemas.SupplierCreate, db: Session = Depends(get_
         token)  # Проверяем токен через auth.py
     if not user_data:
         logger.log_message("Invalid token or unauthorized access")
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
                             detail="Invalid token or unauthorized access")
 
     # Проверка на существование поставщика с таким же названием

@@ -6,6 +6,7 @@ from fastapi import HTTPException
 from sqlalchemy.exc import SQLAlchemyError
 from datetime import datetime
 from app.kafka import send_to_kafka
+from uuid import UUID
 
 # ---- CRUD операции для товаров (Products) ----
 
@@ -56,7 +57,8 @@ def create_product(db: Session, user_id: str, name: str, description: str, categ
 
 def get_all_products(db: Session):
     try:
-        products = db.query(models.Product).all()
+        products = db.query(models.Product).filter(
+            models.Product.is_available == True).all()
 
         # Преобразуем UUID поля в строки для каждого продукта
         for product in products:
@@ -113,7 +115,7 @@ def update_product(db: Session, product_id: str, name: str, description: str, ca
             status_code=500, detail=f"Database error: {str(e)}")
 
 
-def update_product_availability(db: Session, product_id: str, is_available: bool):
+def update_product_availability(db: Session, product_id: UUID, is_available: bool):
     product = db.query(models.Product).filter(
         models.Product.product_id == product_id).first()
     if not product:

@@ -169,6 +169,20 @@ document.addEventListener("DOMContentLoaded", async function () {
     });
 });
 
+function showNotification(message, type = "success", duration = 3000) {
+    const notification = document.getElementById("notification");
+    notification.textContent = message;
+
+    // Устанавливаем класс в зависимости от типа уведомления
+    notification.className = `alert alert-${type}`;
+    notification.style.display = "block";
+
+    // Прячем уведомление через `duration` миллисекунд
+    setTimeout(() => {
+        notification.style.display = "none";
+    }, duration);
+}
+
 // Открытие модального окна для просмотра информации о складе
 async function openViewWarehouseModal(warehouseId) {
     const token = await getTokenFromDatabase();
@@ -252,27 +266,47 @@ async function createWarehouse() {
     const token = await getTokenFromDatabase();
     const warehouseData = {
         location: document.getElementById("add-location").value.trim(),
-        manager_name: document.getElementById("add-manager-name").value.trim(),
+        manager_name: document.getElementById("add-manager-name").value.trim() || null,
         capacity: parseInt(document.getElementById("add-capacity").value.trim()),
         current_stock: parseInt(document.getElementById("add-current-stock").value.trim()) || 0,
-        contact_number: document.getElementById("add-contact-number").value.trim(),
-        email: document.getElementById("add-email").value.trim(),
+        contact_number: document.getElementById("add-contact-number").value.trim() || null,
+        email: document.getElementById("add-email").value.trim() || null,
         is_active: document.getElementById("add-is-active").value === "active",
         area_size: parseFloat(document.getElementById("add-area-size").value.trim()) || null,
     };
 
-    await fetch("http://localhost:8002/warehouses/", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}`
-        },
-        body: JSON.stringify(warehouseData)
-    });
+    try {
+        const response = await fetch("http://localhost:8002/warehouses/", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`
+            },
+            body: JSON.stringify(warehouseData)
+        });
 
-    document.getElementById("add-warehouse-form").reset();
-    loadWarehouses(token);
-    $("#addWarehouseModal").modal("hide");
+        if (response.ok) {
+            // Закрываем модальное окно
+            $("#addWarehouseModal").modal("hide");
+
+            // Очищаем форму
+            document.getElementById("add-warehouse-form").reset();
+
+            // Обновляем список складов
+            await loadWarehouses(token);
+
+            // Показываем уведомление об успешном добавлении
+            showNotification("Склад успешно добавлен!");
+        } else {
+            // Обработка ошибки
+            const errorData = await response.json();
+            console.error("Ошибка при добавлении склада:", errorData);
+            showNotification("Ошибка при добавлении склада", "danger");
+        }
+    } catch (error) {
+        console.error("Ошибка при выполнении запроса:", error);
+        showNotification("Ошибка при добавлении склада", "danger");
+    }
 }
 
 // Обновление склада
@@ -280,11 +314,11 @@ async function updateWarehouse(warehouseId) {
     const token = await getTokenFromDatabase();
     const warehouseData = {
         location: document.getElementById("edit-location").value.trim(),
-        manager_name: document.getElementById("edit-manager-name").value.trim(),
+        manager_name: document.getElementById("edit-manager-name").value.trim() || null,
         capacity: parseInt(document.getElementById("edit-capacity").value.trim()),
         current_stock: parseInt(document.getElementById("edit-current-stock").value.trim()),
-        contact_number: document.getElementById("edit-contact-number").value.trim(),
-        email: document.getElementById("edit-email").value.trim(),
+        contact_number: document.getElementById("edit-contact-number").value.trim() || null,
+        email: document.getElementById("edit-email").value.trim() || null,
         is_active: document.getElementById("edit-is-active").value === "active",
         area_size: parseFloat(document.getElementById("edit-area-size").value.trim()) || null,
     };
