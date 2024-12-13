@@ -1,5 +1,5 @@
 /my_env
-/auth_service/logs
-/orders_service/logs
-/products_service/logs
 /docker-data
+products_service/logs/products_service.log
+auth_service/logs/auth.log
+orders_service/logs/orders_service.log
