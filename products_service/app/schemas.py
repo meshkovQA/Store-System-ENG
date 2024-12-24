@@ -39,6 +39,15 @@ class ProductBase(BaseModel):
                 "Name must contain only letters and digits, with a length between 3 and 100 characters.")
         return value
 
+    @validator("description")
+    def validate_description(cls, value):
+        if value is not None:
+            # Проверка длины описания
+            if len(value) > 500:
+                raise ValueError(
+                    "Description must be 500 characters or fewer.")
+        return value
+
     @validator("category")
     def validate_category(cls, value):
         if value is not None:
@@ -121,7 +130,7 @@ class ProductResponse(BaseModel):
     product_id: str
     user_id: str
     name: str
-    description: str
+    description: Optional[str] = None
     category: Optional[str] = None
     price: Decimal
     stock_quantity: int

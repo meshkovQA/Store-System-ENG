@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from uuid import UUID
 from app import crud, schemas, database, auth, logger, models
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from app.database import get_session_local
+from app.database import get_session_local, Product
 
 
 router = APIRouter()
@@ -479,6 +479,17 @@ def add_product_to_warehouse(
         logger.log_message("Invalid token or unauthorized access")
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
                             detail="Invalid token or unauthorized access")
+
+    # Проверяем доступное количество продукта
+    product = db.query(Product).filter(
+        Product.product_id == product_id).first()
+    if not product:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail="Product not found")
+
+    if product.stock_quantity < quantity:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
+                            detail=f"Insufficient stock. Available: {product.stock_quantity}, requested: {quantity}")
 
     logger.log_message(f"""Adding product {product_id} to warehouse {
                        warehouse_id} with quantity {quantity}""")
