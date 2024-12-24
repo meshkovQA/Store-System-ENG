@@ -39,6 +39,15 @@ class ProductBase(BaseModel):
                 "Name must contain only letters and digits, with a length between 3 and 100 characters.")
         return value
 
+    @validator("description")
+    def validate_description(cls, value):
+        if value is not None:
+            # Проверка длины описания
+            if len(value) > 500:
+                raise ValueError(
+                    "Description must be 500 characters or fewer.")
+        return value
+
     @validator("category")
     def validate_category(cls, value):
         if value is not None:
@@ -121,7 +130,7 @@ class ProductResponse(BaseModel):
     product_id: str
     user_id: str
     name: str
-    description: str
+    description: Optional[str] = None
     category: Optional[str] = None
     price: Decimal
     stock_quantity: int
@@ -221,6 +230,8 @@ class SupplierBase(BaseModel):
     @validator("address")
     def validate_address(cls, value):
         if value is not None:
+            if value.strip() == "":
+                raise ValueError("Address cannot contain only spaces.")
             # Проверка адреса: только буквы, цифры и пробелы
             pattern = r"^[A-Za-zА-Яа-я0-9\s]+$"
             if not re.match(pattern, value):
@@ -231,6 +242,8 @@ class SupplierBase(BaseModel):
     @validator("country")
     def validate_country(cls, value):
         if value is not None:
+            if value.strip() == "":
+                raise ValueError("Country cannot contain only spaces.")
             # Проверка страны: только буквы
             pattern = r"^[A-Za-zА-Яа-я]+$"
             if not re.match(pattern, value):
@@ -240,10 +253,13 @@ class SupplierBase(BaseModel):
     @validator("city")
     def validate_city(cls, value):
         if value is not None:
+            if value.strip() == "":
+                raise ValueError("Country cannot contain only spaces.")
             # Проверка города: только буквы
-            pattern = r"^[A-Za-zА-Яа-я\s]+$"
+            pattern = r"^[A-Za-zА-Яа-я\s-]+$"
             if not re.match(pattern, value):
-                raise ValueError("City must contain only letters.")
+                raise ValueError(
+                    "City must contain only letters, spaces, and hyphens.")
         return value
 
     @validator("website")
