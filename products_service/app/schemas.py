@@ -273,8 +273,88 @@ class SupplierCreate(SupplierBase):
     pass
 
 
-class SupplierUpdate(SupplierBase):
-    pass
+class SupplierUpdate(BaseModel):
+    # Все поля Optional, чтобы не требовалось передавать их в PATCH
+    name: Optional[constr(min_length=1, max_length=100)] = None
+    contact_name: Optional[constr(max_length=100)] = None
+    contact_email: Optional[EmailStr] = None
+    phone_number: Optional[constr(max_length=15)] = None
+    address: Optional[constr(max_length=200)] = None
+    country: Optional[constr(max_length=50)] = None
+    city: Optional[constr(max_length=50)] = None
+    website: Optional[HttpUrl] = None
+
+    @validator("name")
+    def validate_name(cls, value):
+        # Проверяем только если значение поля не None
+        if value is None:
+            return value
+        pattern = r"^[A-Za-zА-Яа-я0-9\s]+$"
+        if not re.match(pattern, value):
+            raise ValueError(
+                "Name must contain only letters, digits, and spaces, and be 1-100 characters long."
+            )
+        return value
+
+    @validator("contact_name")
+    def validate_contact_name(cls, value):
+        if value is None:
+            return value
+        pattern = r"^[A-Za-zА-Яа-я0-9\s]+$"
+        if not re.match(pattern, value):
+            raise ValueError(
+                "Contact name must contain only letters, digits, and spaces."
+            )
+        return value
+
+    @validator("phone_number")
+    def validate_phone_number(cls, value):
+        if value is None:
+            return value
+        pattern = r"^\+?\d{1,14}$"
+        if not re.match(pattern, value):
+            raise ValueError(
+                "Phone number must contain only digits and optional '+' at the beginning."
+            )
+        return value
+
+    @validator("address")
+    def validate_address(cls, value):
+        if value is None:
+            return value
+        if value.strip() == "":
+            raise ValueError("Address cannot contain only spaces.")
+        pattern = r"^[A-Za-zА-Яа-я0-9\s]+$"
+        if not re.match(pattern, value):
+            raise ValueError(
+                "Address must contain only letters, digits, and spaces.")
+        return value
+
+    @validator("country")
+    def validate_country(cls, value):
+        if value is None:
+            return value
+        if value.strip() == "":
+            raise ValueError("Country cannot contain only spaces.")
+        pattern = r"^[A-Za-zА-Яа-я]+$"
+        if not re.match(pattern, value):
+            raise ValueError("Country must contain only letters.")
+        return value
+
+    @validator("city")
+    def validate_city(cls, value):
+        if value is None:
+            return value
+        if value.strip() == "":
+            raise ValueError("City cannot contain only spaces.")
+        pattern = r"^[A-Za-zА-Яа-я\s-]+$"
+        if not re.match(pattern, value):
+            raise ValueError(
+                "City must contain only letters, spaces, and hyphens.")
+        return value
+
+    # Для contact_email и website дополнительные проверки не нужны —
+    # EmailStr и HttpUrl уже сделают проверку формата, если поле не None.
 
 
 class Supplier(SupplierBase):
