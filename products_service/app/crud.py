@@ -248,7 +248,8 @@ def create_warehouse(db: Session, location: str, manager_name: str, capacity: in
             contact_number=contact_number,
             email=email,
             is_active=is_active,
-            area_size=area_size
+            area_size=area_size,
+            created_at=datetime.utcnow()
         )
         db.add(new_warehouse)
         db.commit()
@@ -303,6 +304,17 @@ def delete_warehouse(db: Session, warehouse_id: str):
             models.Warehouse.warehouse_id == warehouse_id).first()
         if not warehouse:
             raise HTTPException(status_code=404, detail="Warehouse not found")
+
+         # Проверяем наличие связанных товаров в ProductWarehouse
+        linked_products = db.query(models.ProductWarehouse).filter(
+            models.ProductWarehouse.warehouse_id == warehouse_id
+        ).all()
+        if linked_products:
+            raise HTTPException(
+                status_code=422,
+                detail="Cannot delete warehouse: there are products linked to this warehouse."
+            )
+
         db.delete(warehouse)
         db.commit()
         return {"message": "Warehouse deleted"}

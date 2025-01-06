@@ -255,7 +255,7 @@ async function openEditProductModal(productId) {
 
     document.getElementById("edit-product-id").value = product.product_id;
     document.getElementById("edit-name").value = product.name;
-    document.getElementById("edit-description").value = product.description;
+    document.getElementById("edit-description").value = product.description || "";
     document.getElementById("edit-category").value = product.category || "";
     document.getElementById("edit-price").value = product.price;
     document.getElementById("edit-stock-quantity").value = product.stock_quantity;
@@ -379,7 +379,7 @@ function renderProductsTable(products) {
         row.innerHTML = `
             <td>${product.product_id}</td>
             <td>${product.name}</td>
-            <td>${product.description}</td>
+            <td>${product.description || ""}</td>
             <td>${product.category || ""}</td>
             <td>${product.price + " руб" || ""}</td>
             <td class="text-center">
