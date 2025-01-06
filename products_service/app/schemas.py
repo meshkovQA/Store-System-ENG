@@ -372,7 +372,7 @@ class SupplierSearch(BaseModel):
 
 class WarehouseBase(BaseModel):
     # Местоположение склада: обязательное, максимум 255 символов
-    location: constr(min_length=1, max_length=100)
+    location: constr(min_length=1, max_length=255)
     # Имя управляющего склада: необязательное, максимум 100 символов, только буквы
     manager_name: Optional[constr(max_length=100)] = None
     # Вместимость склада: обязательное, положительное целое число

@@ -108,6 +108,13 @@ async def update_product(product_id: str, product: schemas.ProductUpdate, db: Se
         raise HTTPException(
             status_code=400, detail="Invalid UUID format for Product ID")
 
+    # Проверка на существование продукта с таким же названием
+    existing_product = db.query(models.Product).filter(
+        models.Product.name == product.name).first()
+    if existing_product:
+        raise HTTPException(
+            status_code=422, detail="This product is already existed")
+
     logger.log_message(
         f"""User {user_id} is updating product with id {product_id}, new name: {product.name}, new description: {product.description}, new price: {product.price}""")
     return crud.update_product(db=db, product_id=product_uuid, name=product.name, description=product.description,
@@ -435,13 +442,13 @@ def delete_warehouse(warehouse_id: UUID, db: Session = Depends(get_session_local
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
                             detail="Invalid token or unauthorized access")
 
-        # Проверка, что warehouse_id не пустой
-    if not warehouse_id.strip():
+    # Проверка, что warehouse_id не пустой
+    if not warehouse_id:
         raise HTTPException(status_code=400, detail="Warehouse ID is required")
 
     # Проверка корректности UUID
     try:
-        warehouse_uuid = UUID(warehouse_id)
+        warehouse_uuid = warehouse_id
     except ValueError:
         raise HTTPException(
             status_code=400, detail="Invalid UUID format for Warehouse ID")
@@ -479,6 +486,15 @@ def add_product_to_warehouse(
         logger.log_message("Invalid token or unauthorized access")
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
                             detail="Invalid token or unauthorized access")
+
+    # Проверяем, что количество не отрицательное
+    if quantity < 0:
+        logger.log_message(f"""Attempt to add negative quantity {
+                           quantity} to warehouse {warehouse_id}""")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Quantity must be greater than or equal to 0"
+        )
 
     # Проверяем доступное количество продукта
     product = db.query(Product).filter(
