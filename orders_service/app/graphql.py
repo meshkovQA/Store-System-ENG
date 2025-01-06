@@ -94,8 +94,10 @@ def get_current_user_id(info: Info, require_admin: bool = False) -> UUID:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
                             detail="Недопустимая схема аутентификации")
     # Проверяем токен
-    user_id = auth.verify_token_in_other_service(
+    user_data = auth.verify_token_in_other_service(
         token, require_admin=require_admin)
+    # Получаем user_id из возвращенного словаря
+    user_id = user_data.get("user_id")
     return UUID(user_id)
 
 
@@ -244,16 +246,26 @@ class Mutation:
         order = get_order_by_id_crud(db, input.order_id)
         if not order:
             raise Exception("Заказ не найден")
+
         # Проверяем, имеет ли пользователь право обновлять этот заказ
         if order.user_id != user_id:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
                                 detail="Нет прав для обновления этого заказа")
+
+        # Проверяем текущий статус заказа
+        if order.status in [OrderStatus.completed, OrderStatus.cancelled]:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Cannot cancel this order"
+            )
+
         # Проверяем допустимость обновления статуса
         if input.status != GQOrderStatus.cancelled:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
                                 detail="Недопустимое изменение статуса")
         updated_order = update_order_status_crud(
             db, input.order_id, OrderStatus.cancelled)
+
         # Отправляем событие OrderCancelled в Kafka
         order_cancelled_event = {
             "event_type": "OrderCancelled",

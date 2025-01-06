@@ -136,6 +136,41 @@ async def verify_token_endpoint(request: Request, db: Session = Depends(get_sess
         return {"valid": False, "error": str(e.detail)}
 
 
+@app.post("/verify-token-with-admin", include_in_schema=False)
+async def verify_token_with_admin_endpoint(
+    request: Request, db: Session = Depends(get_session_local)
+):
+    try:
+        # Получаем JSON-данные из тела запроса
+        body = await request.json()
+        token = body.get("token")
+        if not token:
+            raise HTTPException(status_code=422, detail="Token is required")
+
+        # Проверяем токен и извлекаем полезную нагрузку
+        payload = verify_token(token, db)
+        user_id = payload.get("sub")
+
+        # Получаем пользователя из базы данных
+        user = db.query(User).filter(User.id == user_id).first()
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+
+        # Логируем и возвращаем результат
+        is_superadmin = user.is_superadmin if hasattr(
+            user, "is_superadmin") else False
+        logger.log_message(
+            f"""Returning from verify_token_with_admin_endpoint: valid=True,
+                user_id={user_id}, is_superadmin={is_superadmin}"""
+        )
+        return {"valid": True, "user_id": user_id, "is_superadmin": is_superadmin}
+    except HTTPException as e:
+        return {"valid": False, "error": str(e.detail)}
+    except Exception as e:
+        logger.log_message(f"Unexpected error: {e}")
+        return {"valid": False, "error": "Unexpected error occurred"}
+
+
 @app.get("/check-superadmin", include_in_schema=False)
 async def check_superadmin(
     credentials: HTTPAuthorizationCredentials = Depends(security),
