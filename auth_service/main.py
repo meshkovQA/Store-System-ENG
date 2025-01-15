@@ -14,6 +14,7 @@ from app.auth import verify_token
 import threading
 import uuid
 import requests
+from app.kafka import create_topic_if_not_exists
 
 app = FastAPI(
     # Укажите название вашего микросервиса здесь
@@ -48,8 +49,9 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 @app.on_event("startup")
 def startup():
     database.init_db()
-    logger.log_message("Database initialized.")
+    create_topic_if_not_exists('product_topic')
     start_kafka_consumer()
+    logger.log_message("Database initialized.")
     logger.log_message("Kafka consumer started.")
 
 

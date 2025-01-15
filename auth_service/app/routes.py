@@ -5,11 +5,12 @@ import uuid
 from fastapi.responses import RedirectResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
-from app import crud, schemas, database, auth, logger
+from app import crud, schemas, database, auth, logger, kafka
 from fastapi.responses import JSONResponse
 from app.database import get_session_local
 import requests
 import redis
+from app.approval_queue import remove_product_from_pending
 
 
 router = APIRouter()
@@ -18,6 +19,23 @@ redis_client = redis.Redis(host='redis', port=6379, db=0)
 
 # Создаем объект security для использования схемы авторизации Bearer
 security = HTTPBearer()
+
+
+@router.post("/remove-from-pending/")
+def remove_from_pending(product: schemas.ProductIdSchema):
+    """
+    Удаляет product_id из очереди на одобрение в Redis.
+    """
+    product_id = product.product_id
+    if not product_id:
+        raise HTTPException(status_code=400, detail="Product ID is required")
+
+    try:
+        remove_product_from_pending(product_id)
+        return {"message": f"Product ID {product_id} removed from Redis pending queue."}
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Error removing product from Redis: {str(e)}")
 
 
 @router.get("/get-user-token/{user_id}", response_model=schemas.Token, tags=["Profile"], summary="Get user token")
