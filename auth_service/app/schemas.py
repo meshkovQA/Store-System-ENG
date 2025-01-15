@@ -134,3 +134,7 @@ class UserResponse(BaseModel):
 
     class Config:
         orm_mode = True
+
+
+class ProductIdSchema(BaseModel):
+    product_id: str

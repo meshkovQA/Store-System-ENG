@@ -61,7 +61,7 @@ def get_products(credentials: HTTPAuthorizationCredentials = Depends(security), 
     return crud.get_all_products(db)
 
 
-@router.get("/products/{product_id}", response_model=schemas.Product, tags=["Products Service"], summary="Get product by ID")
+@router.get("/products/{product_id}", response_model=schemas.ProductResponse, tags=["Products Service"], summary="Get product by ID")
 def get_product(product_id: str, db: Session = Depends(get_session_local), credentials: HTTPAuthorizationCredentials = Depends(security)):
     token = credentials.credentials
     user_data = auth.verify_token_in_other_service(

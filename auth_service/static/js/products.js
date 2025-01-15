@@ -378,7 +378,7 @@ function renderProductsTable(products) {
         const row = document.createElement("tr");
         row.innerHTML = `
             <td>${product.product_id}</td>
-            <td>${product.name}</td>
+            <td><a href="#" class="product-name" data-id="${product.product_id}">${product.name}</a></td>
             <td>${product.description || ""}</td>
             <td>${product.category || ""}</td>
             <td>${product.price + " руб" || ""}</td>
@@ -388,6 +388,15 @@ function renderProductsTable(products) {
             </td>
         `;
         tableBody.appendChild(row);
+    });
+
+    // Добавляем обработчик клика на название продукта
+    document.querySelectorAll(".product-name").forEach((link) => {
+        link.addEventListener("click", (event) => {
+            event.preventDefault();
+            const productId = link.dataset.id;
+            openProductDetailsModal(productId);
+        });
     });
 }
 
@@ -431,4 +440,57 @@ async function searchProduct() {
     } else {
         console.error("Ошибка при поиске продукта:", response.status);
     }
+}
+
+async function openProductDetailsModal(productId) {
+    const token = await getTokenFromDatabase();
+    const response = await fetch(`http://localhost:8002/products/${productId}`, {
+        headers: {
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/json"
+        }
+    });
+
+    if (!response.ok) {
+        console.error("Ошибка при получении данных продукта:", response.status);
+        return;
+    }
+
+    const product = await response.json();
+
+    // Создаем модальное окно с подробной информацией о продукте
+    const modalContent = `
+        <div class="modal fade" id="productDetailsModal" tabindex="-1" aria-labelledby="productDetailsModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="productDetailsModalLabel">${product.name}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p><strong>Описание:</strong> ${product.description || "Нет описания"}</p>
+                        <p><strong>Категория:</strong> ${product.category || "Нет категории"}</p>
+                        <p><strong>Цена:</strong> ${product.price} руб</p>
+                        <p><strong>Количество на складе:</strong> ${product.stock_quantity}</p>
+                        <p><strong>Поставщик:</strong> ${product.supplier_id}</p>
+                        <p><strong>Вес:</strong> ${product.weight || "Нет данных"} кг</p>
+                        <p><strong>Габариты:</strong> ${product.dimensions || "Нет данных"}</p>
+                        <p><strong>Производитель:</strong> ${product.manufacturer || "Нет данных"}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+
+    // Вставляем модальное окно в DOM
+    document.body.insertAdjacentHTML("beforeend", modalContent);
+
+    // Открываем модальное окно
+    const productDetailsModal = new bootstrap.Modal(document.getElementById("productDetailsModal"));
+    productDetailsModal.show();
+
+    // Удаляем модальное окно из DOM после закрытия
+    document.getElementById("productDetailsModal").addEventListener("hidden.bs.modal", () => {
+        document.getElementById("productDetailsModal").remove();
+    });
 }

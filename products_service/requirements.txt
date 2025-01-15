@@ -11,3 +11,4 @@ Jinja2
 uvicorn
 kafka-python
 requests
+kafka-python
