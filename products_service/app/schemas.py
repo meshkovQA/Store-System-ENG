@@ -278,7 +278,7 @@ class SupplierCreate(SupplierBase):
 
 class SupplierUpdate(BaseModel):
     # Все поля Optional, чтобы не требовалось передавать их в PATCH
-    name: Optional[constr(min_length=1, max_length=100)] = None
+    name: Optional[constr(min_length=3, max_length=100)] = None
     contact_name: Optional[constr(max_length=100)] = None
     contact_email: Optional[EmailStr] = None
     phone_number: Optional[constr(max_length=15)] = None
