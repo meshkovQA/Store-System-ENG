@@ -284,9 +284,47 @@ async function loadProducts(token) {
     renderProductsTable(products);
 }
 
+async function uploadImage(imageFile) {
+    const token = await getTokenFromDatabase();
+    const formData = new FormData();
+    formData.append("file", imageFile);
+    console.log("Форма данных для загрузки изображения:", formData);
+
+    const response = await fetch("http://localhost:8002/upload", {
+        method: "POST",
+        headers: {
+            "Authorization": `Bearer ${token}`
+        },
+        body: formData
+    });
+
+    if (!response.ok) {
+        throw new Error("Ошибка загрузки изображения");
+    }
+
+    const data = await response.json();
+    console.log("Данные изображения:", data);
+
+    return data.imageUrl; // Возвращаем URL изображения
+}
+
 async function createProduct() {
     const token = await getTokenFromDatabase();
     const supplierId = document.getElementById("add-supplier-id").value;
+    const imageFile = document.getElementById("add-image-url").files[0];
+    console.log("Получен файл изображения:", imageFile);
+
+    let imageUrl = null;
+    if (imageFile) {
+        try {
+            imageUrl = await uploadImage(imageFile);
+            console.log(imageUrl);
+        } catch (error) {
+            console.error(error);
+            showNotification("Ошибка загрузки изображения", "danger");
+            return;
+        }
+    }
 
     const productData = {
         name: document.getElementById("add-name").value.trim(),
@@ -295,6 +333,7 @@ async function createProduct() {
         price: document.getElementById("add-price").value.trim() || null,
         stock_quantity: parseInt(document.getElementById("add-stock-quantity").value) || null,
         supplier_id: supplierId,  // Передаем выбранный supplier_id
+        image_url: imageUrl || null,  // Передаем URL изображения
         weight: document.getElementById("add-weight").value || null,
         dimensions: document.getElementById("add-dimensions").value.trim() || null,
         manufacturer: document.getElementById("add-manufacturer").value.trim() || null,
@@ -336,6 +375,19 @@ async function createProduct() {
 
 async function updateProduct(productId) {
     const token = await getTokenFromDatabase();
+    const imageFile = document.getElementById("edit-image-url").files[0];
+
+    let imageUrl = null;
+    if (imageFile) {
+        try {
+            imageUrl = await uploadImage(imageFile);
+        } catch (error) {
+            console.error(error);
+            showNotification("Ошибка загрузки изображения", "danger");
+            return;
+        }
+    }
+
     const productData = {
         name: document.getElementById("edit-name").value.trim(),
         description: document.getElementById("edit-description").value.trim() || null,
@@ -343,6 +395,7 @@ async function updateProduct(productId) {
         price: document.getElementById("edit-price").value.trim() || null,
         stock_quantity: parseInt(document.getElementById("edit-stock-quantity").value) || null,
         supplier_id: document.getElementById("edit-supplier-id").value,
+        image_url: imageUrl || null,
         weight: document.getElementById("edit-weight").value || null,
         dimensions: document.getElementById("edit-dimensions").value.trim() || null,
         manufacturer: document.getElementById("edit-manufacturer").value.trim() || null,

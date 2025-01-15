@@ -22,7 +22,7 @@ class ProductBase(BaseModel):
     # Поставщик: обязательное, должен быть действительным UUID
     supplier_id: UUID
     # Изображение продукта: необязательное, форматы png, jpeg, jpg, максимум 255 символов
-    image_url: Optional[HttpUrl] = None
+    image_url: Optional[constr(max_length=255)] = None
     # Вес продукта: необязательное, положительное число с 2 знаками после запятой, максимум 6 цифр
     weight: Optional[condecimal(gt=0, max_digits=6, decimal_places=2)] = None
     # Габариты продукта: необязательное, максимум 100 символов, допускаются цифры и символ "х"

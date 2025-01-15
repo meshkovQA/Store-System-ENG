@@ -1,16 +1,44 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+from fastapi import APIRouter, Depends, HTTPException, status, Query, File, UploadFile
 import asyncio
 from sqlalchemy.orm import Session
 from uuid import UUID
 from app import crud, schemas, database, auth, logger, models
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from app.database import get_session_local, Product
+from app.config import UPLOAD_DIR
+import shutil
 
 
 router = APIRouter()
 
 # Создаем объект security для использования схемы авторизации Bearer
 security = HTTPBearer()
+
+# Путь для загрузки изображений
+
+UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+
+
+@router.post("/upload", summary="Upload product image")
+async def upload_image(file: UploadFile = File(...), credentials: HTTPAuthorizationCredentials = Depends(security)):
+    token = credentials.credentials
+    user_data = auth.verify_token_in_other_service(token)
+    if not user_data:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                            detail="Invalid token or unauthorized access")
+
+    # Проверяем формат файла
+    if file.content_type not in ["image/png", "image/jpeg", "image/jpg"]:
+        raise HTTPException(status_code=400, detail="Invalid image format")
+
+    # Сохраняем файл
+    file_path = UPLOAD_DIR / file.filename
+    with file_path.open("wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+
+    # Возвращаем путь для сохранения в БД
+    image_url = f"/img/{file.filename}"
+    return {"imageUrl": image_url}
 
 # ---- Маршруты для CRUD операций с продуктами ----
 
