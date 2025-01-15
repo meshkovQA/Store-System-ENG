@@ -514,6 +514,7 @@ def add_product_to_warehouse(
 
 @router.put("/productinwarehouses/{product_id}", response_model=schemas.ProductWarehouse, tags=["Product Warehouses Service"], summary="Update product in warehouse")
 def update_product_in_warehouse(
+        product_id: UUID,
         product_warehouse_id: UUID,
         quantity: int,
         db: Session = Depends(get_session_local),
@@ -529,13 +530,14 @@ def update_product_in_warehouse(
     logger.log_message(f"Updating product in warehouse {product_warehouse_id}")
     return crud.update_product_in_warehouse(
         db=db,
+        product_id=str(product_id),
         product_warehouse_id=str(product_warehouse_id),
         quantity=quantity
     )
 
 
 @router.delete("/productinwarehouses/{product_id}", tags=["Product Warehouses Service"], summary="Delete product from warehouse")
-def delete_product_from_warehouse(product_warehouse_id: UUID, db: Session = Depends(get_session_local), credentials: HTTPAuthorizationCredentials = Depends(security)):
+def delete_product_from_warehouse(product_warehouse_id: UUID, product_id: UUID, db: Session = Depends(get_session_local), credentials: HTTPAuthorizationCredentials = Depends(security)):
     token = credentials.credentials
     user_data = auth.verify_token_in_other_service(
         token)  # Проверяем токен через auth.py
@@ -545,4 +547,4 @@ def delete_product_from_warehouse(product_warehouse_id: UUID, db: Session = Depe
                             detail="Invalid token or unauthorized access")
     logger.log_message(f"""Deleting product from warehouse {
                        product_warehouse_id}""")
-    return crud.delete_product_from_warehouse(db, product_warehouse_id=str(product_warehouse_id))
+    return crud.delete_product_from_warehouse(db, product_id=str(product_id), product_warehouse_id=str(product_warehouse_id))
