@@ -3,7 +3,7 @@ from kafka import KafkaProducer, KafkaConsumer
 from app import logger
 from threading import Thread
 from app.database import SessionLocal
-from app.models import Product
+from app.models import ProductWarehouse
 from datetime import datetime
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
@@ -73,19 +73,30 @@ def handle_order_created(message: dict):
         for item in order_items:
             product_id = item['product_id']
             quantity = item['quantity']
-            product = db.query(Product).filter(
-                Product.product_id == product_id).with_for_update().first()
-            if product:
-                if product.stock_quantity >= quantity:
+            warehouse_id = item['warehouse_id']
+            product_warehouse = db.query(ProductWarehouse).filter(
+                ProductWarehouse.product_id == product_id,
+                ProductWarehouse.warehouse_id == warehouse_id
+            ).with_for_update().first()
+            if product_warehouse:
+                if product_warehouse.quantity >= quantity:
                     # Резервируем товар (уменьшаем stock_quantity)
-                    product.stock_quantity -= quantity
-                    db.add(product)
+                    product_warehouse.quantity -= quantity
+                    db.add(product_warehouse)
                 else:
                     insufficient_stock.append(
-                        {'product_id': product_id, 'available_quantity': product.stock_quantity})
+                        {
+                            'product_id': product_id,
+                            'warehouse_id': warehouse_id,
+                            'available_quantity': product_warehouse.quantity
+                        })
             else:
                 insufficient_stock.append(
-                    {'product_id': product_id, 'reason': 'Product not found'})
+                    {
+                        'product_id': product_id,
+                        'warehouse_id': warehouse_id,
+                        'reason': 'Product not found in warehouse'
+                    })
         if insufficient_stock:
             db.rollback()
             # Отправляем событие OrderRejected

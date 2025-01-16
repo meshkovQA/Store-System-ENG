@@ -174,6 +174,27 @@ class ProductPatchResponse(BaseModel):
     updated_at: datetime
 
 
+class ProductFilter(BaseModel):
+    product_id: str
+    supplier_id: str
+    name: str
+    price: float
+    description: Optional[str] = None
+
+    class Config:
+        orm_mode = True
+
+    @classmethod
+    def from_orm(cls, obj):
+        return cls(
+            product_id=str(obj.product_id),
+            supplier_id=str(obj.supplier_id),
+            name=obj.name,
+            price=obj.price,
+            description=obj.description
+        )
+
+
 # ---- Схемы для поставщиков (Supplier) ----
 
 class SupplierBase(BaseModel):

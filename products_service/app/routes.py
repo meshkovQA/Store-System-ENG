@@ -7,6 +7,7 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from app.database import get_session_local, Product
 from app.config import UPLOAD_DIR
 import shutil
+from typing import Optional
 
 
 router = APIRouter()
@@ -576,3 +577,35 @@ def delete_product_from_warehouse(product_warehouse_id: UUID, product_id: UUID, 
     logger.log_message(f"""Deleting product from warehouse {
                        product_warehouse_id}""")
     return crud.delete_product_from_warehouse(db, product_id=str(product_id), product_warehouse_id=str(product_warehouse_id))
+
+
+@router.get("/productinwarehouses/{warehouse_id}/products", response_model=list[schemas.ProductFilter])
+def get_products_in_warehouse_with_filters(
+    warehouse_id: UUID,
+    min_price: Optional[float] = Query(None),
+    max_price: Optional[float] = Query(None),
+    in_stock: Optional[bool] = Query(None),
+    db: Session = Depends(get_session_local),
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    token = credentials.credentials
+    user_data = auth.verify_token_in_other_service(token)
+    if not user_data:
+        raise HTTPException(status_code=403, detail="Unauthorized")
+
+    products_in_warehouse = crud.get_products_in_warehouse(
+        db, warehouse_id=str(warehouse_id))
+    product_ids = [item.product_id for item in products_in_warehouse]
+
+    query = db.query(Product).filter(Product.product_id.in_(product_ids))
+
+    if min_price is not None:
+        query = query.filter(Product.price >= min_price)
+    if max_price is not None:
+        query = query.filter(Product.price <= max_price)
+    if in_stock:
+        query = query.filter(Product.stock_quantity > 0)
+
+    products = query.all()
+
+    return [schemas.ProductFilter.from_orm(product) for product in products]

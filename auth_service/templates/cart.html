@@ -1,0 +1,18 @@
+{% extends "layout.html" %}
+
+{% block title %}Корзина{% endblock %}
+
+{% block content %}
+    <div class="container mt-3">
+        <h2>Корзина</h2>
+        <div id="cartContainer" class="row">
+            <!-- Сюда будет динамически добавляться содержимое корзины -->
+        </div>
+            <div class="d-flex justify-content-between align-items-center mt-4">
+                <a href="/orders" class="btn btn-secondary">Вернуться к каталогу</a>
+                <div id="cartTotal" class="fs-5 fw-bold"></div>
+                <button class="btn btn-success" onclick="checkout()">Оформить заказ</button>
+            </div>
+    </div>
+    <script src="/static/js/cart.js"></script>
+{% endblock %}

@@ -16,6 +16,7 @@ class OrderStatusEnum(str, Enum):
 
 class OrderItemCreate(BaseModel):
     product_id: UUID
+    warehouse_id: UUID
     quantity: conint(gt=0)
     price_at_order: condecimal(gt=0, max_digits=10, decimal_places=2)
 
@@ -29,6 +30,7 @@ class OrderItemResponse(BaseModel):
     order_item_id: UUID
     order_id: UUID
     product_id: UUID
+    warehouse_id: UUID
     quantity: int
     price_at_order: Decimal
 

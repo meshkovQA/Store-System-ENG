@@ -25,6 +25,7 @@ def create_order(db: Session, order_data: OrderCreate):
             order_item = OrderItem(
                 order_id=new_order.order_id,
                 product_id=item_data.product_id,
+                warehouse_id=item_data.warehouse_id,
                 quantity=item_data.quantity,
                 price_at_order=float(item_data.price_at_order)
             )

@@ -37,6 +37,7 @@ class OrderItemType:
     order_item_id: UUID
     order_id: UUID
     product_id: UUID
+    warehouse_id: UUID
     quantity: int
     price_at_order: Decimal
 
@@ -56,6 +57,7 @@ class OrderType:
 @strawberry.input
 class OrderItemInput:
     product_id: UUID
+    warehouse_id: UUID
     quantity: int
     price_at_order: Decimal
 
@@ -123,6 +125,7 @@ class Query:
                     order_item_id=item.order_item_id,
                     order_id=item.order_id,
                     product_id=item.product_id,
+                    warehouse_id=item.warehouse_id,
                     quantity=item.quantity,
                     price_at_order=Decimal(item.price_at_order),
                 )
@@ -147,6 +150,7 @@ class Query:
                         order_item_id=item.order_item_id,
                         order_id=item.order_id,
                         product_id=item.product_id,
+                        warehouse_id=item.warehouse_id,
                         quantity=item.quantity,
                         price_at_order=Decimal(item.price_at_order),
                     )
@@ -173,6 +177,7 @@ class Query:
                         order_item_id=item.order_item_id,
                         order_id=item.order_id,
                         product_id=item.product_id,
+                        warehouse_id=item.warehouse_id,
                         quantity=item.quantity,
                         price_at_order=Decimal(item.price_at_order),
                     )
@@ -196,6 +201,7 @@ class Mutation:
             order_items=[
                 OrderItemCreate(
                     product_id=item.product_id,
+                    warehouse_id=item.warehouse_id,
                     quantity=item.quantity,
                     price_at_order=item.price_at_order
                 )
@@ -211,6 +217,7 @@ class Mutation:
             "order_items": [
                 {
                     "product_id": str(item.product_id),
+                    "warehouse_id": str(item.warehouse_id),
                     "quantity": item.quantity
                 }
                 for item in new_order.order_items
@@ -230,6 +237,7 @@ class Mutation:
                     order_item_id=item.order_item_id,
                     order_id=item.order_id,
                     product_id=item.product_id,
+                    warehouse_id=item.warehouse_id,
                     quantity=item.quantity,
                     price_at_order=Decimal(item.price_at_order),
                 )
@@ -272,6 +280,7 @@ class Mutation:
                     order_item_id=item.order_item_id,
                     order_id=item.order_id,
                     product_id=item.product_id,
+                    warehouse_id=item.warehouse_id,
                     quantity=item.quantity,
                     price_at_order=Decimal(item.price_at_order),
                 )
