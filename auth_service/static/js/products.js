@@ -539,11 +539,17 @@ async function openProductDetailsModal(productId) {
     document.body.insertAdjacentHTML("beforeend", modalContent);
 
     // Открываем модальное окно
-    const productDetailsModal = new bootstrap.Modal(document.getElementById("productDetailsModal"));
+    const productDetailsModalElement = document.getElementById("productDetailsModal");
+    const productDetailsModal = new bootstrap.Modal(productDetailsModalElement);
     productDetailsModal.show();
 
+    // Добавляем обработчик события для закрытия модального окна
+    productDetailsModalElement.addEventListener("hidden.bs.modal", () => {
+        productDetailsModalElement.remove();
+    });
+
     // Удаляем модальное окно из DOM после закрытия
-    document.getElementById("productDetailsModal").addEventListener("hidden.bs.modal", () => {
-        document.getElementById("productDetailsModal").remove();
+    productDetailsModalElement.querySelector(".btn-close").addEventListener("click", () => {
+        productDetailsModal.hide();
     });
 }

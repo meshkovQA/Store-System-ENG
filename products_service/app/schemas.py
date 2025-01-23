@@ -393,19 +393,27 @@ class WarehouseBase(BaseModel):
 
     @validator("location")
     def validate_location(cls, value):
+        if value.strip() == "":
+            raise ValueError("Location cannot contain only spaces.")
         if len(value) > 255:
             raise ValueError("Location must be 255 characters or fewer.")
         return value
 
     @validator("manager_name")
     def validate_manager_name(cls, value):
-        if value is not None and value.strip():
+        if value is None:
+            return value  # Если значение None, валидатор пропускает его как валидное
+
+        if value.strip() == "":
+            raise ValueError("Manager name cannot contain only spaces.")
+
             # Проверка: только буквы и пробелы
-            pattern = r"^[A-Za-zА-Яа-я\s]+$"
-            if not re.match(pattern, value):
-                raise ValueError(
-                    "Manager name must contain only letters and spaces.")
-        return value or None
+        pattern = r"^[A-Za-zА-Яа-я\s]+$"
+        if not re.match(pattern, value.strip()):
+            raise ValueError(
+                "Manager name must contain only letters and spaces.")
+
+        return value
 
     @validator("capacity")
     def validate_capacity(cls, value):
@@ -422,6 +430,11 @@ class WarehouseBase(BaseModel):
 
     @validator("contact_number")
     def validate_contact_number(cls, value):
+        if value is None:
+            return value  # Если значение None, валидатор пропускает его как валидное
+
+        if value.strip() == "":
+            raise ValueError("Contact_numbe cannot contain only spaces.")
         if value is not None:
             # Проверка допустимого формата телефона: цифры и символ "+"
             pattern = r"^\+?\d{1,14}$"
