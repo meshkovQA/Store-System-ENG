@@ -311,6 +311,15 @@ def patch_supplier(supplier_id: str, supplier: schemas.SupplierUpdate, db: Sessi
     # Передаем только те поля, которые изменены
     updates = supplier.dict(exclude_unset=True)
 
+    # Проверка на существование поставщика с таким же названием
+    existing_supplier = db.query(models.Supplier).filter(
+        models.Supplier.name == supplier.name).first()
+    if existing_supplier:
+        logger.log_message(f"""Supplier with name '{
+                           supplier.name}' already exists.""")
+        raise HTTPException(
+            status_code=422, detail="This supplier is already existed")
+
     # Проверка, что supplier_id не пустой
     if not supplier_id.strip():
         raise HTTPException(status_code=400, detail="Supplier ID is required")

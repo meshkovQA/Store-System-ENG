@@ -225,6 +225,17 @@ def delete_supplier(db: Session, supplier_id: str):
             models.Supplier.supplier_id == supplier_id).first()
         if not supplier:
             raise HTTPException(status_code=404, detail="Supplier not found")
+
+            # Проверяем наличие связанных товаров
+        linked_products = db.query(models.Product).filter(
+            models.Product.supplier_id == supplier_id
+        ).all()
+        if linked_products:
+            raise HTTPException(
+                status_code=422,
+                detail="Cannot delete supplier: there are products linked to this supplier."
+            )
+
         db.delete(supplier)
         db.commit()
         return {"message": "Supplier deleted"}

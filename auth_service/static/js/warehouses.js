@@ -69,7 +69,7 @@ document.addEventListener("DOMContentLoaded", async function () {
         areaSize = areaSize.replace(',', '.'); // Заменяем запятую на точку
 
 
-        if (areaSize && (isNaN(areaSize) || parseFloat(areaSize) <= 0 || parseFloat(price) > 1000000 || !/^\d{1,7}\.\d{2}$/.test(price))) {
+        if (areaSize && (isNaN(areaSize) || parseFloat(areaSize) <= 0 || parseFloat(areaSize) > 1000000 || !/^\d{1,7}\.\d{2}$/.test(areaSize))) {
             document.getElementById("addAreaSizeError").style.display = 'block';
             valid = false;
         }
@@ -133,12 +133,11 @@ document.addEventListener("DOMContentLoaded", async function () {
         }
 
         // Площадь склада (area_size)
-        // Площадь склада (area_size)
         let areaSize = document.getElementById("add-area-size").value.trim();
         areaSize = areaSize.replace(',', '.'); // Заменяем запятую на точку
 
 
-        if (areaSize && (isNaN(areaSize) || parseFloat(areaSize) <= 0 || parseFloat(price) > 1000000 || !/^\d{1,7}\.\d{2}$/.test(price))) {
+        if (areaSize && (isNaN(areaSize) || parseFloat(areaSize) <= 0 || parseFloat(areaSize) > 1000000 || !/^\d{1,7}\.\d{2}$/.test(areaSize))) {
             document.getElementById("addAreaSizeError").style.display = 'block';
             valid = false;
         }
@@ -340,11 +339,23 @@ async function updateWarehouse(warehouseId) {
 // Удаление склада
 async function deleteWarehouse(warehouseId) {
     const token = await getTokenFromDatabase();
-    await fetch(`http://localhost:8002/warehouses/${warehouseId}`, {
-        method: "DELETE",
-        headers: { "Authorization": `Bearer ${token}` }
-    });
-    loadWarehouses(token);
+    try {
+        const response = await fetch(`http://localhost:8002/warehouses/${warehouseId}`, {
+            method: "DELETE",
+            headers: { "Authorization": `Bearer ${token}` }
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            showNotification(error.detail || "Ошибка при удалении склада", "danger");
+            return;
+        }
+
+        showNotification("Склад успешно удален", "success");
+        loadWarehouses(token);
+    } catch (error) {
+        showNotification("Ошибка подключения к серверу", "danger");
+    }
 }
 
 // Заполнение таблицы складов

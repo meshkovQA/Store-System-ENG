@@ -366,11 +366,23 @@ async function updateSupplier(supplierId) {
 //Удаление поставщика
 async function deleteSupplier(supplierId) {
     const token = await getTokenFromDatabase();
-    await fetch(`http://localhost:8002/suppliers/${supplierId}`, {
-        method: "DELETE",
-        headers: { "Authorization": `Bearer ${token}` }
-    });
-    loadSuppliers(token);
+    try {
+        const response = await fetch(`http://localhost:8002/suppliers/${supplierId}`, {
+            method: "DELETE",
+            headers: { "Authorization": `Bearer ${token}` }
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            showNotification(error.detail || "Ошибка при удалении поставщика", "danger");
+            return;
+        }
+
+        showNotification("Поставщик успешно удален", "success");
+        loadSuppliers(token);
+    } catch (error) {
+        showNotification("Ошибка подключения к серверу", "danger");
+    }
 }
 
 //Заполнение таблицы поставщиков
