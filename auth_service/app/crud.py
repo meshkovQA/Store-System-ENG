@@ -85,6 +85,12 @@ def delete_user(db: Session, user_id: str):  # Удаление пользова
         # Возвращаем None, если пользователь не найден
         return None
 
+        # Удаляем связанные токены пользователя
+    token = db.query(Token).filter(Token.user_id == str(user_id)).first()
+    if token:
+        db.delete(token)
+        db.commit()  # Фиксируем удаление токена
+
     db.delete(user)
     db.commit()
 
@@ -95,6 +101,7 @@ def delete_user(db: Session, user_id: str):  # Удаление пользова
         """
         cursor.execute(create_user_sql)
         db.commit()
+
     logger.log_message(
         f"User {user.email} has been deleted from the database")
     return user
