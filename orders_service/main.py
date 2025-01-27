@@ -23,8 +23,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Инициализация базы данных и запуск Kafka-потребителя при старте приложения
-
 
 @app.on_event("startup")
 def startup():

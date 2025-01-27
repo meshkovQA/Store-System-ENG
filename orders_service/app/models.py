@@ -35,6 +35,7 @@ class OrderItem(Base):
     order_id = Column(UUID(as_uuid=True), ForeignKey(
         "orders.order_id"), nullable=False)
     product_id = Column(UUID(as_uuid=True), nullable=False)
+    warehouse_id = Column(UUID(as_uuid=True), nullable=False)
     quantity = Column(Integer, nullable=False)
     price_at_order = Column(Numeric(10, 2), nullable=False)
     order = relationship("Order", back_populates="order_items")

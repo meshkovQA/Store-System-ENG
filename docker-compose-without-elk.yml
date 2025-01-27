@@ -31,7 +31,7 @@ services:
       KAFKA_PROCESS_ROLES: broker,controller
       KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
       KAFKA_LOG_DIRS: /var/lib/kafka/data
-      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
       KAFKA_CLUSTER_ID: "5L6g3nShT-eMCtK--X86sw" # Cluster ID из логов
       KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
     ports:

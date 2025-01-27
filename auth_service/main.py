@@ -14,6 +14,7 @@ from app.auth import verify_token
 import threading
 import uuid
 import requests
+from app.kafka import create_topic_if_not_exists
 
 app = FastAPI(
     # Укажите название вашего микросервиса здесь
@@ -48,8 +49,11 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 @app.on_event("startup")
 def startup():
     database.init_db()
-    logger.log_message("Database initialized.")
+    create_topic_if_not_exists('product_topic')
+    create_topic_if_not_exists('orders')
+    create_topic_if_not_exists('order_responses')
     start_kafka_consumer()
+    logger.log_message("Database initialized.")
     logger.log_message("Kafka consumer started.")
 
 
@@ -86,6 +90,21 @@ async def pending_approval_page(request: Request):
 @app.get("/user-list", response_class=HTMLResponse, include_in_schema=False)
 def get_user_list(request: Request):
     return templates.TemplateResponse("userlist.html", {"request": request})
+
+
+@app.get("/orders", response_class=HTMLResponse, include_in_schema=False)
+def get_user_list(request: Request):
+    return templates.TemplateResponse("orders.html", {"request": request})
+
+
+@app.get("/cart", response_class=HTMLResponse, include_in_schema=False)
+def cart_page(request: Request):
+    return templates.TemplateResponse("cart.html", {"request": request})
+
+
+@app.get("/shipments", response_class=HTMLResponse, include_in_schema=False)
+async def shipments_page(request: Request):
+    return templates.TemplateResponse("shipments.html", {"request": request})
 
 
 @app.get("/warehouses_detail/{warehouse_id}", response_class=HTMLResponse, include_in_schema=False)

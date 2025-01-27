@@ -284,9 +284,47 @@ async function loadProducts(token) {
     renderProductsTable(products);
 }
 
+async function uploadImage(imageFile) {
+    const token = await getTokenFromDatabase();
+    const formData = new FormData();
+    formData.append("file", imageFile);
+    console.log("Форма данных для загрузки изображения:", formData);
+
+    const response = await fetch("http://localhost:8002/upload", {
+        method: "POST",
+        headers: {
+            "Authorization": `Bearer ${token}`
+        },
+        body: formData
+    });
+
+    if (!response.ok) {
+        throw new Error("Ошибка загрузки изображения");
+    }
+
+    const data = await response.json();
+    console.log("Данные изображения:", data);
+
+    return data.imageUrl; // Возвращаем URL изображения
+}
+
 async function createProduct() {
     const token = await getTokenFromDatabase();
     const supplierId = document.getElementById("add-supplier-id").value;
+    const imageFile = document.getElementById("add-image-url").files[0];
+    console.log("Получен файл изображения:", imageFile);
+
+    let imageUrl = null;
+    if (imageFile) {
+        try {
+            imageUrl = await uploadImage(imageFile);
+            console.log(imageUrl);
+        } catch (error) {
+            console.error(error);
+            showNotification("Ошибка загрузки изображения", "danger");
+            return;
+        }
+    }
 
     const productData = {
         name: document.getElementById("add-name").value.trim(),
@@ -295,6 +333,7 @@ async function createProduct() {
         price: document.getElementById("add-price").value.trim() || null,
         stock_quantity: parseInt(document.getElementById("add-stock-quantity").value) || null,
         supplier_id: supplierId,  // Передаем выбранный supplier_id
+        image_url: imageUrl || null,  // Передаем URL изображения
         weight: document.getElementById("add-weight").value || null,
         dimensions: document.getElementById("add-dimensions").value.trim() || null,
         manufacturer: document.getElementById("add-manufacturer").value.trim() || null,
@@ -336,6 +375,19 @@ async function createProduct() {
 
 async function updateProduct(productId) {
     const token = await getTokenFromDatabase();
+    const imageFile = document.getElementById("edit-image-url").files[0];
+
+    let imageUrl = null;
+    if (imageFile) {
+        try {
+            imageUrl = await uploadImage(imageFile);
+        } catch (error) {
+            console.error(error);
+            showNotification("Ошибка загрузки изображения", "danger");
+            return;
+        }
+    }
+
     const productData = {
         name: document.getElementById("edit-name").value.trim(),
         description: document.getElementById("edit-description").value.trim() || null,
@@ -343,6 +395,7 @@ async function updateProduct(productId) {
         price: document.getElementById("edit-price").value.trim() || null,
         stock_quantity: parseInt(document.getElementById("edit-stock-quantity").value) || null,
         supplier_id: document.getElementById("edit-supplier-id").value,
+        image_url: imageUrl || null,
         weight: document.getElementById("edit-weight").value || null,
         dimensions: document.getElementById("edit-dimensions").value.trim() || null,
         manufacturer: document.getElementById("edit-manufacturer").value.trim() || null,
@@ -378,7 +431,7 @@ function renderProductsTable(products) {
         const row = document.createElement("tr");
         row.innerHTML = `
             <td>${product.product_id}</td>
-            <td>${product.name}</td>
+            <td><a href="#" class="product-name" data-id="${product.product_id}">${product.name}</a></td>
             <td>${product.description || ""}</td>
             <td>${product.category || ""}</td>
             <td>${product.price + " руб" || ""}</td>
@@ -388,6 +441,15 @@ function renderProductsTable(products) {
             </td>
         `;
         tableBody.appendChild(row);
+    });
+
+    // Добавляем обработчик клика на название продукта
+    document.querySelectorAll(".product-name").forEach((link) => {
+        link.addEventListener("click", (event) => {
+            event.preventDefault();
+            const productId = link.dataset.id;
+            openProductDetailsModal(productId);
+        });
     });
 }
 
@@ -431,4 +493,63 @@ async function searchProduct() {
     } else {
         console.error("Ошибка при поиске продукта:", response.status);
     }
+}
+
+async function openProductDetailsModal(productId) {
+    const token = await getTokenFromDatabase();
+    const response = await fetch(`http://localhost:8002/products/${productId}`, {
+        headers: {
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/json"
+        }
+    });
+
+    if (!response.ok) {
+        console.error("Ошибка при получении данных продукта:", response.status);
+        return;
+    }
+
+    const product = await response.json();
+
+    // Создаем модальное окно с подробной информацией о продукте
+    const modalContent = `
+        <div class="modal fade" id="productDetailsModal" tabindex="-1" aria-labelledby="productDetailsModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="productDetailsModalLabel">${product.name}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p><strong>Описание:</strong> ${product.description || "Нет описания"}</p>
+                        <p><strong>Категория:</strong> ${product.category || "Нет категории"}</p>
+                        <p><strong>Цена:</strong> ${product.price} руб</p>
+                        <p><strong>Количество на складе:</strong> ${product.stock_quantity}</p>
+                        <p><strong>Поставщик:</strong> ${product.supplier_id}</p>
+                        <p><strong>Вес:</strong> ${product.weight || "Нет данных"} кг</p>
+                        <p><strong>Габариты:</strong> ${product.dimensions || "Нет данных"}</p>
+                        <p><strong>Производитель:</strong> ${product.manufacturer || "Нет данных"}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+
+    // Вставляем модальное окно в DOM
+    document.body.insertAdjacentHTML("beforeend", modalContent);
+
+    // Открываем модальное окно
+    const productDetailsModalElement = document.getElementById("productDetailsModal");
+    const productDetailsModal = new bootstrap.Modal(productDetailsModalElement);
+    productDetailsModal.show();
+
+    // Добавляем обработчик события для закрытия модального окна
+    productDetailsModalElement.addEventListener("hidden.bs.modal", () => {
+        productDetailsModalElement.remove();
+    });
+
+    // Удаляем модальное окно из DOM после закрытия
+    productDetailsModalElement.querySelector(".btn-close").addEventListener("click", () => {
+        productDetailsModal.hide();
+    });
 }

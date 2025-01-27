@@ -164,18 +164,21 @@ function openEditProductModal(productWarehouseId) {
 // Обновление количества продукта на складе
 async function updateProductQuantity(productWarehouseId, quantity) {
     const token = await getTokenFromDatabase();
-    const response = await fetch(`http://localhost:8002/productinwarehouses/${productWarehouseId}`, {
+    const url = `http://localhost:8002/productinwarehouses/${productId}?product_warehouse_id=${productWarehouseId}&quantity=${quantity}`;
+
+    const response = await fetch(url, {
         method: "PUT",
         headers: {
             "Authorization": `Bearer ${token}`,
             "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ quantity })
+        }
     });
 
     if (response.ok) {
         alert("Количество товара успешно обновлено");
         loadProducts();
+    } else if (response.status === 404) {
+        alert("Продукт с указанным ID отсутствует в системе.");
     } else {
         alert("Ошибка обновления товара");
     }
@@ -187,17 +190,22 @@ async function deleteProduct(productWarehouseId) {
     if (!confirmed) return;
 
     const token = await getTokenFromDatabase();
-    const response = await fetch(`http://localhost:8002/productinwarehouses/${productWarehouseId}`, {
-        method: "DELETE",
-        headers: {
-            "Authorization": `Bearer ${token}`,
-            "Content-Type": "application/json"
+    const response = await fetch(
+        `http://localhost:8002/productinwarehouses/${productId}?product_warehouse_id=${productWarehouseId}`,
+        {
+            method: "DELETE",
+            headers: {
+                "Authorization": `Bearer ${token}`,
+                "Content-Type": "application/json"
+            }
         }
-    });
+    );
 
     if (response.ok) {
         alert("Товар успешно удален со склада");
         loadProducts();
+    } else if (response.status === 404) {
+        alert("Продукт с указанным ID не найден. Удаление невозможно.");
     } else {
         alert("Ошибка удаления товара");
     }

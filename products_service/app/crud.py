@@ -225,6 +225,17 @@ def delete_supplier(db: Session, supplier_id: str):
             models.Supplier.supplier_id == supplier_id).first()
         if not supplier:
             raise HTTPException(status_code=404, detail="Supplier not found")
+
+            # Проверяем наличие связанных товаров
+        linked_products = db.query(models.Product).filter(
+            models.Product.supplier_id == supplier_id
+        ).all()
+        if linked_products:
+            raise HTTPException(
+                status_code=422,
+                detail="Cannot delete supplier: there are products linked to this supplier."
+            )
+
         db.delete(supplier)
         db.commit()
         return {"message": "Supplier deleted"}
@@ -379,8 +390,15 @@ def get_products_in_warehouse(db: Session, warehouse_id: str):
             status_code=500, detail=f"Database error: {str(e)}")
 
 
-def update_product_in_warehouse(db: Session, product_warehouse_id: str, quantity: int):
+def update_product_in_warehouse(db: Session, product_id: str, product_warehouse_id: str, quantity: int):
     try:
+        # Проверка существования продукта
+        product = db.query(models.Product).filter(
+            models.Product.product_id == product_id).first()
+        if not product:
+            raise HTTPException(
+                status_code=404, detail="Продукт с указанным ID отсутствует в системе.")
+
         # Проверка существования записи
         record = db.query(models.ProductWarehouse).filter(
             models.ProductWarehouse.product_warehouse_id == product_warehouse_id).first()
@@ -396,13 +414,17 @@ def update_product_in_warehouse(db: Session, product_warehouse_id: str, quantity
             status_code=500, detail=f"Database error: {str(e)}")
 
 
-def delete_product_from_warehouse(db: Session, product_warehouse_id: str):
+def delete_product_from_warehouse(db: Session, product_id: str, product_warehouse_id: str):
     try:
         # Проверка существования записи
         record = db.query(models.ProductWarehouse).filter(
-            models.ProductWarehouse.product_warehouse_id == product_warehouse_id).first()
+            models.ProductWarehouse.product_warehouse_id == product_warehouse_id,
+            # Проверяем соответствие product_id
+            models.ProductWarehouse.product_id == product_id
+        ).first()
         if not record:
-            raise HTTPException(status_code=404, detail="Record not found")
+            raise HTTPException(
+                status_code=404, detail="Product not found in warehouse")
 
         db.delete(record)
         db.commit()
