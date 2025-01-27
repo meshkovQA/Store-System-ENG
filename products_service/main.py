@@ -4,6 +4,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPBearer
 from app import routes, database, logger, auth
 from app.kafka import start_consumer
+from fastapi.staticfiles import StaticFiles
+
 
 app = FastAPI(
     title="Warehouse Management Microservice API",
@@ -20,6 +22,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+app.mount("/img", StaticFiles(directory="img"), name="img")
 
 
 @app.on_event("startup")

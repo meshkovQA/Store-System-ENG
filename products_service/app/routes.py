@@ -1,3 +1,4 @@
+# routes.py
 from fastapi import APIRouter, Depends, HTTPException, status, Query, File, UploadFile
 import asyncio
 from sqlalchemy.orm import Session
@@ -16,7 +17,6 @@ router = APIRouter()
 security = HTTPBearer()
 
 # Путь для загрузки изображений
-
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
 

@@ -262,12 +262,13 @@ function renderProducts(products) {
 
     products.forEach((product) => {
         const inStock = product.stock_quantity > 0;
+        const imageHost = "http://localhost:8002";
 
         const card = `
             <div class="card mb-3">
                 <div class="row g-0">
                     <div class="col-md-4">
-                        <img src="${product.image_url || '/default-image.jpg'}" class="img-fluid rounded-start" alt="${product.name}">
+                        <img src="${imageHost}${product.image_url || '/default-image.jpg'}" class="img-fluid rounded-start" alt="${product.name}">
                     </div>
                     <div class="col-md-8">
                         <div class="card-body">
