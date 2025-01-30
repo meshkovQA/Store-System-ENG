@@ -320,7 +320,8 @@ function addToCart(productId) {
             price: product.price,
             quantity: 1,
             max_quantity: product.stock_quantity,
-            warehouse_id: warehouseId
+            warehouse_id: warehouseId,
+            image_url: product.image_url
         });
     }
     console.log("Корзина обновлена:", cart);

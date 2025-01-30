@@ -24,13 +24,14 @@ function renderCart() {
     cart.forEach(item => {
         const itemTotal = item.price * item.quantity;
         total += itemTotal;
+        const imageHost = "http://localhost:8002";
 
         cartContainer.innerHTML += `
             <div class="col-md-12 mb-3">
                 <div class="card shadow-sm">
                     <div class="row g-0 align-items-center">
                         <div class="col-md-2 text-center">
-                            <img src="/default-image.jpg" class="img-fluid rounded" alt="${item.name}">
+                            <img src="${imageHost}${item.image_url || '/default-image.jpg'}" class="img-fluid rounded-start" alt="${item.name}">
                         </div>
                         <div class="col-md-6">
                             <div class="card-body">
@@ -44,7 +45,7 @@ function renderCart() {
                             </div>
                         </div>
                         <div class="col-md-3 text-center">
-                            <p class="fs-5 fw-bold">${itemTotal} ₽</p>
+                            <p class="fs-5 fw-bold">${itemTotal.toFixed(2)} ₽</p>
                         </div>
                         <div class="col-md-1 text-end pe-3">
                             <button class="btn btn-danger btn-sm" onclick="removeFromCart('${item.product_id}')">
@@ -57,7 +58,7 @@ function renderCart() {
         `;
     });
 
-    cartTotal.textContent = `Итого: ${total} ₽`;
+    cartTotal.textContent = `Итого: ${total.toFixed(2)} ₽`;
 }
 
 // Изменение количества товаров
@@ -72,12 +73,14 @@ function changeQuantity(productId, delta) {
         alert("Достигнуто максимальное количество на складе");
         item.quantity = item.max_quantity;
     }
+    saveCartToStorage();
     renderCart();
 }
 
 // Удаление товара из корзины
 function removeFromCart(productId) {
     cart = cart.filter(item => item.product_id !== productId);
+    saveCartToStorage();
     renderCart();
 }
 
