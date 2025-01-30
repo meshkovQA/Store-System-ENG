@@ -1,0 +1,16 @@
+sqlalchemy
+jose
+fastapi
+passlib
+python-jose
+psycopg2-binary
+uvicorn
+pydantic
+pydantic[email]
+Jinja2
+uvicorn
+kafka-python
+requests
+kafka-python
+python-multipart
+redis

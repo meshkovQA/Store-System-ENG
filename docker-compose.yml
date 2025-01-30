@@ -296,6 +296,31 @@ services:
         delay: 5s
         window: 20s
 
+  db_chats:
+    image: postgres:12-bullseye
+    container_name: postgres_chats_db
+    environment:
+      POSTGRES_USER: chat_user # Задать пользователя
+      POSTGRES_PASSWORD: THw7l0bxvPPkWUhP # Задать пароль
+      POSTGRES_DB: chat_db # Задать имя БД
+    ports:
+      - "5440:5432" # Открыть порт для внешнего доступа
+    volumes:
+      - ./docker-data/chat_db:/var/lib/postgresql/data
+      - ./chat_service/db_init/init_chat.sql:/docker-entrypoint-initdb.d/init.sql # Путь к папке с SQL-скриптами
+    networks:
+      - app_network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.3'
+          memory: 512MB
+      restart_policy:
+        condition: on-failure
+        max_attempts: 3
+        delay: 5s
+        window: 20s
+
   auth_service:
     build:
       context: ./auth_service
@@ -367,6 +392,34 @@ services:
       REDIS_HOST: redis
     ports:
       - "8003:8000" # Открываем порт для сервиса заказов
+    networks:
+      - app_network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.3'
+          memory: 512MB
+      restart_policy:
+        condition: on-failure
+        max_attempts: 3
+        delay: 5s
+        window: 20s
+
+  chat_service:
+    build:
+      context: ./chat_service
+      dockerfile: Dockerfile
+    container_name: chat_service
+    volumes:
+      - ./chat_service/logs:/app/logs
+    depends_on:
+      kafka:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://chat_user:THw7l0bxvPPkWUhP@db_chats:5432/chat_db
+      REDIS_HOST: redis
+    ports:
+      - "8004:8000" # Открываем порт для сервиса заказов
     networks:
       - app_network
     deploy:
