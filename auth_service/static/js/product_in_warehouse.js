@@ -166,6 +166,8 @@ async function addProductToWarehouse(warehouseId) {
         }
     });
 
+    const result = await response.json();
+
     if (response.ok) {
         alert("Товар успешно добавлен на склад");
         const warehouseId = getWarehouseIdFromUrl();
@@ -173,7 +175,7 @@ async function addProductToWarehouse(warehouseId) {
         renderProductsTable(products);
         $("#addProductModal").modal("hide");
     } else {
-        alert("Ошибка добавления товара");
+        alert(`Ошибка добавления товара: ${result.detail || "Неизвестная ошибка"}`);
     }
 }
 
@@ -211,15 +213,15 @@ async function updateProductQuantity(productWarehouseId, productId, quantity) {
         }
     });
 
+    const result = await response.json();
+
     if (response.ok) {
         alert("Количество товара успешно обновлено");
         const warehouseId = getWarehouseIdFromUrl();
         const products = await fetchProductsFromWarehouse(warehouseId, token);
         renderProductsTable(products);
-    } else if (response.status === 404) {
-        alert("Продукт с указанным ID отсутствует в системе.");
     } else {
-        alert("Ошибка обновления товара");
+        alert(`Ошибка обновления товара: ${result.detail || "Неизвестная ошибка"}`);
     }
 }
 
