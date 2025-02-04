@@ -1,11 +1,11 @@
 # routes.py
 from fastapi import APIRouter, Depends, HTTPException, status, Query, File, UploadFile
 import asyncio
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from uuid import UUID
 from app import crud, schemas, database, auth, logger, models
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from app.database import get_session_local, Product
+from app.database import get_session_local, Product, ProductWarehouse
 from app.config import UPLOAD_DIR
 import shutil
 from typing import Optional
@@ -594,6 +594,7 @@ def get_products_in_warehouse_with_filters(
     min_price: Optional[float] = Query(None),
     max_price: Optional[float] = Query(None),
     in_stock: Optional[bool] = Query(None),
+    name: Optional[str] = Query(None),
     db: Session = Depends(get_session_local),
     credentials: HTTPAuthorizationCredentials = Depends(security)
 ):
@@ -602,19 +603,21 @@ def get_products_in_warehouse_with_filters(
     if not user_data:
         raise HTTPException(status_code=403, detail="Unauthorized")
 
-    products_in_warehouse = crud.get_products_in_warehouse(
-        db, warehouse_id=str(warehouse_id))
-    product_ids = [item.product_id for item in products_in_warehouse]
-
-    query = db.query(Product).filter(Product.product_id.in_(product_ids))
+    query = (
+        db.query(Product, ProductWarehouse.quantity)
+        .join(ProductWarehouse, Product.product_id == ProductWarehouse.product_id)
+        .filter(ProductWarehouse.warehouse_id == warehouse_id)
+    )
 
     if min_price is not None:
         query = query.filter(Product.price >= min_price)
     if max_price is not None:
         query = query.filter(Product.price <= max_price)
     if in_stock:
-        query = query.filter(Product.stock_quantity > 0)
+        query = query.filter(ProductWarehouse.quantity > 0)
+    if name:
+        query = query.filter(Product.name.ilike(f"%{name}%"))
 
     products = query.all()
 
-    return [schemas.ProductFilter.from_orm(product) for product in products]
+    return [schemas.ProductFilter.from_orm(product, quantity) for product, quantity in products]
