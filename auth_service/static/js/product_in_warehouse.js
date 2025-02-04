@@ -220,11 +220,6 @@ async function updateProductQuantity(productWarehouseId, productId, quantity) {
         const warehouseId = getWarehouseIdFromUrl();
         const products = await fetchProductsFromWarehouse(warehouseId, token);
         renderProductsTable(products);
-<<<<<<< HEAD
-    } else if (response.status === 404) {
-        alert("Продукт с указанным ID отсутствует в системе.");
-=======
->>>>>>> release3_order_service
     } else {
         alert(`Ошибка обновления товара: ${result.detail || "Неизвестная ошибка"}`);
     }

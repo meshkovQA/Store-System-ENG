@@ -1,12 +1,8 @@
 # routes.py
 from fastapi import APIRouter, Depends, HTTPException, status, Query, File, UploadFile
 import asyncio
-<<<<<<< HEAD
-from sqlalchemy.orm import Session, joinedload
-=======
 from sqlalchemy.orm import Session
 from sqlalchemy import func
->>>>>>> release3_order_service
 from uuid import UUID
 from app import crud, schemas, database, auth, logger, models
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
