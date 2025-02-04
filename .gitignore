@@ -1,5 +1,16 @@
 /my_env
 /docker-data
+<<<<<<< HEAD
 /products_service/logs/products_service.log
 /auth_service/logs/auth.log
 /orders_service/logs/orders_service.log
+=======
+<<<<<<< HEAD
+products_service/logs/products_service.log
+auth_service/logs/auth.log
+orders_service/logs/orders_service.log
+=======
+/products_service/logs/products_service.log
+/auth_service/logs/auth.log
+>>>>>>> feature2_fixed_v2
+>>>>>>> release3_order_service

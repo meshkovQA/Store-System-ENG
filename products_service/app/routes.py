@@ -1,7 +1,12 @@
 # routes.py
 from fastapi import APIRouter, Depends, HTTPException, status, Query, File, UploadFile
 import asyncio
+<<<<<<< HEAD
 from sqlalchemy.orm import Session, joinedload
+=======
+from sqlalchemy.orm import Session
+from sqlalchemy import func
+>>>>>>> release3_order_service
 from uuid import UUID
 from app import crud, schemas, database, auth, logger, models
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
@@ -534,16 +539,42 @@ def add_product_to_warehouse(
             detail="Quantity must be greater than or equal to 0"
         )
 
-    # Проверяем доступное количество продукта
+    # Проверяем, что продукт существует
     product = db.query(Product).filter(
         Product.product_id == product_id).first()
     if not product:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail="Product not found")
 
-    if product.stock_quantity < quantity:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
-                            detail=f"Insufficient stock. Available: {product.stock_quantity}, requested: {quantity}")
+        # Проверяем, есть ли уже этот продукт в данном складе
+    existing_entry = db.query(ProductWarehouse).filter(
+        ProductWarehouse.product_id == product_id,
+        ProductWarehouse.warehouse_id == warehouse_id
+    ).first()
+
+    if existing_entry:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"""Product {product_id} is already in warehouse {
+                warehouse_id}. You can only update the quantity."""
+        )
+
+    # Считаем, сколько товара уже добавлено на другие склады
+    total_allocated_quantity = (
+        db.query(func.sum(ProductWarehouse.quantity))
+        .filter(ProductWarehouse.product_id == product_id)
+        .scalar()
+    ) or 0  # Если товара ещё нигде нет, считаем 0
+
+    available_quantity = product.stock_quantity - total_allocated_quantity
+
+    # Проверяем, что доступное количество товара позволяет добавить его на склад
+    if available_quantity < quantity:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"""Not enough available stock. Total available: {
+                available_quantity}, requested: {quantity}"""
+        )
 
     logger.log_message(f"""Adding product {product_id} to warehouse {
                        warehouse_id} with quantity {quantity}""")
@@ -565,6 +596,52 @@ def update_product_in_warehouse(
         logger.log_message("Invalid token or unauthorized access")
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
                             detail="Invalid token or unauthorized access")
+
+        # Проверяем, что количество не отрицательное
+    if quantity < 0:
+        logger.log_message(f"""Attempt to update product {product_id} in warehouse {
+                           product_warehouse_id} with negative quantity {quantity}""")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Quantity must be greater than or equal to 0"
+        )
+
+        # Проверяем, что продукт существует
+    product = db.query(Product).filter(
+        Product.product_id == product_id).first()
+    if not product:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Product not found")
+
+    # Проверяем, что запись в ProductWarehouse существует
+    product_warehouse = db.query(ProductWarehouse).filter(
+        ProductWarehouse.product_warehouse_id == product_warehouse_id,
+        ProductWarehouse.product_id == product_id
+    ).first()
+
+    if not product_warehouse:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail="Product in warehouse not found")
+
+        # Считаем, сколько этого продукта уже распределено по складам (кроме текущего обновляемого склада)
+    total_allocated_quantity = (
+        db.query(func.sum(ProductWarehouse.quantity))
+        .filter(ProductWarehouse.product_id == product_id)
+        # Исключаем текущий склад
+        .filter(ProductWarehouse.product_warehouse_id != product_warehouse_id)
+        .scalar()
+    ) or 0  # Если товара ещё нигде нет, считаем 0
+
+    available_quantity = product.stock_quantity - total_allocated_quantity
+
+    # Проверяем, что доступное количество товара позволяет обновить его в этом складе
+    if available_quantity < quantity:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"""Not enough available stock. Total available: {
+                available_quantity}, requested update: {quantity}"""
+        )
+
     logger.log_message(f"Updating product in warehouse {product_warehouse_id}")
     return crud.update_product_in_warehouse(
         db=db,
