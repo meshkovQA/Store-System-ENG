@@ -55,6 +55,7 @@ document.addEventListener("DOMContentLoaded", async function () {
         const warehouseId = document.getElementById("warehouseSelect").value;
         const searchQuery = document.getElementById("searchInput").value.trim();
         if (warehouseId && searchQuery) {
+            resetFilters();
             const products = await searchProductsInWarehouse(warehouseId, searchQuery, token);
             renderProducts(products);
         }
@@ -66,9 +67,10 @@ document.addEventListener("DOMContentLoaded", async function () {
         const minPrice = minPriceInput.value;
         const maxPrice = maxPriceInput.value;
         const inStock = document.getElementById("inStockCheckbox").checked;
+        const searchQuery = document.getElementById("searchInput").value.trim();
 
         if (warehouseId) {
-            const products = await filterProductsByWarehouse(warehouseId, { minPrice, maxPrice, inStock }, token);
+            const products = await filterProductsByWarehouse(warehouseId, { minPrice, maxPrice, inStock, searchQuery }, token);
             renderProducts(products);
         }
     });
@@ -112,25 +114,10 @@ async function searchProductsInWarehouse(warehouseId, query, token) {
         return [];
     }
 
-    const productsInWarehouse = await response.json();
-    console.log("Найденные продукты на складе:", productsInWarehouse);
+    const products = await response.json(); // Теперь API уже возвращает нужные данные
+    console.log("✅ Найденные продукты на складе:", products);
 
-    const products = [];
-
-    for (const productWarehouse of productsInWarehouse) {
-        const productDetails = await fetchProductDetails(productWarehouse.product_id, token);
-        if (productDetails) {
-            products.push({
-                ...productDetails,
-                stock_quantity: productWarehouse.quantity // Количество со склада
-            });
-        } else {
-            console.warn("Не удалось загрузить данные для продукта:", productWarehouse.product_id);
-        }
-    }
-
-    console.log("Все найденные продукты:", products);
-    return products;
+    return products; // Возвращаем напрямую, без fetchProductDetails
 }
 
 // ---- Фильтрация по складу ----
@@ -146,6 +133,7 @@ async function filterProductsByWarehouse(warehouseId, filters, token) {
     if (filters.inStock) {
         url += `in_stock=true&`;
     }
+    if (filters.searchQuery) url += `name=${encodeURIComponent(filters.searchQuery)}&`;
 
     const response = await fetch(url, {
         headers: {
@@ -159,24 +147,9 @@ async function filterProductsByWarehouse(warehouseId, filters, token) {
         return [];
     }
 
-    const productsInWarehouse = await response.json();
-    console.log("Фильтрованные продукты на складе:", productsInWarehouse);
+    const products = await response.json();
+    console.log("Фильтрованные продукты на складе:", products);
 
-    const products = [];
-
-    for (const productWarehouse of productsInWarehouse) {
-        const productDetails = await fetchProductDetails(productWarehouse.product_id, token);
-        if (productDetails) {
-            products.push({
-                ...productDetails,
-                stock_quantity: productWarehouse.quantity // Количество со склада
-            });
-        } else {
-            console.warn("Не удалось загрузить данные для продукта:", productWarehouse.product_id);
-        }
-    }
-
-    console.log("Все отфильтрованные продукты:", products);
     return products;
 }
 
@@ -250,7 +223,7 @@ async function fetchProductsFromWarehouse(warehouseId, token) {
 }
 
 // ---- Формирование списка продуктов ----
-function renderProducts(products) {
+async function renderProducts(products) {
     console.log("Рендеринг продуктов:", products);
     const container = document.getElementById("productsContainer");
     container.innerHTML = "";
@@ -260,9 +233,13 @@ function renderProducts(products) {
         return;
     }
 
-    products.forEach((product) => {
+    // Загружаем токен заранее
+    const token = await getTokenFromDatabase();
+
+    for (const product of products) {
         const inStock = product.stock_quantity > 0;
         const imageHost = "http://localhost:8002";
+        const supplierName = await fetchSupplierName(product.supplier_id, token);
 
         const card = `
             <div class="card mb-3">
@@ -274,7 +251,7 @@ function renderProducts(products) {
                         <div class="card-body">
                             <h5 class="card-title">${product.name}</h5>
                             <p class="card-text">${product.description?.substring(0, 200) || "Нет описания"}...</p>
-                            <p class="card-text"><small class="text-muted">Поставщик: ${product.supplier || "Неизвестен"}</small></p>
+                            <p class="card-text"><small class="text-muted">Поставщик: ${supplierName}</small></p>
                             <p class="card-text"><small class="text-muted">Цена: ${product.price} ₽</small></p>
                             <p class="card-text"><small class="text-muted">Количество на складе: ${product.stock_quantity}</small></p>
                             <button class="btn btn-primary" ${!inStock ? "disabled" : ""}
@@ -288,7 +265,7 @@ function renderProducts(products) {
         `;
 
         container.innerHTML += card;
-    });
+    };
 }
 
 function addToCart(productId) {
@@ -347,5 +324,39 @@ function renderCartIndicator() {
         cartButton.textContent = `Корзина (${totalItems})`;
     } else {
         console.warn("Кнопка корзины не найдена");
+    }
+}
+// Функция сброса фильтров
+function resetFilters() {
+    console.log("Сбрасываем фильтры...");
+    document.getElementById("minPriceRange").value = 0;
+    document.getElementById("maxPriceRange").value = 10000;
+    document.getElementById("inStockCheckbox").checked = false;
+    document.getElementById("minPriceValue").textContent = "0";
+    document.getElementById("maxPriceValue").textContent = "10000";
+}
+
+// ---- Получение информации о поставщике ----
+async function fetchSupplierName(supplierId, token) {
+    if (!supplierId) return "Неизвестен"; // Если нет ID, возвращаем "Неизвестен"
+
+    try {
+        const response = await fetch(`http://localhost:8002/suppliers/${supplierId}`, {
+            headers: {
+                "Authorization": `Bearer ${token}`,
+                "Content-Type": "application/json"
+            }
+        });
+
+        if (!response.ok) {
+            console.error(`Ошибка при получении имени поставщика: ${response.status}`);
+            return "Неизвестен";
+        }
+
+        const supplierData = await response.json();
+        return supplierData.name || "Неизвестен";
+    } catch (error) {
+        console.error("Ошибка при загрузке имени поставщика:", error);
+        return "Неизвестен";
     }
 }

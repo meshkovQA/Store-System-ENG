@@ -180,18 +180,20 @@ class ProductFilter(BaseModel):
     name: str
     price: float
     description: Optional[str] = None
+    stock_quantity: int
 
     class Config:
         orm_mode = True
 
     @classmethod
-    def from_orm(cls, obj):
+    def from_orm(cls, obj, quantity):
         return cls(
             product_id=str(obj.product_id),
             supplier_id=str(obj.supplier_id),
             name=obj.name,
             price=obj.price,
-            description=obj.description
+            description=obj.description,
+            stock_quantity=quantity
         )
 
 

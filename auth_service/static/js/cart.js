@@ -8,6 +8,7 @@ document.addEventListener("DOMContentLoaded", () => {
 function renderCart() {
     const cartContainer = document.getElementById("cartContainer");
     const cartTotal = document.getElementById("cartTotal");
+    const checkoutBtn = document.getElementById("checkoutBtn");
     cartContainer.innerHTML = "";
 
     if (cart.length === 0) {
@@ -17,6 +18,7 @@ function renderCart() {
             </div>
         `;
         cartTotal.textContent = "";
+        checkoutBtn.disabled = true;
         return;
     }
     let total = 0;
@@ -59,6 +61,7 @@ function renderCart() {
     });
 
     cartTotal.textContent = `Итого: ${total.toFixed(2)} ₽`;
+    checkoutBtn.disabled = false;
 }
 
 // Изменение количества товаров
