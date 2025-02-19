@@ -235,17 +235,24 @@ async function renderProducts(products) {
 
     // Загружаем токен заранее
     const token = await getTokenFromDatabase();
+    const imageHost = "http://localhost:8002";
 
     for (const product of products) {
+
         const inStock = product.stock_quantity > 0;
-        const imageHost = "http://localhost:8002";
         const supplierName = await fetchSupplierName(product.supplier_id, token);
+
+        const imageUrl = product.image_url && product.image_url.trim() !== ""
+            ? (product.image_url.startsWith("http")
+                ? product.image_url
+                : `${imageHost}${product.image_url}`)
+            : `${imageHost}/default-image.jpg`;
 
         const card = `
             <div class="card mb-3">
                 <div class="row g-0">
                     <div class="col-md-4">
-                        <img src="${imageHost}${product.image_url || '/default-image.jpg'}" class="img-fluid rounded-start" alt="${product.name}">
+                        <img src="${imageUrl}" class="img-fluid rounded-start" alt="${product.name}">
                     </div>
                     <div class="col-md-8">
                         <div class="card-body">

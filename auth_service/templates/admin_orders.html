@@ -1,0 +1,36 @@
+{% extends "layout.html" %}
+
+{% block title %}Администрирование заказов{% endblock %}
+
+{% block content %}
+<div class="container mt-3">
+    <h2>Администрирование заказов</h2>
+    <div class="row">
+        <div class="col-md-3">
+            <h5>Фильтры</h5>
+            <form id="filtersForm">
+                <div class="mb-3">
+                    <label for="statusFilter" class="form-label">Статус</label>
+                    <select id="statusFilter" class="form-select">
+                        <option value="">Все</option>
+                        <option value="pending">Ожидание</option>
+                        <option value="completed">Завершён</option>
+                        <option value="cancelled">Отменён</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label for="dateFilter" class="form-label">Дата создания</label>
+                    <input type="date" id="dateFilter" class="form-control">
+                </div>
+                <button class="btn btn-primary" type="submit">Применить</button>
+            </form>
+        </div>
+        <div class="col-md-9">
+            <div id="ordersContainer">
+                <!-- Заказы будут загружены сюда -->
+            </div>
+        </div>
+    </div>
+</div>
+<script src="/static/js/admin_orders.js"></script>
+{% endblock %}
