@@ -180,6 +180,7 @@ class ProductFilter(BaseModel):
     name: str
     price: float
     description: Optional[str] = None
+    image_url: Optional[str] = None
     stock_quantity: int
 
     class Config:
@@ -193,7 +194,8 @@ class ProductFilter(BaseModel):
             name=obj.name,
             price=obj.price,
             description=obj.description,
-            stock_quantity=quantity
+            stock_quantity=quantity,
+            image_url=obj.image_url
         )
 
 

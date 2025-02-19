@@ -20,6 +20,7 @@ document.addEventListener("DOMContentLoaded", async function () {
         if (data.is_superadmin) {
             document.getElementById("user-list-item").style.display = "block";
             document.getElementById("pending-approval-item").style.display = "block";
+            document.getElementById("adminOrdersBtn").style.display = "inline-block";
         }
     } catch (error) {
         console.error("Error checking super admin status:", error);

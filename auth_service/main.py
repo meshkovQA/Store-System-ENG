@@ -118,6 +118,11 @@ def warehouse_page(
     })
 
 
+@app.get("/admin_orders", response_class=HTMLResponse, include_in_schema=False)
+async def pending_approval_page(request: Request):
+    return templates.TemplateResponse("admin_orders.html", {"request": request})
+
+
 # Обновляем OpenAPI-схему для отображения Bearer токена в Swagger UI
 @app.get("/openapi.json", include_in_schema=False)
 def custom_openapi():
