@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field, constr, validator, conint, condecimal, HttpUrl, EmailStr
 from typing import Optional
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation, ROUND_DOWN
 import re
 from uuid import UUID
 from datetime import datetime
@@ -60,6 +60,14 @@ class ProductBase(BaseModel):
 
     @validator("price")
     def validate_price(cls, value):
+
+        try:
+            # Конвертируем в Decimal
+            value = Decimal(value).quantize(
+                Decimal("0.01"), rounding=ROUND_DOWN)
+        except InvalidOperation:
+            raise ValueError("Invalid price format.")
+
         # Проверяем, что значение имеет ровно 2 знака после запятой
         if value.as_tuple().exponent != -2:
             raise ValueError("Price must have exactly two decimal places.")
@@ -89,15 +97,22 @@ class ProductBase(BaseModel):
 
     @validator("weight")
     def validate_weight(cls, value):
+
+        try:
+            # Конвертируем в Decimal
+            value = Decimal(value).quantize(
+                Decimal("0.01"), rounding=ROUND_DOWN)
+        except InvalidOperation:
+            raise ValueError("Invalid price format.")
+
         # Проверяем, что значение имеет ровно 2 знака после запятой
-        if value is not None:
-            if value.as_tuple().exponent != -2:
-                raise ValueError(
-                    "Weight must have exactly two decimal places.")
+        if value.as_tuple().exponent != -2:
+            raise ValueError(
+                "Weight must have exactly two decimal places.")
             # Проверяем, что количество цифр не превышает 10
-            if len(str(value).replace(".", "")) > 10:
-                raise ValueError(
-                    "Weight must not exceed 10 digits including decimal places.")
+        if len(str(value).replace(".", "")) > 10:
+            raise ValueError(
+                "Weight must not exceed 10 digits including decimal places.")
         return value
 
     @validator("dimensions")
