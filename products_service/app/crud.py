@@ -184,8 +184,6 @@ def get_supplier_by_id(db: Session, supplier_id: str):
 
 def get_all_suppliers(db: Session):
     suppliers = db.query(models.Supplier).all()
-    if not suppliers:
-        raise HTTPException(status_code=404, detail="No suppliers found")
     return suppliers
 
 
