@@ -38,9 +38,13 @@ document.addEventListener("DOMContentLoaded", async function () {
         // Email контактного лица
         let contactEmail = document.getElementById("add-contact_email").value.trim();
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!contactEmail || contactEmail.length > 100 || !emailRegex.test(contactEmail)) {
+        const localPart = contactEmail.split('@')[0];
+        if (!contactEmail || contactEmail.length > 100 || !emailRegex.test(contactEmail) || localPart.length > 20) {
             document.getElementById("addContactEmailError").style.display = 'block';
             valid = false;
+        }
+        else {
+            document.getElementById("addContactEmailError").style.display = 'none';
         }
 
         // Номер телефона
@@ -124,9 +128,13 @@ document.addEventListener("DOMContentLoaded", async function () {
         // Email контактного лица
         let contactEmail = document.getElementById("edit-contact_email").value.trim();
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!contactEmail || contactEmail.length > 100 || !emailRegex.test(contactEmail)) {
+        const localPart = contactEmail.split('@')[0];
+        if (!contactEmail || contactEmail.length > 100 || !emailRegex.test(contactEmail) || localPart.length > 20) {
             document.getElementById("editContactEmailError").style.display = 'block';
             valid = false;
+        }
+        else {
+            document.getElementById("editContactEmailError").style.display = 'none';
         }
 
         // Номер телефона

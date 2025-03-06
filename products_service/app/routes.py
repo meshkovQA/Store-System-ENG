@@ -216,6 +216,16 @@ def delete_product(product_id: str, db: Session = Depends(get_session_local), cr
         raise HTTPException(
             status_code=400, detail="Invalid UUID format for Product ID")
 
+    product_in_warehouse = db.query(ProductWarehouse).filter(
+        ProductWarehouse.product_id == product_uuid,
+    ).first()
+
+    if product_in_warehouse:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Cannot delete product {product_id}: It is available in warehouse {product_in_warehouse.warehouse_id}"
+        )
+
     logger.log_message(f"Deleting product with id {product_id}")
     return crud.delete_product(db, product_uuid)
 
@@ -356,6 +366,17 @@ def delete_supplier(supplier_id: str, db: Session = Depends(get_session_local), 
     except ValueError:
         raise HTTPException(
             status_code=400, detail="Invalid UUID format for Supplier ID")
+
+        # Проверяем, есть ли продукты, использующие этого поставщика
+    product_with_supplier = db.query(Product).filter(
+        Product.supplier_id == supplier_uuid
+    ).first()
+
+    if product_with_supplier:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Cannot delete supplier {supplier_id}: It is still associated with product {product_with_supplier.name} (ID: {product_with_supplier.product_id})"
+        )
 
     logger.log_message(f"Deleting supplier with id {supplier_id}")
     return crud.delete_supplier(db, supplier_uuid)
