@@ -217,6 +217,10 @@ class SupplierBase(BaseModel):
         # Pydantic уже проверяет формат email через EmailStr, так что дополнительная валидация не требуется.
         if len(value) > 100:
             raise ValueError("Email must be up to 100 characters long.")
+        local_part = value.split('@')[0]  # Часть email до первого "@"
+        if len(local_part) < 20:
+            raise ValueError(
+                "Email must have at least 20 characters before '@'.")
         return value
 
     @validator("phone_number")
@@ -308,6 +312,17 @@ class SupplierUpdate(BaseModel):
             raise ValueError(
                 "Contact name must contain only letters, digits, and spaces."
             )
+        return value
+
+    @validator("contact_email")
+    def validate_contact_email(cls, value):
+        # Pydantic уже проверяет формат email через EmailStr, так что дополнительная валидация не требуется.
+        if len(value) > 100:
+            raise ValueError("Email must be up to 100 characters long.")
+        local_part = value.split('@')[0]  # Часть email до первого "@"
+        if len(local_part) > 20:
+            raise ValueError(
+                "Email must have at least 20 characters before '@'.")
         return value
 
     @validator("phone_number")

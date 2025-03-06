@@ -280,9 +280,7 @@ def get_warehouse_by_id(db: Session, warehouse_id: str):
 
 def get_all_warehouses(db: Session):
     warehouses = db.query(models.Warehouse).all()
-    if not warehouses:
-        raise HTTPException(status_code=404, detail="No warehouses found")
-    return warehouses
+    return warehouses if warehouses else []
 
 
 def patch_warehouse(db: Session, warehouse_id: str, updates: dict):
