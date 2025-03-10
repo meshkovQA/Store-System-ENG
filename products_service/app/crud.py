@@ -401,8 +401,24 @@ def update_product_in_warehouse(db: Session, product_id: str, product_warehouse_
         if not record:
             raise HTTPException(status_code=404, detail="Record not found")
 
+            # Проверка существования склада
+        warehouse = db.query(models.Warehouse).filter(
+            models.Warehouse.warehouse_id == record.warehouse_id
+        ).first()
+        if not warehouse:
+            raise HTTPException(status_code=404, detail="Склад не найден.")
+
+        quantity_difference = quantity - record.quantity
+
         record.quantity = quantity
+
+        # Обновление текущего запаса на складе
+        warehouse.current_stock = max(
+            (warehouse.current_stock or 0) + quantity_difference, 0)
+        warehouse.updated_at = datetime.utcnow()
+
         db.commit()
+        db.refresh(warehouse)
         return record
     except SQLAlchemyError as e:
         db.rollback()
@@ -422,8 +438,21 @@ def delete_product_from_warehouse(db: Session, product_id: str, product_warehous
             raise HTTPException(
                 status_code=404, detail="Product not found in warehouse")
 
+            # Проверка существования склада
+        warehouse = db.query(models.Warehouse).filter(
+            models.Warehouse.warehouse_id == record.warehouse_id
+        ).first()
+        if not warehouse:
+            raise HTTPException(status_code=404, detail="Склад не найден.")
+
+            # Уменьшаем current_stock на количество удаляемого товара
+        warehouse.current_stock = max(
+            (warehouse.current_stock or 0) - record.quantity, 0)
+        warehouse.updated_at = datetime.utcnow()
+
         db.delete(record)
         db.commit()
+        db.refresh(warehouse)
         return {"message": "Product removed from warehouse"}
     except SQLAlchemyError as e:
         db.rollback()

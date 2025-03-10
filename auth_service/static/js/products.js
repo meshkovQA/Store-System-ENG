@@ -86,13 +86,15 @@ document.addEventListener("DOMContentLoaded", async function () {
         // Габариты
         let dimensions = document.getElementById("add-dimensions").value.trim();
         if (dimensions) {
-            if (dimensions.length > 100 || !/^\d+(\s*[xхXХ]\s*\d+){2}$/.test(dimensions)) {
+            let pattern = /^\d+x\d+x\d+$/;
+            if (dimensions.length > 100 || !pattern.test(dimensions)) {
                 console.log("Invalid dimensions input");  // Лог ошибки габаритов
                 document.getElementById("dimensionsError").style.display = 'block';
                 valid = false;
+            } else {
+                document.getElementById("dimensionsError").style.display = 'none';
             }
         }
-
         // Производитель
         let manufacturer = document.getElementById("add-manufacturer").value.trim();
         if (manufacturer && (!/^[а-яА-Яa-zA-Z0-9]{1,100}$/.test(manufacturer))) {
@@ -181,10 +183,15 @@ document.addEventListener("DOMContentLoaded", async function () {
 
         // Габариты
         let dimensions = document.getElementById("edit-dimensions").value.trim();
-        if (dimensions && !/^\d+(\s*[xхXХ]\s*\d+){2}$/.test(dimensions)) {
-            console.log("Invalid dimensions input");  // Лог ошибки габаритов
-            document.getElementById("dimensionsError").style.display = 'block';
-            valid = false;
+        if (dimensions) {
+            let pattern = /^\d+x\d+x\d+$/;
+            if (dimensions.length > 100 || !pattern.test(dimensions)) {
+                console.log("Invalid dimensions input");  // Лог ошибки габаритов
+                document.getElementById("dimensionsError").style.display = 'block';
+                valid = false;
+            } else {
+                document.getElementById("dimensionsError").style.display = 'none';
+            }
         }
 
         // Производитель
