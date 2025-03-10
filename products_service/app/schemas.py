@@ -118,11 +118,11 @@ class ProductBase(BaseModel):
     @validator("dimensions")
     def validate_dimensions(cls, value):
         if value is not None:
-            # Регулярное выражение для цифр и символа "х"
-            pattern = r"^[0-9xх]+$"
-            if not re.match(pattern, value):
+            # Регулярное выражение для "10x20x30" или "5x5x5"
+            pattern = r"^\d+x\d+x\d+$"
+            if not re.fullmatch(pattern, value):
                 raise ValueError(
-                    "Dimensions must contain only digits and 'x' symbol.")
+                    "Dimensions must be in the format '10x20x30' with three numbers separated by 'x'.")
         return value
 
     @validator("manufacturer")
@@ -508,8 +508,12 @@ class WarehouseBase(BaseModel):
 
     @validator("area_size")
     def validate_area_size(cls, value):
-        if value is not None and value <= 0:
-            raise ValueError("Area size must be a positive number.")
+        if value is not None:  # Проверяем, если значение передано
+            if value <= Decimal("0"):
+                raise ValueError(
+                    "Area size must be a positive number greater than zero.")
+            if value > Decimal("1000000.00"):
+                raise ValueError("Area size must not exceed 1,000,000.00.")
         return value
 
 
@@ -517,8 +521,92 @@ class WarehouseCreate(WarehouseBase):
     pass
 
 
-class WarehouseUpdate(WarehouseBase):
-    pass
+class WarehouseUpdate(BaseModel):
+    location: Optional[constr(min_length=1, max_length=255)] = None
+    manager_name: Optional[constr(max_length=100)] = None
+    capacity: Optional[conint(gt=0)] = None
+    current_stock: Optional[conint(ge=0)] = None
+    contact_number: Optional[constr(max_length=15)] = None
+    email: Optional[EmailStr] = None
+    is_active: Optional[bool] = None
+    area_size: Optional[Decimal] = None
+
+    @validator("location")
+    def validate_location(cls, value):
+        if value.strip() == "":
+            raise ValueError("Location cannot contain only spaces.")
+        if len(value) > 255:
+            raise ValueError("Location must be 255 characters or fewer.")
+        return value
+
+    @validator("manager_name")
+    def validate_manager_name(cls, value):
+        if value is None:
+            return value  # Если значение None, валидатор пропускает его как валидное
+
+        if value.strip() == "":
+            raise ValueError("Manager name cannot contain only spaces.")
+
+            # Проверка: только буквы и пробелы
+        pattern = r"^[A-Za-zА-Яа-я\s]+$"
+        if not re.match(pattern, value.strip()):
+            raise ValueError(
+                "Manager name must contain only letters and spaces.")
+
+        return value
+
+    @validator("capacity")
+    def validate_capacity(cls, value):
+        if value <= 0:
+            raise ValueError("Capacity must be a positive integer.")
+        return value
+
+    @validator("current_stock")
+    def validate_current_stock(cls, value):
+        if value < 0:
+            raise ValueError(
+                "Current stock must be zero or a positive integer.")
+        return value
+
+    @validator("contact_number")
+    def validate_contact_number(cls, value):
+        if value is None:
+            return value  # Если значение None, валидатор пропускает его как валидное
+
+        if value.strip() == "":
+            raise ValueError("Contact_numbe cannot contain only spaces.")
+        if value is not None:
+            # Проверка допустимого формата телефона: цифры и символ "+"
+            pattern = r"^\+?\d{1,14}$"
+            if not re.match(pattern, value):
+                raise ValueError(
+                    "Contact number must contain only digits and optional '+' at the beginning.")
+        return value
+
+    @validator('email', pre=True, always=True)
+    def validate_email(cls, value):
+        if not value:
+            return None
+        return value
+
+    @validator("is_active")
+    def validate_is_active(cls, value):
+        if not isinstance(value, bool):
+            raise ValueError("is_active must be a boolean value.")
+        return value
+
+    @validator("area_size")
+    def validate_area_size(cls, value):
+        if value is not None:  # Проверяем, если значение передано
+            if value <= Decimal("0"):
+                raise ValueError(
+                    "Area size must be a positive number greater than zero.")
+            if value > Decimal("1000000.00"):
+                raise ValueError("Area size must not exceed 1,000,000.00.")
+        return value
+
+    class Config:
+        orm_mode = True
 
 
 class Warehouse(WarehouseBase):

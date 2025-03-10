@@ -138,13 +138,6 @@ async def update_product(product_id: str, product: schemas.ProductUpdate, db: Se
         raise HTTPException(
             status_code=400, detail="Invalid UUID format for Product ID")
 
-    # Проверка на существование продукта с таким же названием
-    existing_product = db.query(models.Product).filter(
-        models.Product.name == product.name).first()
-    if existing_product:
-        raise HTTPException(
-            status_code=422, detail="This product is already existed")
-
     logger.log_message(
         f"""User {user_id} is updating product with id {product_id}, new name: {product.name}, new description: {product.description}, new price: {product.price}""")
     return crud.update_product(db=db, product_id=product_uuid, name=product.name, description=product.description,
@@ -322,15 +315,6 @@ def patch_supplier(supplier_id: str, supplier: schemas.SupplierUpdate, db: Sessi
     # Передаем только те поля, которые изменены
     updates = supplier.dict(exclude_unset=True)
 
-    # Проверка на существование поставщика с таким же названием
-    existing_supplier = db.query(models.Supplier).filter(
-        models.Supplier.name == supplier.name).first()
-    if existing_supplier:
-        logger.log_message(f"""Supplier with name '{
-                           supplier.name}' already exists.""")
-        raise HTTPException(
-            status_code=422, detail="This supplier is already existed")
-
     # Проверка, что supplier_id не пустой
     if not supplier_id.strip():
         raise HTTPException(status_code=400, detail="Supplier ID is required")
@@ -475,6 +459,7 @@ def patch_warehouse(warehouse_id: str, warehouse: schemas.WarehouseUpdate, db: S
         logger.log_message("Invalid token or unauthorized access")
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
                             detail="Invalid token or unauthorized access")
+
     updates = warehouse.dict(exclude_unset=True)
 
     # Проверка, что warehouse_id не пустой
