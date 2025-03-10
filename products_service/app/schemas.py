@@ -254,9 +254,9 @@ class SupplierBase(BaseModel):
         if len(value) > 100:
             raise ValueError("Email must be up to 100 characters long.")
         local_part = value.split('@')[0]  # Часть email до первого "@"
-        if len(local_part) < 20:
+        if len(local_part) > 20:
             raise ValueError(
-                "Email must have at least 20 characters before '@'.")
+                "Email must have less tham 20 characters before '@'.")
         return value
 
     @validator("phone_number")
