@@ -291,6 +291,21 @@ def patch_warehouse(db: Session, warehouse_id: str, updates: dict):
         if not warehouse:
             raise HTTPException(status_code=404, detail="Warehouse not found")
 
+            # Проверяем, передается ли новый location
+        new_location = updates.get("location")
+        if new_location:
+            # Проверяем, существует ли уже склад с таким местоположением (игнорируем регистр)
+            existing_warehouse = db.query(models.Warehouse).filter(
+                func.lower(models.Warehouse.location) == func.lower(
+                    new_location),
+                models.Warehouse.warehouse_id != warehouse_id  # Исключаем текущий склад
+            ).first()
+
+            if existing_warehouse:
+                raise HTTPException(
+                    status_code=422, detail="This location is already in use by another warehouse."
+                )
+
         # Обновляем только те поля, которые переданы в словаре updates
         for key, value in updates.items():
             if hasattr(warehouse, key):
