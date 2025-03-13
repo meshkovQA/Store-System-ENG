@@ -66,7 +66,8 @@ async def create_product(product: schemas.ProductCreate, db: Session = Depends(g
 
     # Проверка на существование продукта с таким же названием
     existing_product = db.query(models.Product).filter(
-        models.Product.name == product.name).first()
+        func.lower(models.Product.name) == func.lower(product.name)
+    ).first()
     if existing_product:
         raise HTTPException(
             status_code=422, detail="This product is already existed")
@@ -250,7 +251,8 @@ def create_supplier(supplier: schemas.SupplierCreate, db: Session = Depends(get_
 
     # Проверка на существование поставщика с таким же названием
     existing_supplier = db.query(models.Supplier).filter(
-        models.Supplier.name == supplier.name).first()
+        func.lower(models.Supplier.name) == func.lower(supplier.name)
+    ).first()
     if existing_supplier:
         logger.log_message(f"""Supplier with name '{
                            supplier.name}' already exists.""")
@@ -430,7 +432,7 @@ def create_warehouse(warehouse: schemas.WarehouseCreate, db: Session = Depends(g
 
     # Проверка на существование продукта с таким же названием
     existing_warehouse = db.query(models.Warehouse).filter(
-        models.Warehouse.location == warehouse.location).first()
+        func.lower(models.Warehouse.location) == func.lower(warehouse.location)).first()
     if existing_warehouse:
         raise HTTPException(
             status_code=422, detail="This warehouse is already exist")
