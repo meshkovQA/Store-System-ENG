@@ -18,7 +18,7 @@ class ProductBase(BaseModel):
     # Цена: обязательное, положительное число с 2 знаками после запятой, максимум 10 цифр
     price: condecimal(gt=0, max_digits=10, decimal_places=2)
     # Количество продукта: обязательное, целое число, не меньше 0
-    stock_quantity: conint(ge=0)
+    stock_quantity: conint(ge=0, le=2_147_483_647)
     # Поставщик: обязательное, должен быть действительным UUID
     supplier_id: UUID
     # Изображение продукта: необязательное, форматы png, jpeg, jpg, максимум 255 символов
@@ -78,9 +78,13 @@ class ProductBase(BaseModel):
 
     @validator("stock_quantity")
     def validate_stock_quantity(cls, value):
+
+        max_value = 2_147_483_647
         # Проверяем, что количество является целым числом и не меньше 0
         if value < 0:
             raise ValueError("Stock quantity must be a non-negative integer.")
+        if value > max_value:
+            raise ValueError(f"Stock quantity must not exceed {max_value}.")
         return value
 
     @validator("image_url")
@@ -408,6 +412,12 @@ class SupplierUpdate(BaseModel):
             raise ValueError(
                 "City must contain only letters, spaces, and hyphens.")
         return value
+
+    @validator("website")
+    def validate_website(cls, value):
+        if value is not None:
+            # Проверка URL уже обеспечена HttpUrl, поэтому дополнительная проверка не требуется.
+            return value
 
     # Для contact_email и website дополнительные проверки не нужны —
     # EmailStr и HttpUrl уже сделают проверку формата, если поле не None.
