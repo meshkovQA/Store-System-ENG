@@ -337,8 +337,8 @@ async function createProduct() {
         name: document.getElementById("add-name").value.trim(),
         description: document.getElementById("add-description").value.trim() || null,
         category: document.getElementById("add-category").value.trim() || null,
-        price: document.getElementById("add-price").value.trim() || null,
-        stock_quantity: parseInt(document.getElementById("add-stock-quantity").value) || null,
+        price: document.getElementById("add-price").value.trim(),
+        stock_quantity: parseInt(document.getElementById("add-stock-quantity").value),
         supplier_id: supplierId,  // Передаем выбранный supplier_id
         image_url: imageUrl || null,  // Передаем URL изображения
         weight: document.getElementById("add-weight").value || null,
@@ -399,8 +399,8 @@ async function updateProduct(productId) {
         name: document.getElementById("edit-name").value.trim(),
         description: document.getElementById("edit-description").value.trim() || null,
         category: document.getElementById("edit-category").value.trim() || null,
-        price: document.getElementById("edit-price").value.trim() || null,
-        stock_quantity: parseInt(document.getElementById("edit-stock-quantity").value) || null,
+        price: document.getElementById("edit-price").value.trim(),
+        stock_quantity: parseInt(document.getElementById("edit-stock-quantity").value),
         supplier_id: document.getElementById("edit-supplier-id").value,
         image_url: imageUrl || null,
         weight: document.getElementById("edit-weight").value || null,

@@ -375,6 +375,12 @@ class SupplierUpdate(BaseModel):
                 "City must contain only letters, spaces, and hyphens.")
         return value
 
+    @validator("website")
+    def validate_website(cls, value):
+        if value is not None:
+            # Проверка URL уже обеспечена HttpUrl, поэтому дополнительная проверка не требуется.
+            return value
+
     # Для contact_email и website дополнительные проверки не нужны —
     # EmailStr и HttpUrl уже сделают проверку формата, если поле не None.
 
