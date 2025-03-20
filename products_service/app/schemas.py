@@ -96,21 +96,22 @@ class ProductBase(BaseModel):
 
     @validator("weight")
     def validate_weight(cls, value):
-        # Проверяем, что значение имеет ровно 2 знака после запятой
-        try:
-            # Конвертируем в Decimal
-            value = Decimal(value).quantize(
-                Decimal("0.01"), rounding=ROUND_DOWN)
-        except InvalidOperation:
-            raise ValueError("Invalid price format.")
+        if value is not None:
+            # Проверяем, что значение имеет ровно 2 знака после запятой
+            try:
+                # Конвертируем в Decimal
+                value = Decimal(value).quantize(
+                    Decimal("0.01"), rounding=ROUND_DOWN)
+            except InvalidOperation:
+                raise ValueError("Invalid price format.")
 
-        if value.as_tuple().exponent != -2:
-            raise ValueError(
-                "Weight must have exactly two decimal places.")
-            # Проверяем, что количество цифр не превышает 10
-        if len(str(value).replace(".", "")) > 10:
-            raise ValueError(
-                "Weight must not exceed 10 digits including decimal places.")
+            if value.as_tuple().exponent != -2:
+                raise ValueError(
+                    "Weight must have exactly two decimal places.")
+                # Проверяем, что количество цифр не превышает 10
+            if len(str(value).replace(".", "")) > 10:
+                raise ValueError(
+                    "Weight must not exceed 10 digits including decimal places.")
         return value
 
     @validator("dimensions")
