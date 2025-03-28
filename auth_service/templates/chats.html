@@ -7,6 +7,7 @@
 
 {% block content %}
 <div class="row">
+    <button id="create-chat-btn" class="btn btn-primary mb-3" style="display: none;">Создать новый чат</button>
     <!-- Левая колонка со списком чатов -->
     <div class="col-md-3">
         <h4 class="mb-3">Список чатов</h4>
@@ -35,5 +36,63 @@
     </div>
 </div>
 
+<!-- Модальное окно для создания чата -->
+<div class="modal fade" id="createChatModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Создать чат</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+      </div>
+      <div class="modal-body">
+        <form id="create-chat-form">
+          <div class="mb-3">
+            <label for="chat-name-input" class="form-label">Название чата</label>
+            <input type="text" class="form-control" id="chat-name-input" placeholder="Название">
+          </div>
+          <div class="mb-3 form-check">
+            <input class="form-check-input" type="checkbox" value="" id="is-group-checkbox">
+            <label class="form-check-label" for="is-group-checkbox">Групповой чат</label>
+          </div>
+          <div class="mb-3">
+            <label for="participants-select" class="form-label">Добавить участников</label>
+            <select class="form-select" id="participants-select" multiple>
+              <!-- Заполним списком пользователей через JS -->
+            </select>
+            <small class="text-muted">Можно выбрать нескольких (Cmd/Ctrl + Click)</small>
+          </div>
+          <button type="submit" class="btn btn-primary">Создать</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Модальное окно для добавления участников в существующий чат -->
+<div class="modal fade" id="addParticipantsModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Добавить участников в чат</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+      </div>
+      <div class="modal-body">
+        <form id="add-participants-form">
+          <div class="mb-3">
+            <label for="add-participants-select" class="form-label">Выберите участников</label>
+            <select class="form-select" id="add-participants-select" multiple>
+              <!-- Заполним списком пользователей -->
+            </select>
+            <small class="text-muted">Можно выбрать нескольких</small>
+          </div>
+          <input type="hidden" id="hidden-chat-id">
+          <button type="submit" class="btn btn-primary">Добавить</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script src="/static/js/chat.js"></script>
+<script src="/static/js/chat_admin.js"></script>
 {% endblock %}

@@ -57,6 +57,19 @@ async def get_user_chats(db: Session = Depends(get_db), credentials: HTTPAuthori
     return crud.get_user_chats(db, user_id=user_id)
 
 
+# ---- Маршрут для получения информации о чате ----
+@router.get("/chats/{chat_id}")
+def get_chat_by_id_route(chat_id: UUID, db: Session = Depends(get_db)):
+    chat = crud.get_chat_by_id(db, chat_id)
+    return {
+        "id": str(chat.id),
+        "name": chat.name,
+        "is_group": chat.is_group,
+        "participants": [str(p.user_id) for p in chat.participants],
+        # если нужно, можно вернуть messages и т.п.
+    }
+
+
 # ---- Маршрут для получения сообщений в чате ----
 @router.get("/chats/{chat_id}/messages", response_model=List[schemas.MessageResponse], tags=["Chat Service"], summary="Get chat messages")
 async def get_chat_messages(chat_id: str, db: Session = Depends(get_db), credentials: HTTPAuthorizationCredentials = Depends(security)):
