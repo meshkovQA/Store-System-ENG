@@ -6,6 +6,7 @@ from fastapi.responses import RedirectResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from app import crud, schemas, database, auth, logger, kafka
+from app.models import User
 from fastapi.responses import JSONResponse
 from app.database import get_session_local
 import requests
@@ -393,3 +394,11 @@ def get_pending_products(
                                product_id}: {e}""")
 
     return products_data
+
+
+@router.get("/user_name/{user_id}")
+def get_user_name(user_id: uuid.UUID, db: Session = Depends(database.get_session_local)):
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    return {"name": user.name}

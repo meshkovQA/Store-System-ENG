@@ -1,0 +1,39 @@
+{% extends "layout.html" %}
+{% block title %}Управление чатами{% endblock %}
+
+{% block styles %}
+    <link rel="stylesheet" href="/static/css/chat.css">
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Левая колонка со списком чатов -->
+    <div class="col-md-3">
+        <h4 class="mb-3">Список чатов</h4>
+        <ul id="chat-list" class="list-group">
+            <!-- Будем добавлять чаты через JS -->
+        </ul>
+    </div>
+
+    <!-- Правая колонка с окном чата -->
+    <div class="col-md-9 d-flex flex-column" style="height: 80vh;" id="chat-container">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <h4 id="chat-title" class="mb-0"></h4>
+        </div>
+        <!-- Окно сообщений -->
+        <div id="chat-messages" class="flex-grow-1 border rounded p-3 overflow-auto" style="background-color: #f9f9f9;">
+            <!-- Сообщения будем добавлять через JS -->
+        </div>
+
+        <div class="d-flex justify-content-between mt-3">
+            <button id="load-history-btn" class="btn btn-secondary me-2">Показать историю</button>
+            <div class="input-group" style="flex: 1;">
+                <input type="text" id="message-input" class="form-control" placeholder="Введите сообщение...">
+                <button id="send-btn" class="btn btn-primary">Отправить</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="/static/js/chat.js"></script>
+{% endblock %}

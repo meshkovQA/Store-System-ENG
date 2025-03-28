@@ -4,6 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPBearer
 from app import routes, database, logger
 from app.websocket import router as websocket_router
+from app.websocket import prefill_redis_with_history
 # Запускаем Kafka Consumer в фоне
 from app.kafka import start_kafka_consumer
 import threading
@@ -35,6 +36,9 @@ def startup():
     database.init_db()
     start_kafka_consumer()  # Запускаем Kafka Consumer в фоновом режиме
     logger.log_message("Database initialized and Kafka Consumer started.")
+    with database.SessionLocal() as db:
+        prefill_redis_with_history(db)
+    logger.log_message("Redis prefilled with last 50 messages for each chat.")
 
 
 # Подключаем маршруты API

@@ -1,24 +1,31 @@
-import uuid
+from uuid import UUID
 from datetime import datetime
 from typing import List, Optional
-from pydantic import BaseModel
+from pydantic import BaseModel, constr, Field, validator
 
 # ----------------- ЧАТЫ -----------------
 
 
 class ChatBase(BaseModel):
-    name: Optional[str] = None
+    name: constr(min_length=1, max_length=100)
     is_group: bool = False
+
+    @validator('name')
+    def name_must_not_be_whitespace(cls, v: str) -> str:
+        if v.strip() == "":
+            raise ValueError("Chat name must not be only whitespace")
+        return v
 
 
 class ChatCreate(ChatBase):
-    participants: List[uuid.UUID]
+    participants: List[UUID]
 
 
 class ChatResponse(ChatBase):
-    id: uuid.UUID
+    id: UUID
+    name: str
     created_at: datetime
-    participants: List[uuid.UUID]
+    participants: List[UUID]
 
     class Config:
         from_attributes = True
@@ -27,8 +34,8 @@ class ChatResponse(ChatBase):
 # ----------------- УЧАСТНИКИ ЧАТА -----------------
 
 class ChatParticipantBase(BaseModel):
-    user_id: uuid.UUID
-    chat_id: uuid.UUID
+    user_id: UUID
+    chat_id: UUID
     joined_at: datetime
 
     class Config:
@@ -38,8 +45,7 @@ class ChatParticipantBase(BaseModel):
 # ----------------- СООБЩЕНИЯ -----------------
 
 class MessageBase(BaseModel):
-    chat_id: uuid.UUID
-    sender_id: uuid.UUID
+    chat_id: UUID
     content: str
 
 
@@ -48,7 +54,7 @@ class MessageCreate(MessageBase):
 
 
 class MessageResponse(MessageBase):
-    id: uuid.UUID
+    id: UUID
     created_at: datetime
 
     class Config:

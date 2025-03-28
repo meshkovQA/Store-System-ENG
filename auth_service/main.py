@@ -23,6 +23,7 @@ app = FastAPI(
     description="API for managing users and roles in the application",
     version="1.0.0"  # Версия микросервиса
 )
+
 # Добавляем схему безопасности OAuth2 с токенами
 security = HTTPBearer()
 
@@ -116,6 +117,12 @@ def warehouse_page(
         "request": request,
         "warehouse": warehouse_id,
     })
+
+
+@app.get("/chat-ui", response_class=HTMLResponse)
+def chat_ui(request: Request):
+    # здесь можно какую-то логику проверить
+    return templates.TemplateResponse("chats.html", {"request": request})
 
 
 @app.get("/admin_orders", response_class=HTMLResponse, include_in_schema=False)

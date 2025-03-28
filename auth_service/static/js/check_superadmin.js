@@ -18,9 +18,19 @@ document.addEventListener("DOMContentLoaded", async function () {
         const data = await response.json();
 
         if (data.is_superadmin) {
-            document.getElementById("user-list-item").style.display = "block";
-            document.getElementById("pending-approval-item").style.display = "block";
-            document.getElementById("adminOrdersBtn").style.display = "inline-block";
+            const userListItemEl = document.getElementById("user-list-item");
+            const pendingApprovalItemEl = document.getElementById("pending-approval-item");
+            const adminOrdersBtnEl = document.getElementById("adminOrdersBtn");
+
+            if (userListItemEl) {
+                userListItemEl.style.display = "block";
+            }
+            if (pendingApprovalItemEl) {
+                pendingApprovalItemEl.style.display = "block";
+            }
+            if (adminOrdersBtnEl) {
+                adminOrdersBtnEl.style.display = "inline-block";
+            }
         }
     } catch (error) {
         console.error("Error checking super admin status:", error);

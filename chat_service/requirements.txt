@@ -8,7 +8,7 @@ uvicorn
 pydantic
 pydantic[email]
 Jinja2
-uvicorn
+uvicorn[standard]
 kafka-python
 requests
 kafka-python
