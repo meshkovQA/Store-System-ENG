@@ -108,6 +108,10 @@ async def websocket_endpoint(websocket: WebSocket, chat_id: str, user_id: str, d
             message_data = json.loads(data)
             content = message_data["content"]
 
+            if len(content) > 1000:
+                await websocket.send_text(json.dumps({"error": "Content must be at most 1000 characters"}, ensure_ascii=False))
+                continue
+
             # Создаем сообщение в БД
             message = crud.create_message(
                 db=db,

@@ -48,6 +48,12 @@ class MessageBase(BaseModel):
     chat_id: UUID
     content: str
 
+    @validator('content')
+    def content_length_validator(cls, v: str) -> str:
+        if len(v) > 1000:
+            raise ValueError("Content must be at most 1000 characters")
+        return v
+
 
 class MessageCreate(MessageBase):
     pass

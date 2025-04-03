@@ -30,6 +30,13 @@ async def create_chat(chat_data: schemas.ChatCreate, db: Session = Depends(get_d
         raise HTTPException(
             status_code=400, detail="A chat must have at least two participants")
 
+        # Проверяем, что нет повторяющихся user_id
+    if len(set(chat_data.participants)) != len(chat_data.participants):
+        raise HTTPException(
+            status_code=400,
+            detail="Participants must not contain duplicate user IDs."
+        )
+
     if len(chat_data.participants) > 2 and not chat_data.is_group:
         raise HTTPException(
             status_code=400,
@@ -59,8 +66,23 @@ async def get_user_chats(db: Session = Depends(get_db), credentials: HTTPAuthori
 
 # ---- Маршрут для получения информации о чате ----
 @router.get("/chats/{chat_id}")
-def get_chat_by_id_route(chat_id: UUID, db: Session = Depends(get_db)):
-    chat = crud.get_chat_by_id(db, chat_id)
+def get_chat_by_id_route(chat_id: UUID, db: Session = Depends(get_db), credentials: HTTPAuthorizationCredentials = Depends(security)):
+
+    token = credentials.credentials
+    user_data = auth.verify_token_in_other_service(token)
+    if not user_data:
+        logger.log_message("Unauthorized access attempt")
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                            detail="Invalid token or unauthorized access")
+    # Проверка валидности UUID
+    try:
+        valid_chat_id = UUID(chat_id)
+    except ValueError:
+        raise HTTPException(status_code=422, detail="Invalid UUID format")
+
+    chat = crud.get_chat_by_id(db, valid_chat_id)
+    if chat is None:
+        raise HTTPException(status_code=404, detail="Chat not found")
     return {
         "id": str(chat.id),
         "name": chat.name,

@@ -263,6 +263,12 @@ function sendMessage() {
     const text = messageInputEl.value.trim();
     if (!text) return;
 
+    // Проверка длины: сообщение не должно превышать 1000 символов
+    if (text.length > 1000) {
+        alert("Сообщение не должно превышать 1000 символов.");
+        return;
+    }
+
     // Отправляем JSON
     console.log(`[WS] Отправляем сообщение: "${text}"`);
     const payload = JSON.stringify({ content: text });
