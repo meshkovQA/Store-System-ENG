@@ -108,12 +108,34 @@ class Query:
     @strawberry.field
     def get_order(self, info: Info, order_id: UUID) -> OrderType:
         db = get_db_session(info)
-        user_id = get_current_user_id(info)
         order = get_order_by_id_crud(db, order_id)
+
+        # Получаем user_id из контекста
+        request = info.context.get("request")
+        if not request:
+            raise Exception("Request не найден в контексте")
+
+        auth_header = request.headers.get("Authorization")
+        if not auth_header:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
+                                detail="Отсутствует заголовок Authorization")
+
+        scheme, _, token = auth_header.partition(" ")
+        if scheme.lower() != "bearer" or not token:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
+                                detail="Недопустимая схема аутентификации")
+
+            # Предположим, что verify_token_in_other_service вернет словарь,
+        # в котором есть ключи "user_id" и "is_superadmin"
+        user_data = auth.verify_token_in_other_service(token)
+        user_id = UUID(user_data.get("user_id"))
+        is_superadmin = user_data.get("is_superadmin", False)
+
         if not order:
             raise Exception("Заказ не найден")
+
         # Проверяем, имеет ли пользователь право просматривать этот заказ
-        if order.user_id != user_id:
+        if not is_superadmin and order.user_id != user_id:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
                                 detail="Нет прав для просмотра этого заказа")
         return OrderType(
