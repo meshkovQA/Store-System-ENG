@@ -131,6 +131,14 @@ async def update_product(product_id: str, product: schemas.ProductUpdate, db: Se
     if not product_id.strip():
         raise HTTPException(status_code=400, detail="Product ID is required")
 
+    # Проверка на существование продукта с таким же названием
+    existing_product = db.query(models.Product).filter(
+        func.lower(models.Product.name) == func.lower(product.name)
+    ).first()
+    if existing_product:
+        raise HTTPException(
+            status_code=422, detail="This product is already existed")
+
     # Проверка корректности UUID
     try:
         product_uuid = UUID(product_id)
