@@ -32,11 +32,13 @@ class ProductBase(BaseModel):
 
     @validator("name")
     def validate_name(cls, value):
-        # Регулярное выражение для букв латиницы и кириллицы, а также цифр, длиной от 3 до 100 символов
-        pattern = r"^[A-Za-zА-Яа-я0-9]{3,100}$"
+        # Разрешаем латиницу, кириллицу, цифры и пробелы между словами, но не в начале или конце
+        pattern = r"^(?! )[A-Za-zА-Яа-я0-9 ]{3,100}(?<! )$"
         if not re.match(pattern, value):
             raise ValueError(
-                "Name must contain only letters and digits, with a length between 3 and 100 characters.")
+                "Name must contain only letters, digits, and spaces (no leading or trailing spaces), "
+                "with a length between 3 and 100 characters."
+            )
         return value
 
     @validator("description")
@@ -60,6 +62,7 @@ class ProductBase(BaseModel):
 
     @validator("price")
     def validate_price(cls, value):
+
         try:
             # Конвертируем в Decimal
             value = Decimal(value).quantize(
@@ -101,7 +104,6 @@ class ProductBase(BaseModel):
     @validator("weight")
     def validate_weight(cls, value):
         if value is not None:
-            # Проверяем, что значение имеет ровно 2 знака после запятой
             try:
                 # Конвертируем в Decimal
                 value = Decimal(value).quantize(
@@ -109,6 +111,7 @@ class ProductBase(BaseModel):
             except InvalidOperation:
                 raise ValueError("Invalid price format.")
 
+            # Проверяем, что значение имеет ровно 2 знака после запятой
             if value.as_tuple().exponent != -2:
                 raise ValueError(
                     "Weight must have exactly two decimal places.")
