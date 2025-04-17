@@ -171,12 +171,12 @@ document.addEventListener("DOMContentLoaded", async function () {
         }
 
         // Вес продукта
-        let weight = document.getElementById("add-weight").value;
+        let weight = document.getElementById("edit-weight").value;
         weight = weight.replace(',', '.'); // Заменяем запятую на точку
         if (weight) {
             if (!/^\d{1,4}(\.\d{1,2})?$/.test(weight) || parseFloat(weight) <= 0 || parseFloat(price) > 1000000 || !/^\d{1,7}\.\d{2}$/.test(price)) {
                 console.log("Invalid weight input");  // Лог ошибки веса
-                document.getElementById("weightError").style.display = 'block';
+                document.getElementById("editweightError").style.display = 'block';
                 valid = false;
             }
         }
@@ -187,10 +187,10 @@ document.addEventListener("DOMContentLoaded", async function () {
             let pattern = /^\d+x\d+x\d+$/;
             if (dimensions.length > 100 || !pattern.test(dimensions)) {
                 console.log("Invalid dimensions input");  // Лог ошибки габаритов
-                document.getElementById("dimensionsError").style.display = 'block';
+                document.getElementById("editdimensionsError").style.display = 'block';
                 valid = false;
             } else {
-                document.getElementById("dimensionsError").style.display = 'none';
+                document.getElementById("editdimensionsError").style.display = 'none';
             }
         }
 

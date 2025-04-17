@@ -418,9 +418,40 @@ function renderSuppliersTable(suppliers) {
     });
 }
 
-function isValidURL(string) {
+function isValidURL(url) {
+    // Добавим протокол, если его нет, чтобы URL можно было распарсить
+    let urlToCheck = url;
+    if (!/^https?:\/\//i.test(url)) {
+        urlToCheck = 'http://' + url;
+    }
+
     try {
-        new URL(string);
+        const parsed = new URL(urlToCheck);
+
+        // Проверка на двойные точки в hostname
+        if (parsed.hostname.includes('..')) {
+            return false;
+        }
+
+        // Домен должен содержать хотя бы одну точку (tld)
+        const hostnameParts = parsed.hostname.split('.');
+        if (hostnameParts.length < 2) {
+            return false;
+        }
+
+        // Каждая часть домена должна быть не пустой и начинаться/заканчиваться не с дефиса
+        for (const part of hostnameParts) {
+            if (!part || /^-/.test(part) || /-$/.test(part)) {
+                return false;
+            }
+        }
+
+        // Общий паттерн на домен
+        const domainPattern = /^[a-zA-Z0-9-\.]+$/;
+        if (!domainPattern.test(parsed.hostname)) {
+            return false;
+        }
+
         return true;
     } catch (_) {
         return false;
