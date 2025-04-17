@@ -107,6 +107,11 @@ async def websocket_endpoint(websocket: WebSocket, chat_id: str, user_id: str, d
             data = await websocket.receive_text()
             message_data = json.loads(data)
             content = message_data["content"]
+            if not content:
+                await websocket.send_text(json.dumps({
+                    "error": "Missing required field: content"
+                }, ensure_ascii=False))
+                continue
 
             if len(content) > 1000:
                 await websocket.send_text(json.dumps({"error": "Content must be at most 1000 characters"}, ensure_ascii=False))

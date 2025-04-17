@@ -65,7 +65,7 @@ async def get_user_chats(db: Session = Depends(get_db), credentials: HTTPAuthori
 
 
 # ---- Маршрут для получения информации о чате ----
-@router.get("/chats/{chat_id}")
+@router.get("/chats/{chat_id}", tags=["Chat Service"], summary="Get chat")
 def get_chat_by_id_route(chat_id: UUID, db: Session = Depends(get_db), credentials: HTTPAuthorizationCredentials = Depends(security)):
 
     token = credentials.credentials
@@ -75,12 +75,12 @@ def get_chat_by_id_route(chat_id: UUID, db: Session = Depends(get_db), credentia
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
                             detail="Invalid token or unauthorized access")
     # Проверка валидности UUID
-    try:
-        valid_chat_id = UUID(chat_id)
-    except ValueError:
-        raise HTTPException(status_code=422, detail="Invalid UUID format")
+    # try:
+    #     valid_chat_id = UUID(chat_id)
+    # except ValueError:
+    #     raise HTTPException(status_code=422, detail="Invalid UUID format")
 
-    chat = crud.get_chat_by_id(db, valid_chat_id)
+    chat = crud.get_chat_by_id(db, chat_id)
     if chat is None:
         raise HTTPException(status_code=404, detail="Chat not found")
     return {
