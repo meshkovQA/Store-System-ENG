@@ -7,34 +7,34 @@ document.addEventListener('DOMContentLoaded', function () {
         let password = document.getElementById('password').value;
         let valid = true;
 
-        // Сброс сообщений об ошибках и успехе
+        // Hide error messages
         document.getElementById('successMessage').style.display = 'none';
         document.getElementById('usernameError').style.display = 'none';
         document.getElementById('emailError').style.display = 'none';
         document.getElementById('passwordError').style.display = 'none';
 
-        // Валидация имени пользователя
+        // Validation of username
         if (username.length < 3 || username.length > 60) {
             document.getElementById('usernameError').style.display = 'block';
             valid = false;
         }
 
-        // Валидация email
+        // Validation of email
         let emailPattern = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
         if (!emailPattern.test(email)) {
             document.getElementById('emailError').style.display = 'block';
             valid = false;
         }
 
-        // Валидация пароля
+        // Validation of password
         if (password.length < 6) {
             document.getElementById('passwordError').style.display = 'block';
             valid = false;
         }
 
-        // Если валидация успешна
+        // If username, email and password are valid
         if (valid) {
-            // Отправка данных на сервер через fetch
+            // send POST request to /register/
             fetch('/register/', {
                 method: 'POST',
                 headers: {
@@ -48,23 +48,23 @@ document.addEventListener('DOMContentLoaded', function () {
             })
                 .then(response => {
                     if (response.status === 201) {
-                        // Если регистрация успешна, перенаправляем на страницу логина
+                        // if registration is successful, show success message
                         window.location.href = "/login";
                     } else {
                         return response.json().then(data => {
-                            // Если возникла ошибка, отображаем сообщение об ошибке
+                            // if registration fails, show error message
                             if (data.detail === "Email already registered") {
-                                document.getElementById('emailError').innerText = "Этот email уже зарегистрирован.";
+                                document.getElementById('emailError').innerText = "This email is already registered";
                                 document.getElementById('emailError').style.display = 'block';
                             } else {
-                                alert("Ошибка при регистрации");
+                                alert("Registration failed: " + data.detail);
                             }
                         });
                     }
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    alert("Ошибка при отправке данных");
+                    alert("Error: " + error);
                 });
         }
     });

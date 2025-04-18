@@ -1,19 +1,19 @@
-# Используем базовый образ Python 3.10-bullseye
+# Use an official Python runtime as a parent image
 FROM python:3.10-bullseye
 
-# Указываем рабочую директорию внутри контейнера
+# Put the application code in /app
 WORKDIR /app
 
-# Копируем requirements.txt и устанавливаем зависимости
+# Copy requirements.txt first to leverage Docker cache
 COPY requirements.txt .
 
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Копируем весь код в контейнер
+# Copy the rest of the application code
 COPY . .
 
-# Открываем порт для доступа
+# Open port 8000 for the application
 EXPOSE 8000
 
-# Команда для запуска приложения (FastAPI в этом примере)
+# CMD to run the application
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]

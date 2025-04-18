@@ -6,14 +6,14 @@ from typing import Optional
 
 
 class UserCreate(BaseModel):
-    # Минимум 3, максимум 50 символов для имени
+    # Min and max length for name
     name: constr(min_length=3, max_length=60)
-    email: EmailStr  # Email должен быть валидным
-    # Ограничение на длину пароля (например, минимум 8 символов)
+    email: EmailStr  # Email should be valid
+    # Restrict password length
     password: constr(min_length=6)
 
     class Config:
-        orm_mode = True  # Для работы с ORM (если используется SQLAlchemy)
+        orm_mode = True  # For SQLAlchemy compatibility
 
 
 class User(BaseModel):
@@ -22,17 +22,17 @@ class User(BaseModel):
     email: EmailStr
 
 
-class Login(BaseModel):  # Модель для аутентификации пользователя (логин)
+class Login(BaseModel):  # Model for login
     email: EmailStr
     password: str
 
 
-# Модель для ответа с токеном
+# Model for token
 class Token(BaseModel):
     access_token: str
     token_type: str
 
 
 class UserUpdate(BaseModel):
-    email: EmailStr  # Позволяет изменить email
-    name: str   # Позволяет изменить имя
+    email: EmailStr  # allow to change email
+    name: str   # allow to change name

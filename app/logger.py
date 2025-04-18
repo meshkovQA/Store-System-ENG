@@ -5,42 +5,42 @@ import json
 from datetime import datetime
 import socket
 
-# Создаем директорию logs, если она не существуе
+# Create directory for logs if it doesn't exist
 os.makedirs('logs', exist_ok=True)
 
 # Создаем логгер
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
-# Создаем обработчик, который записывает логи в файл
+# Create a file handler
 handler = logging.FileHandler('logs/app.log')
 handler.setLevel(logging.INFO)
 
-# Получаем IP-адрес машины
+# Get IP address
 
 
 def get_ip_address():
     try:
-        hostname = socket.gethostname()  # Получаем имя хоста
-        ip_address = socket.gethostbyname(hostname)  # Получаем IP-адрес
+        hostname = socket.gethostname()  # Get the hostname
+        ip_address = socket.gethostbyname(hostname)  # Get the IP address
         return ip_address
     except Exception as e:
         return str(e)
 
-# Создаем форматтер и добавляем его в обработчик
+# Create a custom formatter
 
 
 class JsonFormatter(logging.Formatter):
     def format(self, record):
         log_entry = {
             "name": record.name,
-            "class": record.levelname,  # используем уровень логирования в качестве класса
-            # используем числовое значение уровня логирования в качестве состояния
+            "class": record.levelname,  # use level name as class
+            # use level number as state
             "state": record.levelno,
-            # временная метка в миллисекундах
+            # timestamp in milliseconds
             "timestamp": int(datetime.utcnow().timestamp() * 1000),
-            "message": record.getMessage(),  # добавляем текст сообщения
-            "ip_address": get_ip_address()  # добавляем IP-адрес
+            "message": record.getMessage(),  # add message
+            "ip_address": get_ip_address()  # add IP address
         }
         return json.dumps(log_entry)
 
@@ -48,7 +48,7 @@ class JsonFormatter(logging.Formatter):
 formatter = JsonFormatter()
 handler.setFormatter(formatter)
 
-# Добавляем обработчик в логгер
+# Add the handler to the logger
 logger.addHandler(handler)
 
 

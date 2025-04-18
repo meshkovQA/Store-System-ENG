@@ -28,9 +28,9 @@ def create_user(db: Session, user: UserCreate, is_superadmin: bool = False):
 
 
 def assign_role_to_user(db: Session, email: str, password: str):
-    # Открываем сырое SQL-соединение, чтобы выполнить SQL-запросы напрямую
+    # Opening a connection to PostgreSQL
     with db.connection().connection.cursor() as cursor:
-        # SQL-запрос для создания нового пользователя в PostgreSQL и присвоения ему роли
+        # SQL command to create a new user
         create_user_sql = f"""
         CREATE USER "{email}" WITH PASSWORD '{password}';
         GRANT limited_user TO "{email}";
@@ -64,14 +64,14 @@ def get_user_by_id(db: Session, user_id: uuid.UUID, requesting_user: User):
     return db.query(User).filter(User.id == requesting_user.id).first()
 
 
-def edit_user(db: Session, user_id: str, user_data: schemas.UserUpdate):  # Редактирование пользователя
+def edit_user(db: Session, user_id: str, user_data: schemas.UserUpdate):  # Edit user
     user = db.query(User).filter(User.id == user_id).first()
     if user:
         if user_data.email:
             user.email = user_data.email
         if user_data.name:
             user.name = user_data.name
-        # При необходимости можно добавить другие поля для редактирования
+        # If the password is provided, hash it and update
         db.commit()
         db.refresh(user)
         logger.log_message(
@@ -80,7 +80,7 @@ def edit_user(db: Session, user_id: str, user_data: schemas.UserUpdate):  # Ре
     return None
 
 
-def delete_user(db: Session, user_id: str):  # Удаление пользователя
+def delete_user(db: Session, user_id: str):  # Delete user
     user = db.query(User).filter(User.id == user_id).first()
     if user:
         db.delete(user)

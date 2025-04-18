@@ -13,16 +13,16 @@ from app.crud import get_user_by_email
 from app.auth import verify_token
 
 app = FastAPI(
-    title="User Manager MS",  # Укажите название вашего микросервиса здесь
-    description="API for Auth",  # Описание вашего микросервиса
-    version="1.0.0"  # Версия микросервиса
+    title="User Manager MS",
+    description="API for Auth",
+    version="1.0.0"
 )
-# Добавляем схему безопасности OAuth2 с токенами
+# Add your custom OpenAPI schema here if needed
 security = HTTPBearer()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Либо список доменов
+    allow_origins=["*"],  #
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -46,7 +46,7 @@ def index():
     return RedirectResponse(url="/login", status_code=303)
 
 
-# Роут для главной страницы личного кабинета
+# Routing for the dashboard page
 @app.get("/store", include_in_schema=False, response_class=HTMLResponse)
 def dashboard_page(request: Request, credentials: HTTPAuthorizationCredentials = Depends(security), db: Session = Depends(get_session_local)):
     token = credentials.credentials
@@ -62,7 +62,7 @@ def dashboard_page(request: Request, credentials: HTTPAuthorizationCredentials =
     return templates.TemplateResponse("store.html", {"request": request, "is_superadmin": user.is_superadmin})
 
 
-# Обновляем OpenAPI-схему для отображения Bearer токена в Swagger UI
+# Updated OpenAPI schema to include security definitions
 @app.get("/openapi.json", include_in_schema=False)
 def custom_openapi():
     if app.openapi_schema:

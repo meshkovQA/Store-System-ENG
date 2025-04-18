@@ -1,58 +1,58 @@
 //user_list.js
-// Функция для получения списка пользователей с API
+// function to get the list of users
 function getUserList() {
-    let token = localStorage.getItem('access_token');  // Получаем токен из localStorage
+    let token = localStorage.getItem('access_token');  // get token from localStorage
 
     if (!token) {
-        console.error('Токен не найден. Перенаправляем на страницу логина.');
-        window.location.href = '/login';  // Перенаправляем на логин, если токена нет
+        console.error('Token not found');
+        window.location.href = '/login';  // redirect to login page if token is not found
         return;
     }
 
-    // Делаем запрос на API для получения списка пользователей
+    // API request to get the list of users
     fetch('/users/', {
         method: 'GET',
         headers: {
-            'Authorization': `Bearer ${token}`,  // Передаем токен в заголовке Authorization
+            'Authorization': `Bearer ${token}`,  // get token from localStorage
             'Content-Type': 'application/json'
         }
     })
         .then(response => {
             if (response.ok) {
-                return response.json();  // Получаем JSON с данными пользователей
+                return response.json();  // get json data
             } else {
-                throw new Error('Ошибка получения списка пользователей');
+                throw new Error('Error fetching user list: ' + response.statusText);
             }
         })
         .then(data => {
-            // Рендерим таблицу с пользователями
-            renderUserTable(data.users);  // data.users — это массив пользователей, который возвращает сервер
+            // render the user table with the data received from the server
+            renderUserTable(data.users);  // data.users — list of users
         })
         .catch(error => {
-            console.error('Ошибка:', error);
-            window.location.href = '/login';  // Если произошла ошибка, перенаправляем на логин
+            console.error('Error:', error);
+            window.location.href = '/login';  // if error occurs, redirect to login page
         });
 }
 
-// Функция для рендеринга таблицы пользователей
+// function to render the user table
 function renderUserTable(users) {
     const userTableBody = document.getElementById('userTableBody');
-    userTableBody.innerHTML = '';  // Очищаем таблицу перед добавлением новых данных
-
+    userTableBody.innerHTML = '';  // clear the table body
     users.forEach(user => {
         const row = document.createElement('tr');
         row.innerHTML = `
             <td>${user.id}</td>
             <td>${user.name}</td>
             <td>${user.email}</td>
-            <td>${user.is_superadmin ? 'супер-админ' : 'пользователь'}</td>
-            <td>${!user.is_superadmin ? '<button class="btn btn-sm btn-success">Повысить до супер-админа</button>' : ''}</td>
+            <td>${user.is_superadmin ? 'super-admin' : 'user'}</td>
+            <td>${!user.is_superadmin ? '<button class="btn btn-sm btn-success">Promote to superadmin</button>' : ''}</td>
         `;
         userTableBody.appendChild(row);
     });
 }
 
-// Поиск по таблице пользователей
+// search functionality
+// add event listener to the search input
 document.getElementById('search').addEventListener('input', function () {
     const searchValue = this.value.toLowerCase();
     const rows = document.querySelectorAll('#userTableBody tr');
@@ -69,7 +69,7 @@ document.getElementById('search').addEventListener('input', function () {
     });
 });
 
-// Загружаем список пользователей при загрузке страницы
+// upload list of users
 document.addEventListener('DOMContentLoaded', function () {
     getUserList();
 });

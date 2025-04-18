@@ -16,7 +16,7 @@ Base = declarative_base()
 
 
 def init_db():
-    # Импортировать модели здесь, чтобы они были зарегистрированы перед созданием таблиц
+    # Import all models to ensure they are registered with SQLAlchemy
     Base.metadata.create_all(bind=engine)
 
 
@@ -36,4 +36,5 @@ class User(Base):
     name = Column(String, index=True)
     email = Column(String, unique=True, index=True)
     hashed_password = Column(String)
-    is_superadmin = Column(Boolean, default=False)  # Поле для супер админа
+    # Field to indicate if the user is a superadmin
+    is_superadmin = Column(Boolean, default=False)
