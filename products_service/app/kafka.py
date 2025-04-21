@@ -3,25 +3,23 @@ from kafka import KafkaProducer
 from app import logger
 
 
-# Настройка Kafka продюсера
 producer = KafkaProducer(
-    bootstrap_servers=['kafka:9092'],  # Адрес Kafka сервера
+    bootstrap_servers=['kafka:9092'],
     value_serializer=lambda v: json.dumps(v).encode(
-        'utf-8')  # Сериализация данных в JSON
+        'utf-8')
 )
-# Пример данных для отправки
 
 
 def send_to_kafka(topic: str, message: dict):
     """
-    Отправляет сообщение в указанный топик Kafka.
-
-    :param topic: Название топика Kafka.
-    :param message: Сообщение для отправки (словарь).
+    Sends a message to a specified Kafka topic.
+    Args:
+        topic (str): The Kafka topic to send the message to.
+        message (dict): The message to send, which will be serialized to JSON.
     """
     try:
         producer.send(topic, message)
-        producer.flush()  # Убедимся, что сообщение отправлено
+        producer.flush()
         logger.log_message(f"The message sent to {topic}: {message}")
     except Exception as e:
         logger.log_message(

@@ -126,71 +126,68 @@
                 <form id="edit-product-form">
                     <input type="hidden" id="edit-product-id">
                     <div class="mb-3">
-                        <label for="edit-name" class="form-label">Название продукта</label>
-                        <input type="text" class="form-control" id="edit-name" placeholder="Введите название продукта" required>
+                        <label for="edit-name" class="form-label">Name of product</label>
+                        <input type="text" class="form-control" id="edit-name" placeholder="Enter product name" required>
                     </div>
                     <div class="mb-3">
-                        <label for="edit-description" class="form-label">Описание</label>
-                        <input type="text" class="form-control" id="edit-description" placeholder="Введите описание" required>
+                        <label for="edit-description" class="form-label">Description</label>
+                        <input type="text" class="form-control" id="edit-description" placeholder="Enter description" required>
                     </div>
                     <div class="mb-3">
-                        <label for="edit-category" class="form-label">Категория</label>
-                        <input type="text" class="form-control" id="edit-category" placeholder="Введите категорию">
+                        <label for="edit-category" class="form-label">Category</label>
+                        <input type="text" class="form-control" id="edit-category" placeholder="Enter category">
                     </div>
                     <div class="mb-3">
-                        <label for="edit-price" class="form-label">Цена (руб)</label>
-                        <input type="number" class="form-control" id="edit-price" step="0.01" placeholder="Введите цену за 1 штуку продукта">
+                        <label for="edit-price" class="form-label">Price (eur)</label>
+                        <input type="number" class="form-control" id="edit-price" step="0.01" placeholder="Enter price for 1 item">
                     </div>
                     <div class="mb-3">
-                        <label for="edit-stock-quantity" class="form-label">Количество на складе</label>
-                        <input type="number" class="form-control" id="edit-stock-quantity" placeholder="Введите количество продукта">
+                        <label for="edit-stock-quantity" class="form-label">Quantity of product</label>
+                        <input type="number" class="form-control" id="edit-stock-quantity" placeholder="Enter quantity">
                     </div>
                     <div class="mb-3">
-                        <label for="edit-supplier-id" class="form-label">Поставщик</label>
+                        <label for="edit-supplier-id" class="form-label">Supplier</label>
                         <select class="form-control" id="edit-supplier-id" required>
-                            <!-- Поставщики будут загружены через JS -->
                         </select>
                     </div>
                     <div class="mb-3">
-                        <label for="edit-image-url" class="form-label">Изображение продукта</label>
+                        <label for="edit-image-url" class="form-label">Product Image</label>
                         <input type="file" class="form-control" id="edit-image-url" accept=".png, .jpeg, .jpg">
                     </div>
                     <div class="mb-3">
-                        <label for="edit-weight" class="form-label">Вес продукта (кг)</label>
-                        <input type="number" class="form-control" id="edit-weight" step="0.01" placeholder="Введите вес партии продукта">
+                        <label for="edit-weight" class="form-label">Weight of product (kg)</label>
+                        <input type="number" class="form-control" id="edit-weight" step="0.01" placeholder="Enter weight of product">
                     </div>
                     <div class="mb-3">
-                        <label for="edit-dimensions" class="form-label">Габариты продукта (1х1х1 метра)</label>
-                        <input type="text" class="form-control" id="edit-dimensions" placeholder="Введите габариты в формате 1х1х1">
+                        <label for="edit-dimensions" class="form-label">Dimensions of product (1x1x1 meters)</label>
+                        <input type="text" class="form-control" id="edit-dimensions" placeholder="Enter dimensions in format 1x1x1">
                     </div>
                     <div class="mb-3">
-                        <label for="edit-manufacturer" class="form-label">Производитель</label>
-                        <input type="text" class="form-control" id="edit-manufacturer" placeholder="Введите производителя продукта">
+                        <label for="edit-manufacturer" class="form-label">Manufacturer</label>
+                        <input type="text" class="form-control" id="edit-manufacturer" placeholder="Enter manufacturer">
                     </div>
-                    <button type="submit" class="btn btn-primary">Сохранить изменения</button>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
                 </form>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Таблица продуктов -->
 <div class="card shadow-sm">
     <div class="card-body">
-        <h5 class="card-title mb-3">Список продуктов</h5>
+        <h5 class="card-title mb-3">List of Products</h5>
         <table class="table align-middle" id="products-table">
             <thead class="table-light">
                 <tr>
-                    <th scope="col">ID</th>
-                    <th scope="col">Название</th>
-                    <th scope="col">Описание</th>
-                    <th scope="col">Категория</th>
-                    <th scope="col">Цена</th>
-                    <th scope="col" class="text-center">Действия</th>
+                    <th scope="col">ID</th> 
+                    <th scope="col">Name</th>
+                    <th scope="col">Description</th>
+                    <th scope="col">Category</th>
+                    <th scope="col">Price</th>
+                    <th scope="col" class="text-center">Actions</th>
                 </tr>
             </thead>
             <tbody>
-                <!-- Данные будут загружены через JS -->
             </tbody>
         </table>
     </div>

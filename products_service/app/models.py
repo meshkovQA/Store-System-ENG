@@ -9,24 +9,15 @@ Base = declarative_base()
 class Supplier(Base):
     __tablename__ = "suppliers"
 
-    # Уникальный ID поставщика (UUID)
     supplier_id = Column(UUID(as_uuid=True), primary_key=True,
                          default=uuid.uuid4, unique=True, index=True)
-    # Название поставщика
     name = Column(String, index=True)
-    # Имя контактного лица
     contact_name = Column(String)
-    # Email контактного лица
     contact_email = Column(String)
-    # Номер телефона поставщика
     phone_number = Column(String)
-    # Адрес поставщика
     address = Column(String)
-    # Страна поставщика
     country = Column(String)
-    # Город поставщика
     city = Column(String)
-    # Вебсайт поставщика
     website = Column(String)
 
 
@@ -38,18 +29,18 @@ class Product(Base):
     name = Column(String, index=True)
     description = Column(String)
     user_id = Column(String)
-    category = Column(String)           # Категория товара
-    price = Column(Float)               # Цена товара
-    stock_quantity = Column(Integer)    # Количество на складе
+    category = Column(String)
+    price = Column(Float)
+    stock_quantity = Column(Integer)
     supplier_id = Column(UUID(as_uuid=True), ForeignKey(
-        "suppliers.supplier_id"), nullable=False)     # Поставщик товара
-    is_available = Column(Boolean)      # Доступность для заказа
-    created_at = Column(DateTime)       # Дата добавления товара
-    updated_at = Column(DateTime)       # Дата последнего обновления информации
-    weight = Column(Float)              # Вес товара
-    dimensions = Column(String)         # Габариты товара (ДхШхВ)
-    manufacturer = Column(String)       # Производитель товара
-    image_url = Column(String)       # Ссылка на изображение товара
+        "suppliers.supplier_id"), nullable=False)
+    is_available = Column(Boolean)
+    created_at = Column(DateTime)
+    updated_at = Column(DateTime)
+    weight = Column(Float)
+    dimensions = Column(String)
+    manufacturer = Column(String)
+    image_url = Column(String)
 
 
 class Warehouse(Base):
@@ -57,15 +48,15 @@ class Warehouse(Base):
 
     warehouse_id = Column(UUID(as_uuid=True), primary_key=True,
                           default=uuid.uuid4, unique=True, index=True)
-    location = Column(String)           # Местоположение склада
-    manager_name = Column(String)       # Имя управляющего склада
-    capacity = Column(Integer)          # Вместимость склада (в ед. товаров)
-    current_stock = Column(Integer)     # Текущее количество товаров на складе
-    contact_number = Column(String)     # Номер телефона склада
-    email = Column(String)              # Контактный email
-    is_active = Column(Boolean)         # Активность склада (True/False)
-    area_size = Column(Float)           # Площадь склада (в кв.м)
-    created_at = Column(DateTime)       # Дата добавления склада
+    location = Column(String)
+    manager_name = Column(String)
+    capacity = Column(Integer)
+    current_stock = Column(Integer)
+    contact_number = Column(String)
+    email = Column(String)
+    is_active = Column(Boolean)
+    area_size = Column(Float)
+    created_at = Column(DateTime)
 
 
 class ProductWarehouse(Base):
@@ -76,4 +67,4 @@ class ProductWarehouse(Base):
     product_id = Column(UUID, ForeignKey('products.product_id'), index=True)
     warehouse_id = Column(UUID, ForeignKey(
         'warehouses.warehouse_id'), index=True)
-    quantity = Column(Integer)          # Количество данного товара на складе
+    quantity = Column(Integer)

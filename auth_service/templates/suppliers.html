@@ -39,7 +39,7 @@
                     </div>
                     <div class="mb-3">
                         <label for="add-phone_number" class="form-label">Phone number</label>
-                        <input type="text" class="form-control" id="add-phone_number" maxlength="15" placeholder="Enter phone number (+79009999999)">
+                        <input type="text" class="form-control" id="add-phone_number" maxlength="15" placeholder="Enter phone number (+99009999999)">
                     </div>
                     <div class="mb-3">
                         <label for="add-address" class="form-label">Address of Supplier</label>
@@ -75,38 +75,38 @@
                 <form id="edit-supplier-form">
                     <input type="hidden" id="edit-supplier-id">
                     <div class="mb-3">
-                        <label for="edit-name" class="form-label">Название поставщика</label>
-                        <input type="text" class="form-control" id="edit-name" required minlength="3" maxlength="100" placeholder="Введите Название поставщика">
+                        <label for="edit-name" class="form-label">Name of Supplier</label>
+                        <input type="text" class="form-control" id="edit-name" required minlength="3" maxlength="100" placeholder="Enter supplier name">
                     </div>
                     <div class="mb-3">
-                        <label for="edit-contact_name" class="form-label">Контактное лицо</label>
-                        <input type="text" class="form-control" id="edit-contact_name" maxlength="100" placeholder="Укажите контактное лицо" required>
+                        <label for="edit-contact_name" class="form-label">Contact Person</label>
+                        <input type="text" class="form-control" id="edit-contact_name" maxlength="100" placeholder="Enter contact person" required>
                     </div>
                     <div class="mb-3">
                         <label for="edit-contact_email" class="form-label">Email</label>
-                        <input type="email" class="form-control" id="edit-contact_email" maxlength="100" placeholder="Введите email" required>
+                        <input type="email" class="form-control" id="edit-contact_email" maxlength="100" placeholder="Enter email" required>
                     </div>
                     <div class="mb-3">
-                        <label for="edit-phone_number" class="form-label">Телефон</label>
-                        <input type="text" class="form-control" id="edit-phone_number" maxlength="15" placeholder="Введите телефон (+79009999999)">
+                        <label for="edit-phone_number" class="form-label">Phone number</label>
+                        <input type="text" class="form-control" id="edit-phone_number" maxlength="15" placeholder="Enter phone number (+99009999999)">
                     </div>
                     <div class="mb-3">
-                        <label for="edit-address" class="form-label">Адрес</label>
-                        <input type="text" class="form-control" id="edit-address" maxlength="200" placeholder="Введите адрес поставщика">
+                        <label for="edit-address" class="form-label">Address of Supplier</label>
+                        <input type="text" class="form-control" id="edit-address" maxlength="200" placeholder="Enter address of supplier">
                     </div>
                     <div class="mb-3">
-                        <label for="edit-country" class="form-label">Страна</label>
-                        <input type="text" class="form-control" id="edit-country" maxlength="50" placeholder="Введите страну поставщика">
+                        <label for="edit-country" class="form-label">Country</label>
+                        <input type="text" class="form-control" id="edit-country" maxlength="50" placeholder="Enter country of supplier">
                     </div>
                     <div class="mb-3">
-                        <label for="edit-city" class="form-label">Город</label>
-                        <input type="text" class="form-control" id="edit-city" placeholder="Введите город поставщика">
+                        <label for="edit-city" class="form-label">City</label>
+                        <input type="text" class="form-control" id="edit-city" placeholder="Enter city of supplier">
                     </div>
                     <div class="mb-3">
-                        <label for="edit-website" class="form-label">Вебсайт</label>
-                        <input type="text" class="form-control" id="edit-website" placeholder="Укажите веб-сайт">
+                        <label for="edit-website" class="form-label">Website</label>
+                        <input type="text" class="form-control" id="edit-website" placeholder="Enter website">
                     </div>
-                    <button type="submit" class="btn btn-primary">Сохранить изменения</button>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
                 </form>
             </div>
         </div>
@@ -116,23 +116,22 @@
 <!-- Таблица поставщиков -->
 <div class="card shadow-sm">
     <div class="card-body">
-        <h5 class="card-title mb-3">Список поставщиков</h5>
+        <h5 class="card-title mb-3">List of Suppliers</h5>
         <table class="table align-middle" id="suppliers-table">
             <thead class="table-light">
                 <tr>
-                    <th scope="col">Название</th>
-                    <th scope="col">Контактное лицо</th>
+                    <th scope="col">Name</th>
+                    <th scope="col">Contqct person</th>
                     <th scope="col">Email</th>
-                    <th scope="col">Телефон</th>
-                    <th scope="col">Адрес</th>
-                    <th scope="col">Страна</th>
-                    <th scope="col">Город</th>
-                    <th scope="col">Вебсайт</th>
-                    <th scope="col class="text-center"">Действия</th>
+                    <th scope="col">Phone number</th>
+                    <th scope="col">Address</th>
+                    <th scope="col">Country</th>
+                    <th scope="col">City</th>
+                    <th scope="col">Website</th>
+                    <th scope="col class="text-center"">Actions</th>
                 </tr>
             </thead>
             <tbody>
-                <!-- Данные будут загружены через JS -->
             </tbody>
         </table>
     </div>

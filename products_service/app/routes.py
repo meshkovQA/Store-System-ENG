@@ -9,17 +9,14 @@ from app.database import get_session_local
 
 router = APIRouter()
 
-# Создаем объект security для использования схемы авторизации Bearer
 security = HTTPBearer()
-
-# ---- Маршруты для CRUD операций с продуктами ----
 
 
 @router.post("/products/", response_model=schemas.Product, status_code=status.HTTP_201_CREATED, tags=["Products Service"], summary="Create a new product")
 async def create_product(product: schemas.ProductCreate, db: Session = Depends(get_session_local), credentials: HTTPAuthorizationCredentials = Depends(security)):
     token = credentials.credentials
     user_data = auth.verify_token_in_other_service(
-        token)  # Проверяем токен через auth.py
+        token)
     logger.log_message(
         f"User {user_data}")
     if not user_data:
@@ -38,7 +35,7 @@ async def create_product(product: schemas.ProductCreate, db: Session = Depends(g
 def get_products(credentials: HTTPAuthorizationCredentials = Depends(security), db: Session = Depends(get_session_local)):
     token = credentials.credentials
     user_data = auth.verify_token_in_other_service(
-        token)  # Проверяем токен через auth.py
+        token)
     if not user_data:
         logger.log_message("Invalid token or unauthorized access")
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
@@ -51,7 +48,7 @@ def get_products(credentials: HTTPAuthorizationCredentials = Depends(security), 
 def get_product(product_id: str, db: Session = Depends(get_session_local), credentials: HTTPAuthorizationCredentials = Depends(security)):
     token = credentials.credentials
     user_data = auth.verify_token_in_other_service(
-        token)  # Проверяем токен через auth.py
+        token)  #
     if not user_data:
         logger.log_message("Invalid token or unauthorized access")
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
@@ -91,7 +88,6 @@ async def partial_update_product(product_id: str, availability_data: schemas.Pro
     logger.log_message(
         f"User {user_id} is partially updating product with id {product_id}")
 
-    # Обновите только поле is_available в crud
     return crud.update_product_availability(db=db, product_id=product_id, is_available=availability_data.is_available)
 
 
@@ -99,7 +95,7 @@ async def partial_update_product(product_id: str, availability_data: schemas.Pro
 def delete_product(product_id: str, db: Session = Depends(get_session_local), credentials: HTTPAuthorizationCredentials = Depends(security)):
     token = credentials.credentials
     user_data = auth.verify_token_in_other_service(
-        token)  # Проверяем токен через auth.py
+        token)
     if not user_data:
         logger.log_message("Invalid token or unauthorized access")
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
@@ -157,7 +153,7 @@ def get_all_suppliers(db: Session = Depends(get_session_local), credentials: HTT
 def get_supplier_by_id(supplier_id: str, db: Session = Depends(get_session_local), credentials: HTTPAuthorizationCredentials = Depends(security)):
     token = credentials.credentials
     user_data = auth.verify_token_in_other_service(
-        token)  # Проверяем токен через auth.py
+        token)
     if not user_data:
         logger.log_message("Invalid token or unauthorized access")
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
@@ -170,7 +166,7 @@ def get_supplier_by_id(supplier_id: str, db: Session = Depends(get_session_local
 def patch_supplier(supplier_id: str, supplier: schemas.SupplierUpdate, db: Session = Depends(get_session_local), credentials: HTTPAuthorizationCredentials = Depends(security)):
     token = credentials.credentials
     user_data = auth.verify_token_in_other_service(
-        token)  # Проверяем токен через auth.py
+        token)
     if not user_data:
         logger.log_message("Invalid token or unauthorized access")
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
@@ -185,7 +181,7 @@ def patch_supplier(supplier_id: str, supplier: schemas.SupplierUpdate, db: Sessi
 def delete_supplier(supplier_id: str, db: Session = Depends(get_session_local), credentials: HTTPAuthorizationCredentials = Depends(security)):
     token = credentials.credentials
     user_data = auth.verify_token_in_other_service(
-        token)  # Проверяем токен через auth.py
+        token)
     if not user_data:
         logger.log_message("Invalid token or unauthorized access")
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
@@ -206,14 +202,12 @@ def search_suppliers(name: str, db: Session = Depends(get_session_local), creden
     logger.log_message(f"Searching suppliers with name containing '{name}'")
     return crud.search_suppliers_by_name(db, name)
 
-# ---- CRUD операции для складов (Warehouses) ----
-
 
 @router.get("/warehouses/{warehouse_id}", response_model=schemas.Warehouse, tags=["Warehouses Service"], summary="Get warehouse by ID")
 def get_warehouse_by_id(warehouse_id: UUID, db: Session = Depends(get_session_local), credentials: HTTPAuthorizationCredentials = Depends(security)):
     token = credentials.credentials
     user_data = auth.verify_token_in_other_service(
-        token)  # Проверяем токен через auth.py
+        token)
     if not user_data:
         logger.log_message("Invalid token or unauthorized access")
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
@@ -239,7 +233,7 @@ def get_all_warehouses(db: Session = Depends(get_session_local), credentials: HT
 def create_warehouse(warehouse: schemas.WarehouseCreate, db: Session = Depends(get_session_local), credentials: HTTPAuthorizationCredentials = Depends(security)):
     token = credentials.credentials
     user_data = auth.verify_token_in_other_service(
-        token)  # Проверяем токен через auth.py
+        token)
     if not user_data:
         logger.log_message("Invalid token or unauthorized access")
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
@@ -277,7 +271,7 @@ def patch_warehouse(warehouse_id: str, warehouse: schemas.WarehouseUpdate, db: S
 def delete_warehouse(warehouse_id: UUID, db: Session = Depends(get_session_local), credentials: HTTPAuthorizationCredentials = Depends(security)):
     token = credentials.credentials
     user_data = auth.verify_token_in_other_service(
-        token)  # Проверяем токен через auth.py
+        token)
     if not user_data:
         logger.log_message("Invalid token or unauthorized access")
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
@@ -286,13 +280,11 @@ def delete_warehouse(warehouse_id: UUID, db: Session = Depends(get_session_local
     return crud.delete_warehouse(db, warehouse_id=str(warehouse_id))
 
 
-# ---- CRUD операции для товаров на складах (ProductWarehouses) ----
-
 @router.get("/productinwarehouses/{warehouse_id}", response_model=list[schemas.ProductWarehouse], tags=["Product Warehouses Service"], summary="Get products in warehouse")
 def get_products_in_warehouse(warehouse_id: UUID, db: Session = Depends(get_session_local), credentials: HTTPAuthorizationCredentials = Depends(security)):
     token = credentials.credentials
     user_data = auth.verify_token_in_other_service(
-        token)  # Проверяем токен через auth.py
+        token)
     if not user_data:
         logger.log_message("Invalid token or unauthorized access")
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
@@ -330,7 +322,7 @@ def update_product_in_warehouse(
 ):
     token = credentials.credentials
     user_data = auth.verify_token_in_other_service(
-        token)  # Проверяем токен через auth.py
+        token)
     if not user_data:
         logger.log_message("Invalid token or unauthorized access")
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
@@ -347,7 +339,7 @@ def update_product_in_warehouse(
 def delete_product_from_warehouse(product_warehouse_id: UUID, db: Session = Depends(get_session_local), credentials: HTTPAuthorizationCredentials = Depends(security)):
     token = credentials.credentials
     user_data = auth.verify_token_in_other_service(
-        token)  # Проверяем токен через auth.py
+        token)
     if not user_data:
         logger.log_message("Invalid token or unauthorized access")
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,

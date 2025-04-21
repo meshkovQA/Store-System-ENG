@@ -5,7 +5,6 @@ from app.config import SECRET_KEY
 from app import logger
 
 
-# URL микросервиса авторизации
 AUTH_SERVICE_URL = "http://auth_service:8000/verify-token"
 
 

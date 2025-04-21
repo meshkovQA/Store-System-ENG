@@ -87,7 +87,7 @@ document.addEventListener("DOMContentLoaded", async function () {
         if (target.classList.contains("btn-outline-warning")) {
             openEditProductModal(productId);
         } else if (target.classList.contains("btn-outline-danger")) {
-            const confirmed = confirm("Вы уверены, что хотите удалить продукт?");
+            const confirmed = confirm("Are you sure you want to delete this product?");
             if (confirmed) deleteProduct(productId);
         }
     });

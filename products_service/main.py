@@ -9,12 +9,11 @@ app = FastAPI(
     description="API for managing products and suppliers in the warehouse",
     version="1.0.0"
 )
-# Добавляем схему безопасности OAuth2 с токенами
 security = HTTPBearer()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Либо список доменов
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -30,7 +29,6 @@ def startup():
 app.include_router(routes.router)
 
 
-# Обновляем OpenAPI-схему для отображения Bearer токена в Swagger UI
 @app.get("/openapi.json", include_in_schema=False)
 def custom_openapi():
     if app.openapi_schema:

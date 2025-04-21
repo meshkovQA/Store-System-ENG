@@ -1,7 +1,6 @@
 version: "3.9"
 
 services:
-  # Redis - хранилище для очереди продуктов на одобрение
   redis:
     image: redis:6.2
     container_name: redis
@@ -19,7 +18,6 @@ services:
         max_attempts: 3
         delay: 5s
         window: 20s
-  # Kafka - брокер сообщений
   kafka:
     image: apache/kafka:3.8.0
     container_name: kafka
@@ -32,7 +30,7 @@ services:
       KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
       KAFKA_LOG_DIRS: /var/lib/kafka/data
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
-      KAFKA_CLUSTER_ID: "5L6g3nShT-eMCtK--X86sw" # Cluster ID из логов
+      KAFKA_CLUSTER_ID: "5L6g3nShT-eMCtK--X86sw"
       KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
     ports:
       - "9092:9092"
@@ -71,7 +69,6 @@ services:
     networks:
       - app_network
 
-  # Elasticsearch - хранилище логов
   elasticsearch:
     image: elasticsearch:7.17.18
     container_name: elasticsearch
@@ -108,7 +105,6 @@ services:
         delay: 5s
         window: 20s
 
-  # Logstash - обработка и отправка логов в Elasticsearch
   logstash:
     container_name: logstash
     image: logstash:7.17.18
@@ -145,7 +141,6 @@ services:
         delay: 5s
         window: 20s
 
-  # Kibana - интерфейс для просмотра логов
   kibana:
     container_name: kibana
     image: kibana:7.17.18
@@ -179,7 +174,6 @@ services:
         delay: 5s
         window: 20s
 
-  # Filebeat - сборщик логов с контейнеров
   filebeat:
     user: root
     container_name: filebeat
@@ -225,14 +219,14 @@ services:
     image: postgres:12-bullseye
     container_name: postgres_auth_db
     environment:
-      POSTGRES_USER: storage_admin # Задать пользователя
-      POSTGRES_PASSWORD: THw7l0bxvPPkWUhP # Задать пароль
-      POSTGRES_DB: strg_users_db # Задать имя БД
+      POSTGRES_USER: storage_admin
+      POSTGRES_PASSWORD: THw7l0bxvPPkWUhP
+      POSTGRES_DB: strg_users_db
     ports:
-      - "5435:5432" # Открыть порт для внешнего доступа
+      - "5435:5432"
     volumes:
       - ./docker-data/auth_db:/var/lib/postgresql/data
-      - ./auth_service/db_init/init.sql:/docker-entrypoint-initdb.d/init.sql # Путь к папке с SQL-скриптами
+      - ./auth_service/db_init/init.sql:/docker-entrypoint-initdb.d/init.sql
     networks:
       - app_network
     deploy:
@@ -250,14 +244,14 @@ services:
     image: postgres:12-bullseye
     container_name: postgres_products_db
     environment:
-      POSTGRES_USER: storage_admin # Задать пользователя
-      POSTGRES_PASSWORD: THw7l0bxvPPkWUhP # Задать пароль
-      POSTGRES_DB: strg_products_db # Задать имя БД
+      POSTGRES_USER: storage_admin
+      POSTGRES_PASSWORD: THw7l0bxvPPkWUhP
+      POSTGRES_DB: strg_products_db
     ports:
-      - "5436:5432" # Открыть порт для внешнего доступа
+      - "5436:5432"
     volumes:
       - ./docker-data/products_db:/var/lib/postgresql/data
-      - ./products_service/db_init/init_products.sql:/docker-entrypoint-initdb.d/init.sql # Путь к папке с SQL-скриптами
+      - ./products_service/db_init/init_products.sql:/docker-entrypoint-initdb.d/init.sql
     networks:
       - app_network
     deploy:
@@ -285,7 +279,7 @@ services:
       DATABASE_URL: postgresql://storage_admin:THw7l0bxvPPkWUhP@db:5432/strg_users_db
       REDIS_HOST: redis
     ports:
-      - "8001:8000" # Открыть порт для FastAPI или другого веб-сервиса
+      - "8001:8000"
     networks:
       - app_network
     deploy:
@@ -313,7 +307,7 @@ services:
       DATABASE_URL: postgresql://storage_admin:THw7l0bxvPPkWUhP@db_products:5432/strg_products_db
       REDIS_HOST: redis
     ports:
-      - "8002:8000" # Открываем порт для сервиса продуктов
+      - "8002:8000"
     networks:
       - app_network
     deploy:

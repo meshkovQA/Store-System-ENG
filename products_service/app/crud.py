@@ -7,12 +7,9 @@ from sqlalchemy.exc import SQLAlchemyError
 from datetime import datetime
 from app.kafka import send_to_kafka
 
-# ---- CRUD операции для товаров (Products) ----
-
 
 def create_product(db: Session, user_id: str, name: str, description: str, category: str, price: float, stock_quantity: int, supplier_id: str, image_url: str, weight: float, dimensions: str, manufacturer: str):
     try:
-        # Проверка существования поставщика
         supplier = db.query(models.Supplier).filter(
             models.Supplier.supplier_id == supplier_id).first()
         if not supplier:
@@ -28,9 +25,9 @@ def create_product(db: Session, user_id: str, name: str, description: str, categ
             price=price,
             stock_quantity=stock_quantity,
             supplier_id=supplier_id,
-            is_available=False,  # Или по умолчанию, если нужно
-            created_at=datetime.utcnow(),  # Установка текущего времени
-            updated_at=datetime.utcnow(),  # Установка текущего времени
+            is_available=False,
+            created_at=datetime.utcnow(),
+            updated_at=datetime.utcnow(),
             image_url=image_url,
             weight=weight,
             dimensions=dimensions,
@@ -57,7 +54,6 @@ def get_all_products(db: Session):
     try:
         products = db.query(models.Product).all()
 
-        # Преобразуем UUID поля в строки для каждого продукта
         for product in products:
             product.product_id = str(product.product_id)
             product.supplier_id = str(product.supplier_id)
@@ -87,7 +83,6 @@ def update_product(db: Session, product_id: str, user_id: str, name: str, descri
         if not product:
             raise HTTPException(status_code=404, detail="Product not found")
 
-        # Проверка существования поставщика
         supplier = db.query(models.Supplier).filter(
             models.Supplier.supplier_id == supplier_id).first()
         if not supplier:
@@ -145,8 +140,6 @@ def delete_product(db: Session, product_id: str):
 def search_products_by_name(db: Session, name: str):
     return db.query(models.Product).filter(models.Product.name.ilike(f"%{name}%")).all()
 
-# ---- CRUD операции для поставщиков (Suppliers) ----
-
 
 def create_supplier(db: Session, name: str, contact_name: str, contact_email: str, phone_number: str, address: str, country: str, city: str, website: str):
     try:
@@ -193,13 +186,11 @@ def search_suppliers_by_name(db: Session, name: str):
 
 def patch_supplier(db: Session, supplier_id: str, updates: dict):
     try:
-        # Получаем запись поставщика по ID
         supplier = db.query(models.Supplier).filter(
             models.Supplier.supplier_id == supplier_id).first()
         if not supplier:
             raise HTTPException(status_code=404, detail="Supplier not found")
 
-        # Обновляем только те поля, которые переданы в словаре updates
         for key, value in updates.items():
             if hasattr(supplier, key):
                 setattr(supplier, key, value)
@@ -226,8 +217,6 @@ def delete_supplier(db: Session, supplier_id: str):
         db.rollback()
         raise HTTPException(
             status_code=500, detail=f"Database error: {str(e)}")
-
-# ---- CRUD операции для складов (Warehouses) ----
 
 
 def create_warehouse(db: Session, location: str, manager_name: str, capacity: int, current_stock: int, contact_number: str, email: str, is_active: bool, area_size: float):
@@ -271,13 +260,11 @@ def get_all_warehouses(db: Session):
 
 def patch_warehouse(db: Session, warehouse_id: str, updates: dict):
     try:
-        # Получаем запись склада по ID
         warehouse = db.query(models.Warehouse).filter(
             models.Warehouse.warehouse_id == warehouse_id).first()
         if not warehouse:
             raise HTTPException(status_code=404, detail="Warehouse not found")
 
-        # Обновляем только те поля, которые переданы в словаре updates
         for key, value in updates.items():
             if hasattr(warehouse, key):
                 setattr(warehouse, key, value)
@@ -305,24 +292,19 @@ def delete_warehouse(db: Session, warehouse_id: str):
         raise HTTPException(
             status_code=500, detail=f"Database error: {str(e)}")
 
-# ---- CRUD операции для товаров на складах (ProductWarehouses) ----
-
 
 def add_product_to_warehouse(db: Session, product_id: str, warehouse_id: str, quantity: int):
     try:
-        # Проверка существования товара
         product = db.query(models.Product).filter(
             models.Product.product_id == product_id).first()
         if not product:
             raise HTTPException(status_code=404, detail="Product not found")
 
-        # Проверка существования склада
         warehouse = db.query(models.Warehouse).filter(
             models.Warehouse.warehouse_id == warehouse_id).first()
         if not warehouse:
             raise HTTPException(status_code=404, detail="Warehouse not found")
 
-        # Создание записи о товаре на складе
         product_warehouse_id = str(uuid4())
         new_record = models.ProductWarehouse(
             product_warehouse_id=product_warehouse_id,
@@ -332,12 +314,11 @@ def add_product_to_warehouse(db: Session, product_id: str, warehouse_id: str, qu
         )
         db.add(new_record)
 
-        # Обновление количества товаров на складе
         warehouse.current_stock = (warehouse.current_stock or 0) + quantity
-        warehouse.updated_at = datetime.utcnow()  # Обновляем timestamp
+        warehouse.updated_at = datetime.utcnow()
 
         db.commit()
-        db.refresh(warehouse)  # Обновление экземпляра склада
+        db.refresh(warehouse)
         return new_record
     except SQLAlchemyError as e:
         db.rollback()
@@ -347,7 +328,6 @@ def add_product_to_warehouse(db: Session, product_id: str, warehouse_id: str, qu
 
 def get_products_in_warehouse(db: Session, warehouse_id: str):
     try:
-        # Проверка существования склада
         warehouse = db.query(models.Warehouse).filter(
             models.Warehouse.warehouse_id == warehouse_id).first()
         if not warehouse:
@@ -363,7 +343,6 @@ def get_products_in_warehouse(db: Session, warehouse_id: str):
 
 def update_product_in_warehouse(db: Session, product_warehouse_id: str, quantity: int):
     try:
-        # Проверка существования записи
         record = db.query(models.ProductWarehouse).filter(
             models.ProductWarehouse.product_warehouse_id == product_warehouse_id).first()
         if not record:
@@ -380,7 +359,6 @@ def update_product_in_warehouse(db: Session, product_warehouse_id: str, quantity
 
 def delete_product_from_warehouse(db: Session, product_warehouse_id: str):
     try:
-        # Проверка существования записи
         record = db.query(models.ProductWarehouse).filter(
             models.ProductWarehouse.product_warehouse_id == product_warehouse_id).first()
         if not record:

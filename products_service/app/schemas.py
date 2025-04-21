@@ -4,8 +4,6 @@ from uuid import UUID
 from datetime import datetime
 
 
-# ---- Схемы для товаров (Product) ----
-
 class ProductBase(BaseModel):
     name: constr(min_length=1, max_length=100)
     description: Optional[constr(max_length=500)] = None
@@ -27,7 +25,7 @@ class ProductResponse(BaseModel):
     category: Optional[str] = None
     price: Optional[float] = None
     stock_quantity: int
-    supplier_id: str  # Преобразуем UUID в строку
+    supplier_id: str
     is_available: bool
     created_at: datetime
     updated_at: datetime
@@ -60,8 +58,6 @@ class Product(ProductBase):
 class ProductAvailabilityUpdate(BaseModel):
     is_available: bool
 
-
-# ---- Схемы для поставщиков (Supplier) ----
 
 class SupplierBase(BaseModel):
     name: constr(min_length=1, max_length=100)
@@ -102,8 +98,6 @@ class Supplier(SupplierBase):
 class SupplierSearch(BaseModel):
     name: Optional[constr(min_length=1, max_length=100)] = None
 
-# ---- Схемы для складов (Warehouse) ----
-
 
 class WarehouseBase(BaseModel):
     location: constr(min_length=1, max_length=100)
@@ -142,8 +136,6 @@ class Warehouse(WarehouseBase):
     class Config:
         orm_mode = True
 
-
-# ---- Схемы для товаров на складах (ProductWarehouse) ----
 
 class ProductWarehouseBase(BaseModel):
     product_id: UUID
