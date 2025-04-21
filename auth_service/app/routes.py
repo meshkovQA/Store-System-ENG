@@ -16,13 +16,11 @@ router = APIRouter()
 templates = Jinja2Templates(directory="templates")
 redis_client = redis.Redis(host='redis', port=6379, db=0)
 
-# Создаем объект security для использования схемы авторизации Bearer
 security = HTTPBearer()
 
 
 @router.get("/get-user-token/{user_id}", response_model=schemas.Token, tags=["Profile"], summary="Get user token")
 def get_user_token(user_id: str, db: Session = Depends(database.get_session_local)):
-    # Попробуем получить токен из базы данных
     token_record = crud.get_user_token(db, user_id=user_id)
     logger.log_message(f"Token for user {user_id} found in DB.")
     if not token_record:
@@ -45,7 +43,6 @@ async def refresh_token_endpoint(request: Request, db: Session = Depends(get_ses
             raise HTTPException(
                 status_code=422, detail="Refresh token is required")
 
-        # Получаем новый access token
         new_token_data = auth.refresh_access_token(refresh_token, db)
         return new_token_data
 
@@ -53,7 +50,6 @@ async def refresh_token_endpoint(request: Request, db: Session = Depends(get_ses
         return {"detail": e.detail}
 
 
-# Рендеринг страницы регистрации
 @router.get("/register/", include_in_schema=False)
 def register_page(request: Request):
     return templates.TemplateResponse("register.html", {"request": request})
@@ -73,28 +69,23 @@ def register_user(user: schemas.UserCreate, db: Session = Depends(database.get_s
             raise HTTPException(
                 status_code=422, detail="Email already registered")
 
-        # Проверка имени пользователя
         if not user.name.strip():
             raise HTTPException(
                 status_code=422, detail="Name contains invalid characters."
             )
-        # Проверка пароля
         if not user.password.strip():
             raise HTTPException(
                 status_code=422, detail="Password contains invalid characters."
             )
-        # Проверка email
         if not user.email.strip():
             raise HTTPException(
                 status_code=422, detail="Invalid email format."
             )
 
-        # Суперадмин не может быть установлен через регистрацию
         created_user = crud.create_user(db=db, user=user.copy(
             update={"email": user_email}), is_superadmin=False)
         logger.log_message(f"User is registered: {user.email}")
 
-        # Перенаправляем на страницу авторизации
         return {
             "message": "User successfully created",
             "user": {
@@ -108,13 +99,11 @@ def register_user(user: schemas.UserCreate, db: Session = Depends(database.get_s
         raise HTTPException(status_code=500, detail="Internal Server Error")
 
 
-# Рендеринг страницы авторизации
 @router.get("/login/", include_in_schema=False)
 def register_page(request: Request):
     return templates.TemplateResponse("login.html", {"request": request})
 
 
-# Авторизация пользователя и перенаправление на страницу store
 @router.post("/login/", response_model=schemas.LoginResponse, tags=["Profile"], summary="Login in system", responses={
     200: {"description": "User successfully logged in", "model": schemas.LoginResponse},
     400: {"description": "Invalid email or password"}
@@ -141,7 +130,6 @@ def login_for_access_token(form_data: schemas.Login, db: Session = Depends(datab
     }
 
 
-# Повышение прав до супер-админа (только для супер-админа)
 @router.put("/users/promote/{user_id}", status_code=200, tags=["Superadmin"], summary="Promote to superadmin", responses={
     200: {"description": "User successfully promoted to super admin", "content": {"application/json": {"example": {"detail": "User successfully promoted to super admin"}}}},
     400: {"description": "Bad Request - User ID is required", "content": {"application/json": {"example": {"detail": "User ID is required"}}}},
@@ -153,24 +141,19 @@ def login_for_access_token(form_data: schemas.Login, db: Session = Depends(datab
 def promote_user_to_superadmin(user_id: str,
                                db: Session = Depends(get_session_local),
                                credentials: HTTPAuthorizationCredentials = Depends(security)):
-    # Проверка, что user_id не пустой
     if not user_id.strip():
         raise HTTPException(status_code=400, detail="User ID is required")
 
-    # Проверка, что user_id имеет корректный формат UUID
     try:
         user_uuid = uuid.UUID(user_id)
     except ValueError:
         raise HTTPException(status_code=422, detail="Invalid UUID format")
 
-    # Получаем токен из заголовка Authorization
     token = credentials.credentials
 
-    # Проверяем токен
     token_data = auth.verify_token(token, db=db)
     requesting_user = crud.get_user_by_id(db, uuid.UUID(token_data["sub"]))
 
-    # Проверяем права (только супер-админ может повышать других пользователей)
     if not requesting_user.is_superadmin:
         raise HTTPException(status_code=403, detail="Insufficient rights")
 
@@ -178,12 +161,10 @@ def promote_user_to_superadmin(user_id: str,
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
-    # Проверяем, является ли изменяемый пользователь уже супер-админом
     if user.is_superadmin:
         raise HTTPException(
             status_code=422, detail="This user is already a super admin")
 
-    # Повышаем пользователя до супер-админа
     promoted_user = crud.promote_to_superadmin(db, user_uuid)
     if not promoted_user:
         raise HTTPException(status_code=404, detail="User not found")
@@ -192,22 +173,17 @@ def promote_user_to_superadmin(user_id: str,
     return {"detail": "User successfully promoted to super admin"}
 
 
-# Получение списка пользователей (только для супер-админа)
 @router.get("/users/", response_model=list[schemas.UserResponse], tags=["Superadmin"], summary="Get users")
 def get_users(db: Session = Depends(get_session_local),
               credentials: HTTPAuthorizationCredentials = Depends(security)):
-    # Получаем токен из заголовка Authorization
     token = credentials.credentials
 
-    # Проверяем токен
     token_data = auth.verify_token(token, db=db)
     requesting_user = crud.get_user_by_id(db, uuid.UUID(token_data["sub"]))
 
     if requesting_user.is_superadmin:
-        # Если пользователь супер-админ, возвращаем список всех пользователей
         users = crud.get_users_for_superadmin(db)
     else:
-        # Если пользователь не супер-админ, возвращаем только его запись
         users = [requesting_user]
 
     result = []
@@ -222,7 +198,6 @@ def get_users(db: Session = Depends(get_session_local),
     return result
 
 
-# Пример маршрута для редактирования пользователя с проверкой токена через HTTPBearer
 @router.put("/users/edit/{user_id}", response_model=schemas.UserUpdateResponse, responses={
     200: {"description": "User successfully updated", "model": schemas.UserUpdateResponse},
     400: {"description": "Bad Request - User ID is required", "content": {"application/json": {"example": {"detail": "User ID is required"}}}},
@@ -233,38 +208,31 @@ def get_users(db: Session = Depends(get_session_local),
 }, tags=["Superadmin"], summary="Edit user")
 def edit_user(user_id: str, form_data: schemas.UserUpdate, db: Session = Depends(get_session_local), credentials: HTTPAuthorizationCredentials = Depends(security)):
 
-    # Проверка, что user_id не пустой
     if not user_id.strip():
         raise HTTPException(status_code=400, detail="User ID is required")
 
-    # Проверка корректности UUID
     try:
         user_uuid = uuid.UUID(user_id)
     except ValueError:
         raise HTTPException(status_code=400, detail="Invalid UUID format")
 
-    # Получаем токен и проверяем права
     token = credentials.credentials
     token_data = auth.verify_token(token, db=db)
     requesting_user = crud.get_user_by_id(db, uuid.UUID(token_data["sub"]))
 
-    # Проверка на права (только супер-админ может изменять пользователей)
     if not requesting_user.is_superadmin:
         raise HTTPException(status_code=403, detail="Insufficient rights")
 
-    # Проверяем, существует ли пользователь с таким user_id
     user = crud.get_user_by_id(db, user_uuid)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
-    # Проверка на уникальность email
     if form_data.email:
         existing_user = crud.get_user_by_email(db, form_data.email)
         if existing_user and existing_user.id != user.id:
             raise HTTPException(
                 status_code=422, detail="Email already registered")
 
-    # Обновляем информацию пользователя
     updated_user = crud.edit_user(db, user_uuid, form_data)
     if not updated_user:
         raise HTTPException(status_code=404, detail="User not found")
@@ -280,8 +248,6 @@ def edit_user(user_id: str, form_data: schemas.UserUpdate, db: Session = Depends
         }
     }
 
-# Пример маршрута для удаления пользователя с проверкой токена через HTTPBearer
-
 
 @router.delete("/users/delete/{user_id}", responses={
     200: {"description": "User successfully deleted", "content": {"application/json": {"example": {"detail": "User successfully deleted"}}}},
@@ -294,31 +260,25 @@ def delete_user(user_id: str,
                 credentials: HTTPAuthorizationCredentials = Depends(security),
                 db: Session = Depends(get_session_local)):
 
-    # Проверка, что user_id не пустой
     if not user_id.strip():
         raise HTTPException(status_code=400, detail="User ID is required")
 
-    # Проверка корректности UUID
     try:
         user_uuid = uuid.UUID(user_id)
     except ValueError:
         raise HTTPException(status_code=400, detail="Invalid UUID format")
 
-    # Извлекаем и проверяем токен
     token = credentials.credentials
     token_data = auth.verify_token(token, db=db)
 
-    # Проверяем права (например, только супер-админ может удалять пользователей)
     requesting_user = crud.get_user_by_id(db, uuid.UUID(token_data["sub"]))
     if not requesting_user.is_superadmin:
         raise HTTPException(status_code=403, detail="Insufficient rights")
 
-    # Проверяем, пытается ли супер-админ удалить свой собственный аккаунт
     if str(requesting_user.id) == user_id:
         raise HTTPException(
             status_code=403, detail="Super admin cannot delete own account")
 
-    # Удаление пользователя
     user = crud.delete_user(db, user_uuid)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
@@ -333,7 +293,6 @@ def get_pending_products(
     credentials: HTTPAuthorizationCredentials = Depends(security),
     db: Session = Depends(database.get_session_local)
 ):
-    # Проверка токена и прав доступа
     token = credentials.credentials
     token_data = auth.verify_token(token, db=db)
     requesting_user = crud.get_user_by_id(db, uuid.UUID(token_data["sub"]))
@@ -344,7 +303,6 @@ def get_pending_products(
 
     products_data = []
 
-    # Получение списка продуктов из Redis
     pending_product_ids = redis_client.smembers("pending_products")
     logger.log_message(f"""Pending product IDs retrieved from Redis: {
                        pending_product_ids}""")

@@ -1,26 +1,26 @@
 {% extends "layout.html" %}
 
-{% block title %}Информация о складе{% endblock %}
+{% block title %}Warehouse info {% endblock %}
 
 {% block content %}
 <div class="container mt-4">
     <div class="card shadow-sm">
         <div class="card-header bg-primary text-white">
-            <h2 class="h4 mb-0">Склад</h2>
+            <h2 class="h4 mb-0">Warehouse</h2>
         </div>
         <input type="hidden" id="warehouse-id" value="{{ warehouse.warehouse_id }}">
         <div class="card-body">
             <div class="row mb-3">
                 <div class="col-6">
-                    <strong>Управляющий:</strong>
+                    <strong>Manager:</strong>
                 </div>
                 <div class="col-6" id="warehouse-manager-name">
-                    Не указано
+                    Not assigned
                 </div>
             </div>
             <div class="row mb-3">
                 <div class="col-6">
-                    <strong>Вместимость:</strong>
+                    <strong>Capacity:</strong>
                 </div>
                 <div class="col-6" id="warehouse-capacity">
                     -
@@ -28,7 +28,7 @@
             </div>
             <div class="row mb-3">
                 <div class="col-6">
-                    <strong>Текущий запас:</strong>
+                    <strong>Current stock:</strong>
                 </div>
                 <div class="col-6" id="warehouse-current-stock">
                     -
@@ -36,84 +36,80 @@
             </div>
             <div class="row mb-3">
                 <div class="col-6">
-                    <strong>Контактный телефон:</strong>
+                    <strong>Phone number:</strong>
                 </div>
                 <div class="col-6" id="warehouse-contact-number">
-                    Не указан
+                    Not provided
                 </div>
             </div>
             <div class="row mb-3">
                 <div class="col-6">
-                    <strong>Контактный email:</strong>
+                    <strong>Email:</strong>
                 </div>
                 <div class="col-6" id="warehouse-email">
-                    Не указан
+                    Not provided
                 </div>
             </div>
             <div class="row mb-3">
                 <div class="col-6">
-                    <strong>Активность:</strong>
+                    <strong>Status:</strong>
                 </div>
                 <div class="col-6" id="warehouse-is-active">
-                    Неактивен
+                    Inactive
                 </div>
             </div>
             <div class="row">
                 <div class="col-6">
-                    <strong>Площадь:</strong>
+                    <strong>Area size:</strong>
                 </div>
                 <div class="col-6" id="warehouse-area-size">
-                    Не указана кв.м
+                    Not provided
                 </div>
             </div>
         </div>
     </div>
 
 
-    <!-- Кнопка для добавления нового продукта -->
-    <button class="btn btn-primary mt-5" onclick="openAddProductModal()">Добавить продукт на склад</button>
+    <button class="btn btn-primary mt-5" onclick="openAddProductModal()">Add product</button>
 
-    <!-- Модальное окно для добавления продукта -->
     <div class="modal fade" id="addProductModal" tabindex="-1" aria-labelledby="addProductModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="addProductModalLabel">Добавить продукт на склад</h5>
+                    <h5 class="modal-title" id="addProductModalLabel">Add Product</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <form id="add-product-form">
                         <div class="mb-3">
-                            <label for="product-id" class="form-label">ID продукта</label>
+                            <label for="product-id" class="form-label">ID product</label>
                             <input type="text" class="form-control" id="product-id" required>
                         </div>
                         <div class="mb-3">
-                            <label for="product-quantity" class="form-label">Количество товара</label>
+                            <label for="product-quantity" class="form-label">Quantity of product</label>
                             <input type="number" class="form-control" id="product-quantity" min="1" required>
                         </div>
-                        <button type="submit" class="btn btn-primary">Добавить</button>
+                        <button type="submit" class="btn btn-primary">Add</button> 
                     </form>
                 </div>
             </div>
         </div>
     </div>
 
-    <h3 class="mt-5">Продукты на складе</h3>
+    <h3 class="mt-5">Products in warehouse</h3>
     <table class="table table-striped" id="products-table">
         <thead>
             <tr>
-                <th>ID товара</th>
-                <th>Название товара</th>
-                <th>Количество на складе</th>
-                <th>Действия</th>
+                <th>ID</th>
+                <th>Name of product</th>
+                <th>Quantity</th>
+                <th>Action</th>
             </tr>
         </thead>
         <tbody>
-            <!-- Продукты будут загружены через JS -->
         </tbody>
     </table>
 
-    <!-- Пагинация -->
     <nav>
         <ul class="pagination" id="pagination"></ul>
     </nav>

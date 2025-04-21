@@ -1,29 +1,27 @@
 {% extends "layout.html" %}
 
-{% block title %}Управление продуктами{% endblock %}
+{% block title %}Products{% endblock %}
+
 
 {% block content %}
-<h2 class="text-center my-4">Управление продуктами</h2>
+<h2 class="text-center my-4">Products</h2>
 
-<!-- Кнопка для открытия модального окна добавления продукта -->
  <div class="text-end mb-3">
     <button id="add-new-product-btn" class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#addProductModal">
-        Добавить новый продукт
+        Add New Product
     </button>
 </div>
 
-<!-- Форма поиска продукта по названию -->
 <div class="input-group mb-4">
-    <input type="text" class="form-control" id="search-name" placeholder="Введите название для поиска">
-    <button class="btn btn-outline-secondary" onclick="searchProduct()">Найти</button>
+    <input type="text" class="form-control" id="search-name" placeholder="Enter product name">
+    <button class="btn btn-outline-secondary" onclick="searchProduct()">Find</button>
 </div>
 
-<!-- Модальное окно для добавления нового продукта -->
 <div class="modal fade" id="addProductModal" tabindex="-1" aria-labelledby="addProductModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="addProductModalLabel">Добавить новый продукт</h5>
+                <h5 class="modal-title" id="addProductModalLabel">Add New Product</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
@@ -31,98 +29,97 @@
 
                 <form id="add-product-form">
                     <div class="mb-3">
-                        <label for="add-name" class="form-label">Название продукта</label>
-                        <input type="text" class="form-control" id="add-name" placeholder="Введите название продукта" required>
+                        <label for="add-name" class="form-label">Name of product</label>
+                        <input type="text" class="form-control" id="add-name" placeholder="Enter product name" required>
                         <small id="nameError" class="text-danger" style="display: none;">
-                            Название продукта обязательно, от 3 до 100 символов, только буквы и цифры.
+                            Name of product is required, 3 to 100 characters, only letters and numbers.
                         </small>
                     </div>
 
                     <div class="mb-3">
-                        <label for="add-description" class="form-label">Описание</label>
-                        <input type="text" class="form-control" id="add-description" placeholder="Введите описание">
+                        <label for="add-description" class="form-label">Description</label>
+                        <input type="text" class="form-control" id="add-description" placeholder="Enter description">
                         <small id="descriptionError" class="text-danger" style="display: none;">
-                            Описание не должно превышать 500 символов.
+                            Description should be less than 500 characters.
                         </small>
                     </div>
 
                     <div class="mb-3">
-                        <label for="add-category" class="form-label">Категория</label>
-                        <input type="text" class="form-control" id="add-category" placeholder="Введите категорию">
+                        <label for="add-category" class="form-label">Category</label>
+                        <input type="text" class="form-control" id="add-category" placeholder="Enter category">
                         <small id="categoryError" class="text-danger" style="display: none;">
-                            Категория должна быть до 50 символов, только буквы и цифры.
+                            Category should be up to 50 characters, only letters and numbers.
                         </small>
                     </div>
 
                     <div class="mb-3">
-                        <label for="add-price" class="form-label">Цена (руб)</label>
-                        <input type="number" class="form-control" id="add-price" step="0.01" placeholder="Введите цену за 1 штуку продукта" required>
+                        <label for="add-price" class="form-label">Price (eur)</label>
+                        <input type="number" class="form-control" id="add-price" step="0.01" placeholder="Enter price for 1 item" required>
                         <small id="priceError" class="text-danger" style="display: none;">
-                            Цена обязательна, положительное число с двумя знаками после запятой, максимум 10 цифр.
+                            Price is required, positive number with two decimal places, maximum 10 digits.
                         </small>
                     </div>
 
                     <div class="mb-3">
-                        <label for="add-stock-quantity" class="form-label">Количество продукта</label>
-                        <input type="number" class="form-control" id="add-stock-quantity" placeholder="Введите количество продукта" required >
+                        <label for="add-stock-quantity" class="form-label">Quantity of product</label>
+                        <input type="number" class="form-control" id="add-stock-quantity" placeholder="Enter quantity" required>
                         <small id="stockQuantityError" class="text-danger" style="display: none;">
-                            Количество должно быть целым числом, не меньше 0.
+                            Quantity must be a positive integer, at least 0.
                         </small>
                     </div>
 
                     <div class="mb-3">
-                        <label for="add-supplier-id" class="form-label">Поставщик</label>
+                        <label for="add-supplier-id" class="form-label">Supplier</label>
                         <select class="form-control" id="add-supplier-id" required></select>
                         <small id="supplierError" class="text-danger" style="display: none;">
-                            Необходимо выбрать поставщика с действительным UUID.
+                            Need to select a supplier with a valid UUID.
                         </small>
                     </div>
 
                     <div class="mb-3">
-                        <label for="add-image-url" class="form-label">Изображение продукта</label>
+                        <label for="add-image-url" class="form-label">Product Image</label>
                         <input type="file" class="form-control" id="add-image-url" accept=".png, .jpeg, .jpg">
                         <small id="imageError" class="text-danger" style="display: none;">
-                            Формат изображения должен быть .png, .jpeg или .jpg.
+                            Format of image should be .png, .jpeg or .jpg.
                         </small>
                     </div>
 
                     <div class="mb-3">
-                        <label for="add-weight" class="form-label">Вес партии продукта (кг)</label>
-                        <input type="number" class="form-control" id="add-weight" step="0.01" placeholder="Введите вес партии продукта">
+                        <label for="add-weight" class="form-label">Weight of product (kg)</label>
+                        <input type="number" class="form-control" id="add-weight" step="0.01" placeholder="Enter weight of product">
                         <small id="weightError" class="text-danger" style="display: none;">
-                            Вес должен быть положительным числом, максимум 6 цифр (включая 2 знака после запятой).
+                            Weight should be a positive number, maximum 6 digits (including 2 decimal places).
                         </small>
                     </div>
 
                     <div class="mb-3">
-                        <label for="add-dimensions" class="form-label">Габариты продукта (1х1х1 метра)</label>
-                        <input type="text" class="form-control" id="add-dimensions" placeholder="Введите габариты в формате 1х1х1">
+                        <label for="add-dimensions" class="form-label">Dimensions of product (1x1x1 meters)</label>
+                        <input type="text" class="form-control" id="add-dimensions" placeholder="Enter dimensions in format 1x1x1">
                         <small id="dimensionsError" class="text-danger" style="display: none;">
-                            Габариты должны содержать до 100 символов и допускают только цифры и символ "х".
+                            Dimensions should be up to 100 characters and allow only numbers and the symbol "x".
                         </small>
                     </div>
 
                     <div class="mb-3">
-                        <label for="add-manufacturer" class="form-label">Производитель</label>
-                        <input type="text" class="form-control" id="add-manufacturer" placeholder="Введите производителя продукта">
+                        <label for="add-manufacturer" class="form-label">Manufacturer</label>
+                        <input type="text" class="form-control" id="add-manufacturer" placeholder="Enter manufacturer">
                         <small id="manufacturerError" class="text-danger" style="display: none;">
-                            Производитель может содержать только буквы и цифры, максимум 100 символов.
+                            Manufacturer can contain only letters and numbers, maximum 100 characters.
                         </small>
                     </div>
 
-                    <button type="submit" class="btn btn-primary">Создать продукт</button>
+                    <button type="submit" class="btn btn-primary">Create Product</button>
                 </form>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Модальное окно для редактирования продукта -->
 <div class="modal fade" id="editProductModal" tabindex="-1" aria-labelledby="editProductModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="editProductModalLabel">Редактировать продукт</h5>
+                <h5 class="modal-title" id="editProductModalLabel">Edit Product</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">

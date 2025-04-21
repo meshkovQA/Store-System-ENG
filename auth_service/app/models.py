@@ -15,7 +15,7 @@ class User(Base):
     name = Column(String, index=True)
     email = Column(String, unique=True, index=True)
     hashed_password = Column(String)
-    is_superadmin = Column(Boolean, default=False)  # Поле для супер админа
+    is_superadmin = Column(Boolean, default=False)
 
 
 class Token(Base):
@@ -25,5 +25,5 @@ class Token(Base):
     access_token = Column(String, unique=True)
     refresh_token = Column(String, unique=True)
     created_at = Column(DateTime, default=datetime.utcnow)
-    expires_at = Column(DateTime)  # Время истечения access token
-    refresh_expires_at = Column(DateTime)  # Время истечения refresh token
+    expires_at = Column(DateTime)
+    refresh_expires_at = Column(DateTime)

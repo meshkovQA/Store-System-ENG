@@ -16,18 +16,15 @@ import uuid
 import requests
 
 app = FastAPI(
-    # Укажите название вашего микросервиса здесь
     title="User Manager Microservice API",
-    # Описание вашего микросервиса
     description="API for managing users and roles in the application",
-    version="1.0.0"  # Версия микросервиса
+    version="1.0.0"
 )
-# Добавляем схему безопасности OAuth2 с токенами
 security = HTTPBearer()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Либо список доменов
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -35,7 +32,6 @@ app.add_middleware(
 
 
 def start_kafka_consumer():
-    # Запуск Kafka Consumer в отдельном потоке
     kafka_thread = threading.Thread(
         target=kafka.listen_for_product_approval_requests, daemon=True)
     kafka_thread.start()
@@ -54,8 +50,6 @@ def startup():
 
 
 app.include_router(routes.router)
-
-# Вспомогательная функция для рендеринга с проверкой роли супер админа
 
 
 @app.get("/", include_in_schema=False)
@@ -92,14 +86,12 @@ def get_user_list(request: Request):
 def warehouse_page(
         warehouse_id: str, request: Request):
 
-    # Передаем данные о складе и продуктах в шаблон
     return templates.TemplateResponse("product_in_warehouse.html", {
         "request": request,
         "warehouse": warehouse_id,
     })
 
 
-# Обновляем OpenAPI-схему для отображения Bearer токена в Swagger UI
 @app.get("/openapi.json", include_in_schema=False)
 def custom_openapi():
     if app.openapi_schema:
@@ -123,8 +115,8 @@ def custom_openapi():
 @app.post("/verify-token", include_in_schema=False)
 async def verify_token_endpoint(request: Request, db: Session = Depends(get_session_local)):
     try:
-        body = await request.json()  # Получаем JSON-данные из тела запроса
-        token = body.get("token")  # Извлекаем токен
+        body = await request.json()
+        token = body.get("token")
         if not token:
             raise HTTPException(status_code=422, detail="Token is required")
 

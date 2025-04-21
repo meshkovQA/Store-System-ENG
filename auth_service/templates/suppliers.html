@@ -1,78 +1,74 @@
 {% extends "layout.html" %}
 
-{% block title %}Управление поставщиками{% endblock %}
+{% block title %}Supplier Management{% endblock %}
 
 {% block content %}
-<h2 class="text-center my-4">Управление поставщиками</h2>
+<h2 class="text-center my-4">Supplier Management</h2>
 
-<!-- Кнопка для открытия модального окна добавления поставщика -->
 <div class="text-end mb-3">
     <button id="add-new-supplier-btn" class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#addSupplierModal">
-        Добавить нового поставщика
+        Add new supplier
     </button>
 </div>
 
-<!-- Форма поиска поставщика по названию -->
 <div class="input-group mb-4">
-    <input type="text" class="form-control" id="search-name" placeholder="Введите название для поиска">
-    <button class="btn btn-outline-secondary" onclick="searchSupplier()">Найти</button>
+    <input type="text" class="form-control" id="search-name" placeholder="Enter supplier name">
+    <button class="btn btn-outline-secondary" onclick="searchSupplier()">Find</button>
 </div>
 
-<!-- Модальное окно для добавления нового поставщика -->
 <div class="modal fade" id="addSupplierModal" tabindex="-1" aria-labelledby="addSupplierModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="addSupplierModalLabel">Создание нового поставщика</h5>
+                <h5 class="modal-title" id="addSupplierModalLabel">Create Supplier</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <form id="add-supplier-form">
                     <div class="mb-3">
-                        <label for="add-name" class="form-label">Название поставщика</label>
-                        <input type="text" class="form-control" id="add-name" required minlength="3" maxlength="100" placeholder="Введите Название поставщика">
+                        <label for="add-name" class="form-label">Name of Supplier</label>
+                        <input type="text" class="form-control" id="add-name" required minlength="3" maxlength="100" placeholder="Enter supplier name" required>
                     </div>
                     <div class="mb-3">
-                        <label for="add-contact_name" class="form-label">Контактное лицо</label>
-                        <input type="text" class="form-control" id="add-contact_name" maxlength="100" placeholder="Укажите контактное лицо" required>
+                        <label for="add-contact_name" class="form-label">Contact Person</label>
+                        <input type="text" class="form-control" id="add-contact_name" maxlength="100" placeholder="Enter contact person" required>
                     </div>
                     <div class="mb-3">
                         <label for="add-contact_email" class="form-label">Email</label>
-                        <input type="email" class="form-control" id="add-contact_email" placeholder="Введите email" maxlength="100" required>
+                        <input type="email" class="form-control" id="add-contact_email" placeholder="Enter email" maxlength="100" required>
                     </div>
                     <div class="mb-3">
-                        <label for="add-phone_number" class="form-label">Телефон</label>
-                        <input type="text" class="form-control" id="add-phone_number" maxlength="15" placeholder="Введите телефон (+79009999999)">
+                        <label for="add-phone_number" class="form-label">Phone number</label>
+                        <input type="text" class="form-control" id="add-phone_number" maxlength="15" placeholder="Enter phone number (+79009999999)">
                     </div>
                     <div class="mb-3">
-                        <label for="add-address" class="form-label">Адрес</label>
-                        <input type="text" class="form-control" id="add-address" maxlength="200" placeholder="Введите адрес поставщика">
+                        <label for="add-address" class="form-label">Address of Supplier</label>
+                        <input type="text" class="form-control" id="add-address" maxlength="200" placeholder="Enter address of supplier">
                     </div>
                     <div class="mb-3">
-                        <label for="add-country" class="form-label">Страна</label>
-                        <input type="text" class="form-control" id="add-country" maxlength="50" placeholder="Введите страну поставщика">
+                        <label for="add-country" class="form-label">Country</label>
+                        <input type="text" class="form-control" id="add-country" maxlength="50" placeholder="Enter country of supplier">
                     </div>
                     <div class="mb-3">
-                        <label for="add-city" class="form-label">Город</label>
-                        <input type="text" class="form-control" id="add-city" placeholder="Введите город поставщика">
+                        <label for="add-city" class="form-label">City</label>
+                        <input type="text" class="form-control" id="add-city" placeholder="Enter city of supplier">
                     </div>
                     <div class="mb-3">
-                        <label for="add-website" class="form-label">Вебсайт</label>
-                        <input type="text" class="form-control" id="add-website" placeholder="Укажите веб-сайт">
+                        <label for="add-website" class="form-label">Website</label>
+                        <input type="text" class="form-control" id="add-website" placeholder="Enter website">
                     </div>
-                    <button type="submit" class="btn btn-primary">Создать поставщика</button>
+                    <button type="submit" class="btn btn-primary">Create Supplier</button>
                 </form>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Модальное окно для редактирования поставщика -->
 <div class="modal fade" id="editSupplierModal" tabindex="-1" aria-labelledby="editSupplierModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="editSupplierModalLabel">Редактирование поставщика</h5>
+                <h5 class="modal-title" id="editSupplierModalLabel">Edit Supplier</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">

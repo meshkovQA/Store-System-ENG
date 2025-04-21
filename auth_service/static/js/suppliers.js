@@ -2,30 +2,25 @@ document.addEventListener("DOMContentLoaded", async function () {
     const token = await getTokenFromDatabase();
 
     if (!token) {
-        // Перенаправляем на страницу логина, если токен отсутствует
         window.location.href = '/login';
         return;
     }
 
     initializeSuppliers();
 
-    // Открытие модального окна создания нового поставщика
     document.querySelector("#add-new-supplier-btn").addEventListener("click", openAddModal);
 
-    // Обработчик для создания нового поставщика
     document.getElementById("add-supplier-form").addEventListener("submit", async (event) => {
         event.preventDefault();
         await createSupplier();
     });
 
-    // Обработчик для редактирования поставщика
     document.getElementById("edit-supplier-form").addEventListener("submit", async (event) => {
         event.preventDefault();
         const supplierId = document.getElementById("edit-supplier-id").value;
         await updateSupplier(supplierId);
     });
 
-    // Добавляем обработчик для кнопок "Редактировать" и "Удалить" в таблице
     document.getElementById("suppliers-table").addEventListener("click", (event) => {
         const target = event.target;
         const supplierId = target.dataset.id;
@@ -33,19 +28,17 @@ document.addEventListener("DOMContentLoaded", async function () {
         if (target.classList.contains("btn-outline-warning")) {
             openEditModal(supplierId);
         } else if (target.classList.contains("btn-outline-danger")) {
-            const confirmed = confirm("Вы уверены, что хотите удалить поставщика?");
+            const confirmed = confirm("Are you sure you want to delete this supplier?");
             if (confirmed) deleteSupplier(supplierId);
         }
     });
 });
 
-// Открытие модального окна для добавления нового поставщика
 function openAddModal() {
     document.getElementById("add-supplier-form").reset();
     $("#addSupplierModal").modal("show");
 }
 
-// Открытие модального окна для редактирования поставщика
 async function openEditModal(supplierId) {
     const token = await getTokenFromDatabase();
     const response = await fetch(`http://localhost:8002/suppliers/${supplierId}`, {
@@ -57,7 +50,6 @@ async function openEditModal(supplierId) {
 
     const supplier = await response.json();
 
-    // Заполняем поля формы редактирования данными поставщика
     document.getElementById("edit-supplier-id").value = supplier.supplier_id;
     document.getElementById("edit-name").value = supplier.name;
     document.getElementById("edit-contact_name").value = supplier.contact_name;
@@ -68,17 +60,14 @@ async function openEditModal(supplierId) {
     document.getElementById("edit-city").value = supplier.city;
     document.getElementById("edit-website").value = supplier.website;
 
-    // Открываем модальное окно для редактирования
     $("#editSupplierModal").modal("show");
 }
 
-//Использование токена для инициализации поставщиков
 async function initializeSuppliers() {
     const token = await getTokenFromDatabase();
     await loadSuppliers(token);
 }
 
-//Загрузка поставщиков
 async function loadSuppliers(token) {
     const response = await fetch("http://localhost:8002/suppliers/", {
         headers: {
@@ -91,7 +80,6 @@ async function loadSuppliers(token) {
     renderSuppliersTable(suppliers);
 }
 
-// Поиск поставщика
 async function searchSupplier() {
     const token = await getTokenFromDatabase();
     const searchQuery = document.getElementById("search-name").value.trim();
@@ -105,14 +93,13 @@ async function searchSupplier() {
 
     if (response.ok) {
         const suppliers = await response.json();
-        console.log("Найденные поставщики:", suppliers); // Отладка: вывод найденных поставщиков в консоль
+        console.log("suppliers found", suppliers);
         renderSuppliersTable(suppliers);
     } else {
-        console.error("Ошибка при поиске поставщика:", response.status);
+        console.error("Error fetching suppliers:", response.statusText);
     }
 }
 
-// Создание поставщика
 async function createSupplier() {
     const token = await getTokenFromDatabase();
     const supplierData = {
@@ -140,7 +127,6 @@ async function createSupplier() {
     $("#addSupplierModal").modal("hide");
 }
 
-// Обновление поставщика
 async function updateSupplier(supplierId) {
     const token = await getTokenFromDatabase();
     const supplierData = {
@@ -163,12 +149,10 @@ async function updateSupplier(supplierId) {
         body: JSON.stringify(supplierData)
     });
 
-    // Закрываем модальное окно и обновляем список поставщиков
     $("#editSupplierModal").modal("hide");
     loadSuppliers(token);
 }
 
-//Удаление поставщика
 async function deleteSupplier(supplierId) {
     const token = await getTokenFromDatabase();
     await fetch(`http://localhost:8002/suppliers/${supplierId}`, {
@@ -178,7 +162,6 @@ async function deleteSupplier(supplierId) {
     loadSuppliers(token);
 }
 
-//Заполнение таблицы поставщиков
 function renderSuppliersTable(suppliers) {
     const tableBody = document.querySelector("#suppliers-table tbody");
     tableBody.innerHTML = "";
@@ -195,8 +178,8 @@ function renderSuppliersTable(suppliers) {
             <td>${supplier.city}</td>
             <td>${supplier.website}</td>
             <td class="text-center">
-                <button class="btn btn-sm btn-outline-warning mt-2" data-id="${supplier.supplier_id}">Редактировать</button>
-                <button class="btn btn-sm btn-outline-danger mt-2" data-id="${supplier.supplier_id}">Удалить</button>
+                <button class="btn btn-sm btn-outline-warning mt-2" data-id="${supplier.supplier_id}">Edit</button>
+                <button class="btn btn-sm btn-outline-danger mt-2" data-id="${supplier.supplier_id}">Delete</button>
             </td>
         `;
         tableBody.appendChild(row);

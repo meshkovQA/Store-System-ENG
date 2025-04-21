@@ -1,5 +1,4 @@
 // auth.js
-//Получение токена из базы данных
 async function getTokenFromDatabase() {
     const userId = localStorage.getItem("user_id");
     const response = await fetch(`/get-user-token/${userId}`, {
@@ -7,7 +6,7 @@ async function getTokenFromDatabase() {
     });
 
     if (!response.ok) {
-        console.log("Не удалось получить токен. Перенаправляем на страницу логина.");
+        console.log("Don't have access token. Redirecting to login page.");
         window.location.href = '/login';
         return null;
     }
@@ -15,13 +14,10 @@ async function getTokenFromDatabase() {
     const data = await response.json();
     const token = data.access_token;
 
-    // Проверяем токен на сервере
     const isValid = await verifyTokenOnServer(token);
     if (!isValid) {
-        // Пытаемся обновить токен с использованием refresh token
         const newToken = await getNewAccessToken();
         if (!newToken) {
-            // Если не удалось получить новый токен, перенаправляем на логин
             window.location.href = '/login';
             return null;
         }
@@ -32,7 +28,6 @@ async function getTokenFromDatabase() {
     return token;
 }
 
-// Проверка токена на сервере перед выполнением других действий
 async function verifyTokenOnServer(token) {
     const response = await fetch(`/verify-token`, {
         method: "POST",
@@ -45,11 +40,10 @@ async function verifyTokenOnServer(token) {
 }
 
 
-// Функция для получения нового access token с использованием refresh token
 async function getNewAccessToken() {
     const refreshToken = getCookie('refresh_token');
     if (!refreshToken) {
-        console.log("Отсутствует refresh token. Перенаправляем на страницу логина.");
+        console.log("Refresh token not found. Redirecting to login page.");
         return null;
     }
 
@@ -63,16 +57,14 @@ async function getNewAccessToken() {
 
     const data = await response.json();
     if (data.access_token) {
-        // Сохраняем новый access token в Local Storage
         localStorage.setItem('access_token', data.access_token);
         return data.access_token;
     } else {
-        console.log("Не удалось обновить токен. Перенаправляем на страницу логина.");
+        console.log("Didn't get new access token. Redirecting to login page.");
         return null;
     }
 }
 
-// Функция для получения значения куки по имени
 function getCookie(name) {
     const value = `; ${document.cookie}`;
     const parts = value.split(`; ${name}=`);

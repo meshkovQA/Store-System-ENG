@@ -1,9 +1,7 @@
-// Инициализация загрузки продуктов
 document.addEventListener("DOMContentLoaded", async function () {
     const token = await getTokenFromDatabase();
 
     if (!token) {
-        // Перенаправляем на страницу логина, если токен отсутствует
         window.location.href = '/login';
         return;
     }
@@ -11,30 +9,25 @@ document.addEventListener("DOMContentLoaded", async function () {
     const warehouseId = getWarehouseIdFromUrl();
 
     if (!warehouseId) {
-        alert("Идентификатор склада не найден в URL.");
+        alert("ID of the warehouse not found in URL");
         return;
     }
 
-    // Загрузка информации о складе
     loadWarehouseInfo(warehouseId);
-    // Загрузка информации о продуктах на складе
     loadProducts(warehouseId);
 
-    // Инициализация события для добавления продукта
     document.getElementById("add-product-form").addEventListener("submit", async (event) => {
         event.preventDefault();
         await addProductToWarehouse(warehouseId);
     });
 });
 
-// Функция для извлечения warehouse_id из URL
 function getWarehouseIdFromUrl() {
     const urlParams = new URLSearchParams(window.location.pathname);
     const pathParts = window.location.pathname.split("/");
-    return pathParts[pathParts.length - 1]; // Последний элемент пути
+    return pathParts[pathParts.length - 1];
 }
 
-// Функция для загрузки информации о складе
 async function loadWarehouseInfo(warehouseId) {
     const token = await getTokenFromDatabase();
     const response = await fetch(`http://localhost:8002/warehouses/${warehouseId}`, {
@@ -45,24 +38,22 @@ async function loadWarehouseInfo(warehouseId) {
     });
 
     if (!response.ok) {
-        alert("Ошибка загрузки информации о складе");
+        alert("Error loading warehouse information");
         return;
     }
 
     const warehouse = await response.json();
 
-    // Отображение информации о складе на странице (если нужно обновить данные)
-    document.querySelector("h2").textContent = `Склад: ${warehouse.location}`;
-    document.getElementById("warehouse-manager-name").textContent = warehouse.manager_name || 'Не указано';
+    document.querySelector("h2").textContent = `Warehouse: ${warehouse.location}`;
+    document.getElementById("warehouse-manager-name").textContent = warehouse.manager_name || 'None';
     document.getElementById("warehouse-capacity").textContent = warehouse.capacity;
     document.getElementById("warehouse-current-stock").textContent = warehouse.current_stock || 0;
-    document.getElementById("warehouse-contact-number").textContent = warehouse.contact_number || 'Не указан';
-    document.getElementById("warehouse-email").textContent = warehouse.email || 'Не указан';
-    document.getElementById("warehouse-is-active").textContent = warehouse.is_active ? "Активен" : "Неактивен";
-    document.getElementById("warehouse-area-size").textContent = warehouse.area_size || 'Не указана';
+    document.getElementById("warehouse-contact-number").textContent = warehouse.contact_number || 'None';
+    document.getElementById("warehouse-email").textContent = warehouse.email || 'None';
+    document.getElementById("warehouse-is-active").textContent = warehouse.is_active ? "Active" : "Inactive";
+    document.getElementById("warehouse-area-size").textContent = warehouse.area_size || 'None';
 }
 
-// Функция для загрузки продуктов на складе с учетом пагинации
 async function loadProducts(warehouseId, page = 1) {
     const token = await getTokenFromDatabase();
     const response = await fetch(`http://localhost:8002/productinwarehouses/${warehouseId}?page=${page}`, {
@@ -74,14 +65,14 @@ async function loadProducts(warehouseId, page = 1) {
 
     if (response.status === 404) {
         document.querySelector("#products-table tbody").innerHTML = `
-            <tr><td colspan="4" class="text-center">На данном складе продуктов пока нет</td></tr>
+            <tr><td colspan="4" class="text-center">This warehouse has no products.</td></tr>
         `;
-        document.getElementById("pagination").innerHTML = ""; // Очищаем пагинацию
+        document.getElementById("pagination").innerHTML = "";
         return;
     }
 
     if (!response.ok) {
-        alert("Ошибка загрузки продуктов");
+        alert("Error loading products");
         return;
     }
 
@@ -90,7 +81,6 @@ async function loadProducts(warehouseId, page = 1) {
     renderPagination(data.total_pages, page);
 }
 
-// Заполнение таблицы продуктов
 function renderProductsTable(products) {
     const tableBody = document.querySelector("#products-table tbody");
     tableBody.innerHTML = "";
@@ -102,8 +92,8 @@ function renderProductsTable(products) {
             <td>${product.name}</td>
             <td>${product.quantity}</td>
             <td>
-                <button class="btn btn-sm btn-warning" onclick="openEditProductModal('${product.product_warehouse_id}')">Редактировать</button>
-                <button class="btn btn-sm btn-danger" onclick="deleteProduct('${product.product_warehouse_id}')">Удалить</button>
+                <button class="btn btn-sm btn-warning" onclick="openEditProductModal('${product.product_warehouse_id}')">Edit</button>
+                <button class="btn btn-sm btn-danger" onclick="deleteProduct('${product.product_warehouse_id}')">Delete</button>
             </td>
         `;
         tableBody.appendChild(row);
@@ -111,13 +101,11 @@ function renderProductsTable(products) {
 }
 
 
-// Открытие модального окна добавления продукта
 function openAddProductModal() {
     document.getElementById("add-product-form").reset();
     $("#addProductModal").modal("show");
 }
 
-// Обработка добавления нового продукта
 async function addProductToWarehouse(warehouseId) {
     const token = await getTokenFromDatabase();
     const productId = document.getElementById("product-id").value;
@@ -132,15 +120,14 @@ async function addProductToWarehouse(warehouseId) {
     });
 
     if (response.ok) {
-        alert("Товар успешно добавлен на склад");
+        alert("Product successfully added to warehouse");
         loadProducts();
         $("#addProductModal").modal("hide");
     } else {
-        alert("Ошибка добавления товара");
+        alert("Error adding product to warehouse");
     }
 }
 
-// Пагинация
 function renderPagination(totalPages, currentPage) {
     const pagination = document.getElementById("pagination");
     pagination.innerHTML = "";
@@ -153,15 +140,13 @@ function renderPagination(totalPages, currentPage) {
     }
 }
 
-// Открытие модального окна для редактирования продукта
 function openEditProductModal(productWarehouseId) {
-    const quantity = prompt("Введите новое количество:");
+    const quantity = prompt("Enter new quantity for the product:");
     if (quantity && quantity > 0) {
         updateProductQuantity(productWarehouseId, parseInt(quantity));
     }
 }
 
-// Обновление количества продукта на складе
 async function updateProductQuantity(productWarehouseId, quantity) {
     const token = await getTokenFromDatabase();
     const response = await fetch(`http://localhost:8002/productinwarehouses/${productWarehouseId}`, {
@@ -174,16 +159,15 @@ async function updateProductQuantity(productWarehouseId, quantity) {
     });
 
     if (response.ok) {
-        alert("Количество товара успешно обновлено");
+        alert("Quantity successfully updated");
         loadProducts();
     } else {
-        alert("Ошибка обновления товара");
+        alert("Error updating quantity");
     }
 }
 
-// Удаление продукта со склада
 async function deleteProduct(productWarehouseId) {
-    const confirmed = confirm("Вы уверены, что хотите удалить этот товар?");
+    const confirmed = confirm("Are you sure you want to delete this product from the warehouse?");
     if (!confirmed) return;
 
     const token = await getTokenFromDatabase();
@@ -196,10 +180,10 @@ async function deleteProduct(productWarehouseId) {
     });
 
     if (response.ok) {
-        alert("Товар успешно удален со склада");
+        alert("Product successfully deleted from warehouse");
         loadProducts();
     } else {
-        alert("Ошибка удаления товара");
+        alert("Error deleting product from warehouse");
     }
 }
 

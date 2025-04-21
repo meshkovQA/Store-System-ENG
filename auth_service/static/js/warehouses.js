@@ -2,49 +2,40 @@ document.addEventListener("DOMContentLoaded", async function () {
     const token = await getTokenFromDatabase();
 
     if (!token) {
-        // Перенаправляем на страницу логина, если токен отсутствует
         window.location.href = '/login';
         return;
     }
 
     initializeWarehouses();
 
-    // Открытие модального окна создания нового склада
     document.querySelector("#add-new-warehouse-btn").addEventListener("click", openAddWarehouseModal);
 
-    // Обработчик для создания нового склада
     document.getElementById("add-warehouse-form").addEventListener("submit", async (event) => {
         event.preventDefault();
         await createWarehouse();
     });
 
-    // Обработчик для редактирования склада
     document.getElementById("edit-warehouse-form").addEventListener("submit", async (event) => {
         event.preventDefault();
         const warehouseId = document.getElementById("edit-warehouse-id").value;
         await updateWarehouse(warehouseId);
     });
 
-    // Добавляем обработчик для кнопок "Посмотреть", "Редактировать" и "Удалить" в таблице
     document.getElementById("warehouses-table").addEventListener("click", (event) => {
         const target = event.target;
         const warehouseId = target.getAttribute("data-id");
 
         if (target.classList.contains("btn-outline-info")) {
-            // Открытие модального окна для просмотра информации о складе
             openViewWarehouseModal(warehouseId);
         } else if (target.classList.contains("btn-outline-warning")) {
-            // Открытие модального окна для редактирования склада
             openEditWarehouseModal(warehouseId);
         } else if (target.classList.contains("btn-outline-danger")) {
-            // Запрос на подтверждение удаления склада
-            const confirmed = confirm("Вы уверены, что хотите удалить склад?");
+            const confirmed = confirm("Are you sure you want to delete this warehouse?");
             if (confirmed) deleteWarehouse(warehouseId);
         }
     });
 });
 
-// Открытие модального окна для просмотра информации о складе
 async function openViewWarehouseModal(warehouseId) {
     const token = await getTokenFromDatabase();
     const response = await fetch(`http://localhost:8002/warehouses/${warehouseId}`, {
@@ -59,24 +50,21 @@ async function openViewWarehouseModal(warehouseId) {
     document.getElementById("view-warehouse-id").value = warehouse.warehouse_id;
     document.getElementById("view-location").value = warehouse.location;
     document.getElementById("view-manager-name").value = warehouse.manager_name || "";
-    document.getElementById("view-capacity").value = warehouse.capacity + " куб.м";
+    document.getElementById("view-capacity").value = warehouse.capacity;
     document.getElementById("view-current-stock").value = warehouse.current_stock || 0;
     document.getElementById("view-contact-number").value = warehouse.contact_number || "";
     document.getElementById("view-email").value = warehouse.email || "";
-    document.getElementById("view-is-active").value = warehouse.is_active ? "Активен" : "Неактивен";
-    document.getElementById("view-area-size").value = warehouse.area_size + " кв.м" || "";
+    document.getElementById("view-is-active").value = warehouse.is_active ? "Active" : "Inactive";
+    document.getElementById("view-area-size").value = warehouse.area_size || "";
 
-    // Открытие модального окна
     $("#viewWarehouseModal").modal("show");
 }
 
-// Открытие модального окна для добавления нового склада
 function openAddWarehouseModal() {
     document.getElementById("add-warehouse-form").reset();
     $("#addWarehouseModal").modal("show");
 }
 
-// Открытие модального окна для редактирования склада
 async function openEditWarehouseModal(warehouseId) {
     const token = await getTokenFromDatabase();
     const response = await fetch(`http://localhost:8002/warehouses/${warehouseId}`, {
@@ -88,28 +76,24 @@ async function openEditWarehouseModal(warehouseId) {
 
     const warehouse = await response.json();
 
-    // Заполняем поля формы редактирования данными склада
     document.getElementById("edit-warehouse-id").value = warehouse.warehouse_id;
     document.getElementById("edit-location").value = warehouse.location;
     document.getElementById("edit-manager-name").value = warehouse.manager_name || "";
-    document.getElementById("edit-capacity").value = warehouse.capacity + " куб.м";
+    document.getElementById("edit-capacity").value = warehouse.capacity;
     document.getElementById("edit-current-stock").value = warehouse.current_stock || 0;
     document.getElementById("edit-contact-number").value = warehouse.contact_number || "";
     document.getElementById("edit-email").value = warehouse.email || "";
-    document.getElementById("edit-is-active").value = warehouse.is_active ? "Активен" : "Неактивен";
-    document.getElementById("edit-area-size").value = warehouse.area_size + " кв.м" || "";
+    document.getElementById("edit-is-active").value = warehouse.is_active ? "Active" : "Inactive";
+    document.getElementById("edit-area-size").value = warehouse.area_size || "";
 
-    // Открываем модальное окно для редактирования
     $("#editWarehouseModal").modal("show");
 }
 
-// Инициализация складов с использованием токена
 async function initializeWarehouses() {
     const token = await getTokenFromDatabase();
     await loadWarehouses(token);
 }
 
-// Загрузка складов
 async function loadWarehouses(token) {
     const response = await fetch("http://localhost:8002/warehouses/", {
         headers: {
@@ -122,7 +106,6 @@ async function loadWarehouses(token) {
     renderWarehousesTable(warehouses);
 }
 
-// Создание склада
 async function createWarehouse() {
     const token = await getTokenFromDatabase();
     const warehouseData = {
@@ -150,7 +133,6 @@ async function createWarehouse() {
     $("#addWarehouseModal").modal("hide");
 }
 
-// Обновление склада
 async function updateWarehouse(warehouseId) {
     const token = await getTokenFromDatabase();
     const warehouseData = {
@@ -173,12 +155,10 @@ async function updateWarehouse(warehouseId) {
         body: JSON.stringify(warehouseData)
     });
 
-    // Закрываем модальное окно и обновляем список складов
     $("#editWarehouseModal").modal("hide");
     loadWarehouses(token);
 }
 
-// Удаление склада
 async function deleteWarehouse(warehouseId) {
     const token = await getTokenFromDatabase();
     await fetch(`http://localhost:8002/warehouses/${warehouseId}`, {
@@ -188,7 +168,6 @@ async function deleteWarehouse(warehouseId) {
     loadWarehouses(token);
 }
 
-// Заполнение таблицы складов
 function renderWarehousesTable(warehouses) {
     const tableBody = document.querySelector("#warehouses-table tbody");
     tableBody.innerHTML = "";
@@ -198,14 +177,14 @@ function renderWarehousesTable(warehouses) {
         row.innerHTML = `
             <td>${warehouse.location}</td>
             <td>${warehouse.manager_name || ""}</td>
-            <td>${warehouse.capacity + " куб.м"}</td>
+            <td>${warehouse.capacity}</td>
             <td>${warehouse.current_stock || 0}</td>
-            <td>${warehouse.is_active ? "Активен" : "Неактивен"}</td>
-            <td>${warehouse.area_size + " кв.м" || ""}</td>
+            <td>${warehouse.is_active ? "Active" : "Inactive"}</td>
+            <td>${warehouse.area_size || ""}</td>
             <td class="text-center">
-                <button class="btn btn-sm btn-outline-info" data-id="${warehouse.warehouse_id}">Посмотреть</button>
-                <button class="btn btn-sm btn-outline-warning" data-id="${warehouse.warehouse_id}">Редактировать</button>
-                <button class="btn btn-sm btn-outline-danger" data-id="${warehouse.warehouse_id}">Удалить</button>
+                <button class="btn btn-sm btn-outline-info" data-id="${warehouse.warehouse_id}">View</button>
+                <button class="btn btn-sm btn-outline-warning" data-id="${warehouse.warehouse_id}">Edit</button>
+                <button class="btn btn-sm btn-outline-danger" data-id="${warehouse.warehouse_id}">Delete</button>
             </td>
         `;
         tableBody.appendChild(row);

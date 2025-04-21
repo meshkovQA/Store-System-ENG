@@ -21,16 +21,13 @@ def create_user(db: Session, user: UserCreate, is_superadmin: bool = False):
     logger.log_message(
         f"""A user has been created in the database: {user.email}""")
 
-    # Создаем пользователя в PostgreSQL с ролью limited_user
     assign_role_to_user(db, user.email, user.password)
 
     return db_user
 
 
 def assign_role_to_user(db: Session, email: str, password: str):
-    # Открываем сырое SQL-соединение, чтобы выполнить SQL-запросы напрямую
     with db.connection().connection.cursor() as cursor:
-        # SQL-запрос для создания нового пользователя в PostgreSQL и присвоения ему роли
         create_user_sql = f"""
         CREATE USER "{email}" WITH PASSWORD '{password}';
         GRANT limited_user TO "{email}";
@@ -67,7 +64,6 @@ def edit_user(db: Session, user_id: str, user_data: UserUpdate):
     if not user:
         return None
 
-    # Обновляем только те поля, которые переданы в запросе
     if user_data.email is not None:
         user.email = user_data.email
     if user_data.name is not None:
@@ -79,10 +75,9 @@ def edit_user(db: Session, user_id: str, user_data: UserUpdate):
     return user
 
 
-def delete_user(db: Session, user_id: str):  # Удаление пользователя
+def delete_user(db: Session, user_id: str):
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
-        # Возвращаем None, если пользователь не найден
         return None
 
     db.delete(user)

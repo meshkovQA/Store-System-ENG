@@ -2,13 +2,12 @@
 import redis
 from app import logger
 
-# Настройка подключения к Redis
 redis_client = redis.Redis(host='redis', port=6379, db=0)
 
 
 def add_product_to_pending(product_id: str):
     """
-    Добавляет product_id в Redis для очереди на одобрение, если его там еще нет.
+    Add product_id to the Redis pending queue for approval.
     """
     logger.log_message(f"""Attempting to add product ID {
                        product_id} to Redis pending queue.""")
@@ -24,16 +23,15 @@ def add_product_to_pending(product_id: str):
 
 def get_pending_products():
     """
-    Извлекает все product_id из очереди на одобрение в Redis.
+    Retrieves all product_ids from the Redis pending queue.
     """
     product_ids = redis_client.smembers("pending_products")
-    # Преобразование байтов в строки
     return [product_id.decode('utf-8') for product_id in product_ids]
 
 
 def remove_product_from_pending(product_id: str):
     """
-    Удаляет product_id из очереди на одобрение в Redis.
+    Delete product_id from the Redis pending queue.
     """
     redis_client.srem("pending_products", product_id)
     logger.log_message(

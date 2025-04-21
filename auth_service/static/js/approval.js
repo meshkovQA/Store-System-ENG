@@ -5,7 +5,6 @@ document.addEventListener("DOMContentLoaded", async function () {
     const token = await getTokenFromDatabase();
 
     if (!token) {
-        // Перенаправляем на страницу логина, если токен отсутствует
         window.location.href = '/login';
         return;
     }
@@ -13,7 +12,6 @@ document.addEventListener("DOMContentLoaded", async function () {
     loadPendingProducts(token);
 });
 
-// Функция для загрузки списка продуктов, ожидающих одобрения
 async function loadPendingProducts(token) {
     try {
         const response = await fetch("/get-pending-products/", {
@@ -35,11 +33,10 @@ async function loadPendingProducts(token) {
     }
 }
 
-// Функция для рендеринга таблицы продуктов
 function renderProductsTable(products) {
     console.log("Rendering products table...");
     const tableBody = document.getElementById("product-approval-table");
-    tableBody.innerHTML = "";  // Очищаем таблицу перед добавлением новых данных
+    tableBody.innerHTML = "";
 
     products.forEach(product => {
         console.log("Rendering product:", product);
@@ -57,7 +54,6 @@ function renderProductsTable(products) {
     });
 }
 
-// Функция для одобрения продукта
 async function approveProduct(productId) {
     console.log(`Approving product with ID: ${productId}`);
     const token = await getTokenFromDatabase();
@@ -69,13 +65,12 @@ async function approveProduct(productId) {
                 "Authorization": `Bearer ${token}`,
                 "Content-Type": "application/json"
             },
-            body: JSON.stringify({ is_available: true }) // Обновляем поле is_available на true
+            body: JSON.stringify({ is_available: true })
         });
 
         if (response.ok) {
             console.log(`Product ${productId} approved successfully.`);
-            loadPendingProducts(token); // Обновляем список после одобрения
-        } else {
+            loadPendingProducts(token);
             console.error("Error approving product:", response.status);
         }
     } catch (error) {
