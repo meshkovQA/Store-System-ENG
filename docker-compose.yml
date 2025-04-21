@@ -1,7 +1,7 @@
 version: "3.9"
 
 services:
-  # Elasticsearch - хранилище логов
+
   elasticsearch:
     image: elasticsearch:7.17.18
     container_name: elasticsearch
@@ -38,7 +38,6 @@ services:
         delay: 5s
         window: 20s
 
-  # Logstash - обработка и отправка логов в Elasticsearch
   logstash:
     container_name: logstash
     image: logstash:7.17.18
@@ -75,7 +74,6 @@ services:
         delay: 5s
         window: 20s
 
-  # Kibana - интерфейс для просмотра логов
   kibana:
     container_name: kibana
     image: kibana:7.17.18
@@ -109,7 +107,6 @@ services:
         delay: 5s
         window: 20s
 
-  # Filebeat - сборщик логов с контейнеров
   filebeat:
     user: root
     container_name: filebeat
@@ -153,14 +150,14 @@ services:
     image: postgres:12-bullseye
     container_name: postgres_db
     environment:
-      POSTGRES_USER: storage_admin # Задать пользователя
-      POSTGRES_PASSWORD: THw7l0bxvPPkWUhP # Задать пароль
-      POSTGRES_DB: strg_users_db # Задать имя БД
+      POSTGRES_USER: storage_admin
+      POSTGRES_PASSWORD: THw7l0bxvPPkWUhP
+      POSTGRES_DB: strg_users_db
     ports:
-      - "5435:5432" # Открыть порт для внешнего доступа
+      - "5435:5432"
     volumes:
       - ./docker-data/postgres:/var/lib/postgresql/data
-      - ./db_init/init.sql:/docker-entrypoint-initdb.d/init.sql # Путь к папке с SQL-скриптами
+      - ./db_init/init.sql:/docker-entrypoint-initdb.d/init.sql
     networks:
       - app_network
     deploy:
@@ -176,7 +173,7 @@ services:
 
   app:
     build:
-      context: . # Путь к папке с кодом приложения
+      context: .
       dockerfile: Dockerfile
     container_name: python_app
     volumes:
@@ -186,7 +183,7 @@ services:
     environment:
       DATABASE_URL: postgresql://storage_admin:THw7l0bxvPPkWUhP@db:5432/strg_users_db
     ports:
-      - "8000:8000" # Открыть порт для FastAPI или другого веб-сервиса
+      - "8000:8000"
     networks:
       - app_network
     deploy:

@@ -1,29 +1,28 @@
 {% extends "layout.html" %}
 
-{% block title %}Список пользователей{% endblock %}
+{% block title %}List of users{% endblock %}
 
 {% block content %}
-<h2>Список пользователей</h2>
+<h2>List of users</h2>
 <div class="input-group mb-3">
-    <input type="text" class="form-control" id="search" placeholder="Поиск по имени или email">
+    <input type="text" class="form-control" id="search" placeholder="Search by name or email">
 </div>
 <table class="table table-striped">
     <thead>
         <tr>
             <th>ID</th>
-            <th>Имя</th>
+            <th>Name</th>
             <th>Email</th>
-            <th>Роль</th>
-            <th>Действие</th>
+            <th>Role</th>
+            <th>Action</th>
         </tr>
     </thead>
     <tbody id="userTableBody">
-        <!-- Данные будут динамически вставляться сюда через JS -->
+
     </tbody>
 </table>
 <nav aria-label="Page navigation">
     <ul class="pagination">
-        <!-- Пагинация будет динамически добавляться -->
     </ul>
 </nav>
 {% endblock %}

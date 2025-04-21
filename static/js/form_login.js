@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', function () {
 
     localStorage.removeItem('access_token');
-    console.log('Токен удален при посещении страницы логина.');
+    console.log('Token deleted from localStorage');
 
 
     document.getElementById('loginForm').addEventListener('submit', function (e) {
@@ -11,27 +11,22 @@ document.addEventListener('DOMContentLoaded', function () {
         let password = document.getElementById('password').value;
         let valid = true;
 
-        // Сброс сообщений об ошибках
         document.getElementById('emailError').style.display = 'none';
         document.getElementById('passwordError').style.display = 'none';
         document.getElementById('errorMessage').style.display = 'none';
 
-        // Валидация email
         let emailPattern = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
         if (!emailPattern.test(email)) {
             document.getElementById('emailError').style.display = 'block';
             valid = false;
         }
 
-        // Валидация пароля
         if (password.length < 8) {
             document.getElementById('passwordError').style.display = 'block';
             valid = false;
         }
 
-        // Если все корректно
         if (valid) {
-            // Отправка данных на сервер через fetch
             fetch('/login/', {
                 method: 'POST',
                 headers: {
@@ -45,25 +40,22 @@ document.addEventListener('DOMContentLoaded', function () {
                 .then(response => response.json())
                 .then(data => {
                     if (data.access_token) {
-                        // Сохраняем токен в localStorage
                         localStorage.setItem('access_token', data.access_token);
                         console.log('Токен сохранен:', data.access_token);
 
-                        // Перенаправляем на страницу store
                         loadStorePage(data.access_token);
                     } else {
-                        // Обработка ошибок логина
                         document.getElementById('errorMessage').style.display = 'block';
                         if (data.detail === "Invalid email or password") {
-                            document.getElementById('errorMessage').innerText = "Неверный email или пароль.";
+                            document.getElementById('errorMessage').innerText = "Email or password is incorrect.";
                         } else {
-                            document.getElementById('errorMessage').innerText = "Ошибка при авторизации.";
+                            document.getElementById('errorMessage').innerText = "Error: " + data.detail;
                         }
                     }
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    alert("Ошибка при отправке данных");
+                    alert("Error: " + error);
                 });
         } else {
             document.getElementById('errorMessage').style.display = 'block';
@@ -71,9 +63,7 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 });
 
-// Функция для загрузки страницы store
 function loadStorePage(token) {
-    // Запрашиваем страницу /store с токеном в заголовке
     fetch('/store', {
         method: 'GET',
         headers: {
@@ -83,15 +73,15 @@ function loadStorePage(token) {
     })
         .then(response => {
             if (response.ok) {
-                return response.text();  // Получаем HTML страницы
+                return response.text();
             } else {
-                console.error('Ошибка авторизации на странице /store', response.status);
-                window.location.href = '/login';  // Перенаправляем на логин, если нет доступа
+                console.error('Authentication error:', response.status);
+                window.location.href = '/login';
             }
         })
         .then(html => {
-            // Вставляем содержимое страницы store в текущий DOM
+
             document.documentElement.innerHTML = html;
         })
-        .catch(error => console.error('Ошибка при загрузке страницы /store:', error));
+        .catch(error => console.error('Error loading store page:', error));
 }

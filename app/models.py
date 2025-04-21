@@ -14,4 +14,4 @@ class User(Base):
     name = Column(String, index=True)
     email = Column(String, unique=True, index=True)
     hashed_password = Column(String)
-    is_superadmin = Column(Boolean, default=False)  # Поле для супер админа
+    is_superadmin = Column(Boolean, default=False)

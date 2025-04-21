@@ -16,7 +16,6 @@ Base = declarative_base()
 
 
 def init_db():
-    # Импортировать модели здесь, чтобы они были зарегистрированы перед созданием таблиц
     Base.metadata.create_all(bind=engine)
 
 
@@ -36,4 +35,4 @@ class User(Base):
     name = Column(String, index=True)
     email = Column(String, unique=True, index=True)
     hashed_password = Column(String)
-    is_superadmin = Column(Boolean, default=False)  # Поле для супер админа
+    is_superadmin = Column(Boolean, default=False)
