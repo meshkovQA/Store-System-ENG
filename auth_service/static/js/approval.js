@@ -5,7 +5,6 @@ document.addEventListener("DOMContentLoaded", async function () {
     const token = await getTokenFromDatabase();
 
     if (!token) {
-        // Перенаправляем на страницу логина, если токен отсутствует
         window.location.href = '/login';
         return;
     }
@@ -13,7 +12,6 @@ document.addEventListener("DOMContentLoaded", async function () {
     loadPendingProducts(token);
 });
 
-// Функция для загрузки списка продуктов, ожидающих одобрения
 async function loadPendingProducts(token) {
     try {
         const response = await fetch("/get-pending-products/", {
@@ -35,11 +33,10 @@ async function loadPendingProducts(token) {
     }
 }
 
-// Функция для рендеринга таблицы продуктов
 function renderProductsTable(products) {
     console.log("Rendering products table...");
     const tableBody = document.getElementById("product-approval-table");
-    tableBody.innerHTML = "";  // Очищаем таблицу перед добавлением новых данных
+    tableBody.innerHTML = "";
 
     products.forEach(product => {
         console.log("Rendering product:", product);
@@ -51,91 +48,30 @@ function renderProductsTable(products) {
             <td>${product.price}</td>
             <td>
                 <button class="btn btn-sm btn-success" onclick="approveProduct('${product.product_id}')">Одобрить</button>
-                <button class="btn btn-sm btn-danger" onclick="rejectProduct('${product.product_id}')">Отклонить</button>
             </td>
         `;
         tableBody.appendChild(row);
     });
 }
 
-// Функция для одобрения продукта
 async function approveProduct(productId) {
     console.log(`Approving product with ID: ${productId}`);
     const token = await getTokenFromDatabase();
 
     try {
-        // Одобряем продукт (PATCH-запрос)
-        const patchResponse = await fetch(`http://localhost:8002/products/${productId}`, {
+        const response = await fetch(`http://localhost:8002/products/${productId}`, {
             method: "PATCH",
             headers: {
                 "Authorization": `Bearer ${token}`,
                 "Content-Type": "application/json"
             },
-            body: JSON.stringify({ is_available: true }) // Обновляем поле is_available на true
+            body: JSON.stringify({ is_available: true })
         });
 
-        if (!patchResponse.ok) {
-            console.error("Error approving product:", patchResponse.status);
-            return;
-        }
-
-        // Удаляем продукт из Redis
-        const redisResponse = await fetch("/remove-from-pending/", {
-            method: "POST",
-            headers: {
-                "Authorization": `Bearer ${token}`,
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({ product_id: productId })
-        });
-
-        if (!redisResponse.ok) {
-            console.error("Error removing product from Redis:", redisResponse.status);
-            return;
-        }
-
-        console.log(`Product ${productId} approved and removed from Redis successfully.`);
-        loadPendingProducts(token); // Обновляем список после одобрения
-    } catch (error) {
-        console.error("Error:", error);
-    }
-}
-
-// Функция для отклонения продукта
-async function rejectProduct(productId) {
-    console.log(`Rejecting product with ID: ${productId}`);
-    const token = await getTokenFromDatabase();
-
-    try {
-        // Удаляем продукт из Redis
-        const redisResponse = await fetch("/remove-from-pending/", {
-            method: "POST",
-            headers: {
-                "Authorization": `Bearer ${token}`,
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({ product_id: productId })
-        });
-
-        if (!redisResponse.ok) {
-            console.error("Error removing product from Redis:", redisResponse.status);
-            return;
-        }
-
-        // Удаляем продукт из базы данных
-        const dbResponse = await fetch(`http://localhost:8002/products/${productId}`, {
-            method: "DELETE",
-            headers: {
-                "Authorization": `Bearer ${token}`,
-                "Content-Type": "application/json"
-            }
-        });
-
-        if (dbResponse.ok) {
-            console.log(`Product ${productId} rejected and removed successfully.`);
-            loadPendingProducts(token); // Обновляем список после отклонения
-        } else {
-            console.error("Error deleting product from DB:", dbResponse.status);
+        if (response.ok) {
+            console.log(`Product ${productId} approved successfully.`);
+            loadPendingProducts(token);
+            console.error("Error approving product:", response.status);
         }
     } catch (error) {
         console.error("Error:", error);

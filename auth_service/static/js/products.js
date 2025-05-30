@@ -218,7 +218,7 @@ document.addEventListener("DOMContentLoaded", async function () {
         if (target.classList.contains("btn-outline-warning")) {
             openEditProductModal(productId);
         } else if (target.classList.contains("btn-outline-danger")) {
-            const confirmed = confirm("Вы уверены, что хотите удалить продукт?");
+            const confirmed = confirm("Are you sure you want to delete this product?");
             if (confirmed) deleteProduct(productId);
         }
     });
@@ -254,7 +254,7 @@ async function openEditProductModal(productId) {
     });
 
     if (!response.ok) {
-        console.error("Ошибка при получении данных продукта:", response.status);
+        console.error("Error fetching product data:", response.status);
         return;
     }
 
@@ -295,7 +295,7 @@ async function uploadImage(imageFile) {
     const token = await getTokenFromDatabase();
     const formData = new FormData();
     formData.append("file", imageFile);
-    console.log("Форма данных для загрузки изображения:", formData);
+    console.log("FormData for image upload:", formData);
 
     const response = await fetch("http://localhost:8002/upload", {
         method: "POST",
@@ -306,11 +306,11 @@ async function uploadImage(imageFile) {
     });
 
     if (!response.ok) {
-        throw new Error("Ошибка загрузки изображения");
+        throw new Error("Error uploading image: " + response.statusText);
     }
 
     const data = await response.json();
-    console.log("Данные изображения:", data);
+    console.log("Image upload response:", data);
 
     return data.imageUrl; // Возвращаем URL изображения
 }
@@ -319,7 +319,7 @@ async function createProduct() {
     const token = await getTokenFromDatabase();
     const supplierId = document.getElementById("add-supplier-id").value;
     const imageFile = document.getElementById("add-image-url").files[0];
-    console.log("Получен файл изображения:", imageFile);
+    console.log("Get image file:", imageFile);
 
     let imageUrl = null;
     if (imageFile) {
@@ -328,7 +328,7 @@ async function createProduct() {
             console.log(imageUrl);
         } catch (error) {
             console.error(error);
-            showNotification("Ошибка загрузки изображения", "danger");
+            showNotification("Error uploading image", "danger");
             return;
         }
     }
@@ -367,16 +367,16 @@ async function createProduct() {
             await loadProducts(token);
 
             // Показываем уведомление об успешном добавлении
-            showNotification("Продукт успешно добавлен!");
+            showNotification("Product added successfully", "success");
         } else {
             // Обработка ошибки
             const errorData = await response.json();
-            console.error("Ошибка при добавлении продукта:", errorData);
-            showNotification("Ошибка при добавлении продукта", "danger");
+            console.error("Error adding product:", errorData);
+            showNotification("Error adding product: " + (errorData.detail || "Unknown error"), "danger");
         }
     } catch (error) {
-        console.error("Ошибка при выполнении запроса:", error);
-        showNotification("Ошибка при добавлении продукта", "danger");
+        console.error("Error during product creation:", error);
+        showNotification("Error during product creation: " + error.message, "danger");
     }
 }
 
@@ -390,7 +390,7 @@ async function updateProduct(productId) {
             imageUrl = await uploadImage(imageFile);
         } catch (error) {
             console.error(error);
-            showNotification("Ошибка загрузки изображения", "danger");
+            showNotification("Error uploading image", "danger");
             return;
         }
     }
@@ -441,10 +441,10 @@ function renderProductsTable(products) {
             <td><a href="#" class="product-name" data-id="${product.product_id}">${product.name}</a></td>
             <td>${product.description || ""}</td>
             <td>${product.category || ""}</td>
-            <td>${product.price + " руб" || ""}</td>
+            <td>${product.price + " eur" || ""}</td>
             <td class="text-center">
-                <button class="btn btn-sm btn-outline-warning mt-2" data-id="${product.product_id}">Редактировать</button>
-                <button class="btn btn-sm btn-outline-danger mt-2" data-id="${product.product_id}">Удалить</button>
+                <button class="btn btn-sm btn-outline-warning mt-2" data-id="${product.product_id}">Edit</button>
+                <button class="btn btn-sm btn-outline-danger mt-2" data-id="${product.product_id}">Delete</button>
             </td>
         `;
         tableBody.appendChild(row);
@@ -471,7 +471,7 @@ async function loadSuppliers(selectorId, selectedSupplierId = null) {
 
     const suppliers = await response.json();
     const select = document.querySelector(selectorId);
-    select.innerHTML = `<option value="" disabled selected>Выберите поставщика</option>`;
+    select.innerHTML = `<option value="" disabled selected>Choose a supplier</option>`; // Очистка и установка заголовка
 
     suppliers.forEach((supplier) => {
         const option = document.createElement("option");
@@ -480,7 +480,7 @@ async function loadSuppliers(selectorId, selectedSupplierId = null) {
         if (supplier.id === selectedSupplierId) option.selected = true;
         select.appendChild(option);
     });
-    console.log("Поставщики загружены в выпадающий список:", suppliers);
+    console.log("Suppliers loaded:", suppliers);
 }
 
 async function searchProduct() {
@@ -498,7 +498,7 @@ async function searchProduct() {
         const products = await response.json();
         renderProductsTable(products);
     } else {
-        console.error("Ошибка при поиске продукта:", response.status);
+        console.error("Error searching products:", response.status);
     }
 }
 
@@ -512,7 +512,7 @@ async function openProductDetailsModal(productId) {
     });
 
     if (!response.ok) {
-        console.error("Ошибка при получении данных продукта:", response.status);
+        console.error("Error fetching product details:", response.status);
         return;
     }
 
@@ -528,14 +528,14 @@ async function openProductDetailsModal(productId) {
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
-                        <p><strong>Описание:</strong> ${product.description || "Нет описания"}</p>
-                        <p><strong>Категория:</strong> ${product.category || "Нет категории"}</p>
-                        <p><strong>Цена:</strong> ${product.price} руб</p>
+                        <p><strong>Описание:</strong> ${product.description || "none"}</p>
+                        <p><strong>Категория:</strong> ${product.category || "none"}</p>
+                        <p><strong>Цена:</strong> ${product.price} eur</p>
                         <p><strong>Количество на складе:</strong> ${product.stock_quantity}</p>
                         <p><strong>Поставщик:</strong> ${product.supplier_id}</p>
-                        <p><strong>Вес:</strong> ${product.weight || "Нет данных"} кг</p>
-                        <p><strong>Габариты:</strong> ${product.dimensions || "Нет данных"}</p>
-                        <p><strong>Производитель:</strong> ${product.manufacturer || "Нет данных"}</p>
+                        <p><strong>Вес:</strong> ${product.weight || "none"}</p>
+                        <p><strong>Габариты:</strong> ${product.dimensions || "none"}</p>
+                        <p><strong>Производитель:</strong> ${product.manufacturer || "none"}</p>
                     </div>
                 </div>
             </div>

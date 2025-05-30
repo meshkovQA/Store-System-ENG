@@ -162,7 +162,7 @@ document.addEventListener("DOMContentLoaded", async function () {
             openEditWarehouseModal(warehouseId);
         } else if (target.classList.contains("btn-outline-danger")) {
             // Запрос на подтверждение удаления склада
-            const confirmed = confirm("Вы уверены, что хотите удалить склад?");
+            const confirmed = confirm("Are you sure you want to delete this warehouse?");
             if (confirmed) deleteWarehouse(warehouseId);
         }
     });
@@ -201,7 +201,7 @@ async function openViewWarehouseModal(warehouseId) {
     document.getElementById("view-current-stock").value = warehouse.current_stock || 0;
     document.getElementById("view-contact-number").value = warehouse.contact_number || "";
     document.getElementById("view-email").value = warehouse.email || "";
-    document.getElementById("view-is-active").value = warehouse.is_active ? "Активен" : "Неактивен";
+    document.getElementById("view-is-active").value = warehouse.is_active ? "Active" : "Inactive";
     document.getElementById("view-area-size").value = warehouse.area_size || "";
 
     // Открытие модального окна
@@ -230,12 +230,12 @@ async function openEditWarehouseModal(warehouseId) {
     document.getElementById("edit-warehouse-id").value = warehouse.warehouse_id;
     document.getElementById("edit-location").value = warehouse.location;
     document.getElementById("edit-manager-name").value = warehouse.manager_name || "";
-    document.getElementById("edit-capacity").value = warehouse.capacity + " куб.м";
+    document.getElementById("edit-capacity").value = warehouse.capacity || "";
     document.getElementById("edit-current-stock").value = warehouse.current_stock || 0;
     document.getElementById("edit-contact-number").value = warehouse.contact_number || "";
     document.getElementById("edit-email").value = warehouse.email || "";
-    document.getElementById("edit-is-active").value = warehouse.is_active ? "Активен" : "Неактивен";
-    document.getElementById("edit-area-size").value = warehouse.area_size + " кв.м" || "";
+    document.getElementById("edit-is-active").value = warehouse.is_active ? "active" : "inactive";
+    document.getElementById("edit-area-size").value = warehouse.area_size || "";
 
     // Открываем модальное окно для редактирования
     $("#editWarehouseModal").modal("show");
@@ -295,16 +295,16 @@ async function createWarehouse() {
             await loadWarehouses(token);
 
             // Показываем уведомление об успешном добавлении
-            showNotification("Склад успешно добавлен!");
+            showNotification("Warehouse successfully added", "success");
         } else {
             // Обработка ошибки
             const errorData = await response.json();
-            console.error("Ошибка при добавлении склада:", errorData);
-            showNotification("Ошибка при добавлении склада", "danger");
+            console.error("Error adding warehouse:", errorData);
+            showNotification("Error adding warehouse: " + (errorData.detail || "Unknown error"), "danger");
         }
     } catch (error) {
-        console.error("Ошибка при выполнении запроса:", error);
-        showNotification("Ошибка при добавлении склада", "danger");
+        console.error("Error connecting to server:", error);
+        showNotification("Error connecting to server: " + error.message, "danger");
     }
 }
 
@@ -347,14 +347,14 @@ async function deleteWarehouse(warehouseId) {
 
         if (!response.ok) {
             const error = await response.json();
-            showNotification(error.detail || "Ошибка при удалении склада", "danger");
+            showNotification(error.detail || "Error deleting warehouse", "danger");
             return;
         }
 
-        showNotification("Склад успешно удален", "success");
+        showNotification("Warehouse successfully deleted", "success");
         loadWarehouses(token);
     } catch (error) {
-        showNotification("Ошибка подключения к серверу", "danger");
+        showNotification("Error deleting warehouse: " + error.message, "danger");
     }
 }
 
@@ -368,14 +368,14 @@ function renderWarehousesTable(warehouses) {
         row.innerHTML = `
             <td>${warehouse.location}</td>
             <td>${warehouse.manager_name || ""}</td>
-            <td>${warehouse.capacity + " куб.м"}</td>
+            <td>${warehouse.capacity}</td>
             <td>${warehouse.current_stock || 0}</td>
-            <td>${warehouse.is_active ? "Активен" : "Неактивен"}</td>
-            <td>${warehouse.area_size + " кв.м" || ""}</td>
+            <td>${warehouse.is_active ? "active" : "inactive"}</td>
+            <td>${warehouse.area_size || ""}</td>
             <td class="text-center">
-                <button class="btn btn-sm btn-outline-info" data-id="${warehouse.warehouse_id}">Посмотреть</button>
-                <button class="btn btn-sm btn-outline-warning" data-id="${warehouse.warehouse_id}">Редактировать</button>
-                <button class="btn btn-sm btn-outline-danger" data-id="${warehouse.warehouse_id}">Удалить</button>
+                <button class="btn btn-sm btn-outline-info" data-id="${warehouse.warehouse_id}">Show</button>
+                <button class="btn btn-sm btn-outline-warning" data-id="${warehouse.warehouse_id}">Edit</button>
+                <button class="btn btn-sm btn-outline-danger" data-id="${warehouse.warehouse_id}">Delete</button>
             </td>
         `;
         tableBody.appendChild(row);

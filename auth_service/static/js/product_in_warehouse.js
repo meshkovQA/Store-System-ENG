@@ -11,7 +11,7 @@ document.addEventListener("DOMContentLoaded", async function () {
     const warehouseId = getWarehouseIdFromUrl();
 
     if (!warehouseId) {
-        alert("Идентификатор склада не найден в URL.");
+        alert("ID of the warehouse not found in URL");
         return;
     }
 
@@ -47,7 +47,7 @@ async function loadWarehouseInfo(warehouseId) {
     });
 
     if (!response.ok) {
-        alert("Ошибка загрузки информации о складе");
+        alert("Error loading warehouse information");
         return;
     }
 
@@ -55,13 +55,13 @@ async function loadWarehouseInfo(warehouseId) {
 
     // Отображение информации о складе на странице (если нужно обновить данные)
     document.querySelector("h2").textContent = `Склад: ${warehouse.location}`;
-    document.getElementById("warehouse-manager-name").textContent = warehouse.manager_name || 'Не указано';
+    document.getElementById("warehouse-manager-name").textContent = warehouse.manager_name || 'None';
     document.getElementById("warehouse-capacity").textContent = warehouse.capacity;
     document.getElementById("warehouse-current-stock").textContent = warehouse.current_stock || 0;
-    document.getElementById("warehouse-contact-number").textContent = warehouse.contact_number || 'Не указан';
-    document.getElementById("warehouse-email").textContent = warehouse.email || 'Не указан';
-    document.getElementById("warehouse-is-active").textContent = warehouse.is_active ? "Активен" : "Неактивен";
-    document.getElementById("warehouse-area-size").textContent = warehouse.area_size || 'Не указана';
+    document.getElementById("warehouse-contact-number").textContent = warehouse.contact_number || 'None';
+    document.getElementById("warehouse-email").textContent = warehouse.email || 'None';
+    document.getElementById("warehouse-is-active").textContent = warehouse.is_active ? "Active" : "Inactive";
+    document.getElementById("warehouse-area-size").textContent = warehouse.area_size || 'None';
 }
 
 // ---- Получение продуктов со склада ----
@@ -74,12 +74,12 @@ async function fetchProductsFromWarehouse(warehouseId, token) {
     });
 
     if (!response.ok) {
-        console.error("Ошибка при загрузке товаров со склада:", response.status);
+        console.error("Error fetching products from warehouse:", response.status);
         return [];
     }
 
     const productsInWarehouse = await response.json();
-    console.log("Продукты на складе:", productsInWarehouse);
+    console.log("Products in warehouse:", productsInWarehouse);
 
     const products = [];
 
@@ -93,11 +93,11 @@ async function fetchProductsFromWarehouse(warehouseId, token) {
                 product_warehouse_id: productWarehouse.product_warehouse_id
             });
         } else {
-            console.warn("Не удалось загрузить данные для продукта:", productWarehouse.product_id);
+            console.warn("Cannot fetch details for product ID:", productWarehouse.product_id);
         }
     }
 
-    console.log("Все загруженные продукты:", products);
+    console.log("all products in warehouse:", products);
     return products;
 }
 
@@ -111,7 +111,7 @@ async function fetchProductDetails(productId, token) {
     });
 
     if (!response.ok) {
-        console.error("Ошибка при загрузке данных продукта:", productId, response.status);
+        console.error("Error fetching product details:", response.status);
         return null;
     }
 
@@ -125,7 +125,7 @@ function renderProductsTable(products) {
 
     if (products.length === 0) {
         tableBody.innerHTML = `
-            <tr><td colspan="4" class="text-center">На данном складе продуктов пока нет</td></tr>
+            <tr><td colspan="4" class="text-center">This warehouse has no products.</td></tr>
         `;
         return;
     }
@@ -137,8 +137,8 @@ function renderProductsTable(products) {
             <td>${product.name}</td>
             <td>${product.stock_quantity}</td>
             <td>
-                <button class="btn btn-sm btn-warning" onclick="openEditProductModal('${product.product_warehouse_id}', '${product.product_id}')">Редактировать</button>
-                <button class="btn btn-sm btn-danger" onclick="deleteProduct('${product.product_warehouse_id}', '${product.product_id}')">Удалить</button>
+                <button class="btn btn-sm btn-warning" onclick="openEditProductModal('${product.product_warehouse_id}', '${product.product_id}')">Edit</button>
+                <button class="btn btn-sm btn-danger" onclick="deleteProduct('${product.product_warehouse_id}', '${product.product_id}')">Delete</button>
             </td>
         `;
         tableBody.appendChild(row);
@@ -169,13 +169,13 @@ async function addProductToWarehouse(warehouseId) {
     const result = await response.json();
 
     if (response.ok) {
-        alert("Товар успешно добавлен на склад");
+        alert("Product successfully added to warehouse");
         const warehouseId = getWarehouseIdFromUrl();
         const products = await fetchProductsFromWarehouse(warehouseId, token);
         renderProductsTable(products);
         $("#addProductModal").modal("hide");
     } else {
-        alert(`Ошибка добавления товара: ${result.detail || "Неизвестная ошибка"}`);
+        alert(`Error adding product: ${result.detail || "Unknown error"}`);
     }
 }
 
@@ -194,7 +194,7 @@ function renderPagination(totalPages, currentPage) {
 
 // Открытие модального окна для редактирования продукта
 function openEditProductModal(productWarehouseId, productId) {
-    const quantity = prompt("Введите новое количество:");
+    const quantity = prompt("Enter new quantity:");
     if (quantity && quantity > 0) {
         updateProductQuantity(productWarehouseId, productId, parseInt(quantity));
     }
@@ -216,18 +216,18 @@ async function updateProductQuantity(productWarehouseId, productId, quantity) {
     const result = await response.json();
 
     if (response.ok) {
-        alert("Количество товара успешно обновлено");
+        alert("Quantity successfully updated");
         const warehouseId = getWarehouseIdFromUrl();
         const products = await fetchProductsFromWarehouse(warehouseId, token);
         renderProductsTable(products);
     } else {
-        alert(`Ошибка обновления товара: ${result.detail || "Неизвестная ошибка"}`);
+        alert(`Error updating quantity: ${result.detail || "Unknown error"}`);
     }
 }
 
 // Удаление продукта со склада
 async function deleteProduct(productWarehouseId, productId) {
-    const confirmed = confirm("Вы уверены, что хотите удалить этот товар?");
+    const confirmed = confirm("Are you sure you want to delete this product from the warehouse?");
     if (!confirmed) return;
 
     const token = await getTokenFromDatabase();
@@ -242,14 +242,14 @@ async function deleteProduct(productWarehouseId, productId) {
     });
 
     if (response.ok) {
-        alert("Товар успешно удален со склада");
+        alert("Product successfully deleted from warehouse");
         const warehouseId = getWarehouseIdFromUrl();
         const products = await fetchProductsFromWarehouse(warehouseId, token);
         renderProductsTable(products);
     } else if (response.status === 404) {
-        alert("Продукт с указанным ID не найден. Удаление невозможно.");
+        alert("Product not found in warehouse");
     } else {
-        alert("Ошибка удаления товара");
+        alert("Error deleting product: " + (await response.json()).detail || "Unknown error");
     }
 }
 

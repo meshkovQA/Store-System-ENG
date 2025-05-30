@@ -1,236 +1,231 @@
 {% extends "layout.html" %}
 
-{% block title %}Управление складами{% endblock %}
+{% block title %}Warehouse management{% endblock %}
 
 {% block content %}
-<h2 class="text-center my-4">Управление складами</h2>
+<h2 class="text-center my-4">Warehouse management</h2>
 
 <div id="notification" class="alert alert-success" style="display: none; position: fixed; top: 20px; right: 20px; z-index: 1050;">
-    Склад успешно добавлен!
+    Warehouse successfully added!
 </div>
 
-<!-- Кнопка для открытия модального окна добавления склада -->
 <div class="text-end mb-3">
     <button id="add-new-warehouse-btn" class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#addWarehouseModal">
-        Добавить новый склад
+        Add New Warehouse
     </button>
 </div>
 
-<!-- Модальное окно для добавления нового склада -->
 <div class="modal fade" id="addWarehouseModal" tabindex="-1" aria-labelledby="addWarehouseModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="addWarehouseModalLabel">Создание нового склада</h5>
+                <h5 class="modal-title" id="addWarehouseModalLabel">Create New Warehouse</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <form id="add-warehouse-form">
                     <div class="mb-3">
-                        <label for="add-location" class="form-label">Местоположение (обязательно)</label>
-                        <input type="text" class="form-control" id="add-location" placeholder="Введите местоположение склада" required>
+                        <label for="add-location" class="form-label">Location (required)</label>
+                        <input type="text" class="form-control" id="add-location" placeholder="Enter location" required>
                         <small id="addLocationError" class="text-danger" style="display: none;">
-                            Местоположение обязательно, не более 255 символов.
+                            Location is required, maximum 255 characters.
                         </small>
                     </div>
                     <div class="mb-3">
-                        <label for="add-manager-name" class="form-label">Имя управляющего</label>
-                        <input type="text" class="form-control" id="add-manager-name" placeholder="Введите Имя Фамилию управляющего">
+                        <label for="add-manager-name" class="form-label">Name of Manager</label>
+                        <input type="text" class="form-control" id="add-manager-name" placeholder="Enter Manager's Name">
                         <small id="addManagerNameError" class="text-danger" style="display: none;">
-                            Максимум 100 символов, только буквы.
+                            Maximum 100 characters, only letters.
                         </small>
                     </div>
                     <div class="mb-3">
-                        <label for="add-capacity" class="form-label">Вместимость (куб.м) (обязательно)</label>
-                        <input type="number" class="form-control" id="add-capacity" placeholder="Введите вместимость склада" required>
+                        <label for="add-capacity" class="form-label">Capacity (cubic meters) (required)</label>
+                        <input type="number" class="form-control" id="add-capacity" placeholder="Enter warehouse capacity" required>
                         <small id="addCapacityError" class="text-danger" style="display: none;">
-                        Вместимость обязательна, должно быть положительным числом.
+                        Capacity is required, must be a positive number.
                         </small>
                     </div>
                     <div class="mb-3">
-                        <label for="add-current-stock" class="form-label">Количество товаров</label>
+                        <label for="add-current-stock" class="form-label">Current Stock</label>
                         <input type="number" class="form-control" id="add-current-stock" value="0" readonly>
                     </div>
                     <div class="mb-3">
-                        <label for="add-contact-number" class="form-label">Контактный телефон</label>
-                        <input type="text" class="form-control" id="add-contact-number" placeholder="Введите телефон склада (+79009999999)">
+                        <label for="add-contact-number" class="form-label">Contact Phone</label>
+                        <input type="text" class="form-control" id="add-contact-number" placeholder="Enter Phone Number (+99009999999)">
                         <small id="addContactNumberError" class="text-danger" style="display: none;">
-                            Максимум 15 символов, только цифры и символ '+'.
+                            Max 15 characters, only digits and '+' symbol.
                         </small>
                     </div>
                     <div class="mb-3">
-                        <label for="add-email" class="form-label">Контактный email</label>
-                        <input type="email" class="form-control" id="add-email" placeholder="Введите email склада">
+                        <label for="add-email" class="form-label">Contact Email</label>
+                        <input type="email" class="form-control" id="add-email" placeholder="Enter Email">
                         <small id="addEmailError" class="text-danger" style="display: none;">
-                            Максимум 255 символов, должен быть валидным email.
+                            Max 255 characters, must be a valid email.
                         </small>
                     </div>
                     <div class="mb-3">
-                        <label for="add-is-active" class="form-label">Активность</label>
+                        <label for="add-is-active" class="form-label">Active</label>
                         <select class="form-control" id="add-is-active" required>
-                            <option value="active">Активен</option>
-                            <option value="inactive">Неактивен</option>
+                            <option value="active">Active</option>
+                            <option value="inactive">Inactive</option>
                         </select>
                         <small id="addIsActiveError" class="text-danger" style="display: none;">
-                            Пожалуйста, выберите статус активности.
+                            Choose a status.
                         </small>
                     </div>
                     <div class="mb-3">
-                        <label for="add-area-size" class="form-label">Площадь (кв.м)</label>
-                        <input type="number" class="form-control" id="add-area-size" placeholder="Введите площадь склада">
+                        <label for="add-area-size" class="form-label">Area Size (sq.m)</label>
+                        <input type="number" class="form-control" id="add-area-size" placeholder="Enter Area Size">
                         <small id="addAreaSizeError" class="text-danger" style="display: none;">
-                            Должно быть положительным числом.
+                            Must be a positive number.
                         </small>
                     </div>
-                    <button type="submit" class="btn btn-primary">Создать склад</button>
+                    <button type="submit" class="btn btn-primary">Create Warehouse</button>
                 </form>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Модальное окно для редактирования склада -->
 <div class="modal fade" id="editWarehouseModal" tabindex="-1" aria-labelledby="editWarehouseModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="editWarehouseModalLabel">Редактирование склада</h5>
+                <h5 class="modal-title" id="editWarehouseModalLabel">Edit Warehouse</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <form id="edit-warehouse-form">
                     <input type="hidden" id="edit-warehouse-id">
                     <div class="mb-3">
-                        <label for="edit-location" class="form-label">Местоположение (обязательно)</label>
-                        <input type="text" class="form-control" id="edit-location" placeholder="Введите местоположение склада" required>
+                        <label for="edit-location" class="form-label">Location (required)</label>
+                        <input type="text" class="form-control" id="edit-location" placeholder="Enter location" required>
                         <small id="editLocationError" class="text-danger" style="display: none;">
-                            Местоположение обязательно, не более 255 символов.
+                            Location is required, maximum 255 characters.
                         </small>
                     </div>
                     <div class="mb-3">
-                        <label for="edit-manager-name" class="form-label">Имя управляющего</label>
-                        <input type="text" class="form-control" id="edit-manager-name" placeholder="Введите Имя Фамилию управляющего">
+                        <label for="edit-manager-name" class="form-label">Name of Manager</label>
+                        <input type="text" class="form-control" id="edit-manager-name" placeholder="Enter Manager's Name">
                         <small id="editManagerNameError" class="text-danger" style="display: none;">
-                            Максимум 100 символов, только буквы.
+                            Max 100 characters, only letters.
                         </small>
                     </div>
                     <div class="mb-3">
-                        <label for="edit-capacity" class="form-label">Вместимость (куб.м) (обязательно)</label>
-                        <input type="number" class="form-control" id="edit-capacity" placeholder="Введите вместимость склада" required>
+                        <label for="edit-capacity" class="form-label">Capacity (cubic meters) (required)</label>
+                        <input type="number" class="form-control" id="edit-capacity" placeholder="Enter warehouse capacity" required>
                         <small id="editCapacityError" class="text-danger" style="display: none;">
-                            Вместимость обязательна, должно быть положительным числом.
+                            Capacity is required, must be a positive number.
                         </small>
                     </div>
                     <div class="mb-3">
-                        <label for="edit-current-stock" class="form-label">Количество товаров</label>
+                        <label for="edit-current-stock" class="form-label">Current Stock</label>
                         <input type="number" class="form-control" id="edit-current-stock">
                     </div>
                     <div class="mb-3">
-                        <label for="edit-contact-number" class="form-label">Контактный телефон</label>
-                        <input type="text" class="form-control" id="edit-contact-number" placeholder="Введите телефон склада (+79009999999)">
+                        <label for="edit-contact-number" class="form-label">Contact Phone</label>
+                        <input type="text" class="form-control" id="edit-contact-number" placeholder="Enter Phone Number (+99009999999)">
                         <small id="editContactNumberError" class="text-danger" style="display: none;">
-                            Максимум 15 символов, только цифры и символ '+'.
+                            Contact number must be max 15 characters, only digits and '+' symbol.
                         </small>
                     </div>
                     <div class="mb-3">
-                        <label for="edit-email" class="form-label">Контактный email</label>
-                        <input type="email" class="form-control" id="edit-email"  placeholder="Введите email склада">
+                        <label for="edit-email" class="form-label">Contact Email</label>
+                        <input type="email" class="form-control" id="edit-email"  placeholder="Enter Email">
                         <small id="editEmailError" class="text-danger" style="display: none;">
-                            Максимум 255 символов, должен быть валидным email.
+                            Email must be max 255 characters, and a valid email.
                         </small>
                     </div>
                     <div class="mb-3">
-                        <label for="edit-is-active" class="form-label">Активность</label>
+                        <label for="edit-is-active" class="form-label">Active
                         <select class="form-control" id="edit-is-active" required>
-                            <option value="active">Активен</option>
-                            <option value="inactive">Неактивен</option>
+                            <option value="active">Active</option>
+                            <option value="inactive">Inactive</option>
                         </select>
                         <small id="editIsActiveError" class="text-danger" style="display: none;">
-                            Пожалуйста, выберите статус активности.
+                            Choose a status.
                         </small>
                     </div>
                     <div class="mb-3">
-                        <label for="edit-area-size" class="form-label">Площадь (кв.м)</label>
+                        <label for="edit-area-size" class="form-label">Area Size (sq.m)</label>
                         <input type="number" class="form-control" id="edit-area-size">
                         <small id="editAreaSizeError" class="text-danger" style="display: none;">
-                            Должно быть положительным числом.
+                            Area size must be a positive number.
                         </small>
                     </div>
-                    <button type="submit" class="btn btn-primary">Сохранить изменения</button>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
                 </form>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Модальное окно для просмотра информации о складе -->
 <div class="modal fade" id="viewWarehouseModal" tabindex="-1" aria-labelledby="viewWarehouseModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="viewWarehouseModalLabel">Информация о складе</h5>
+                <h5 class="modal-title" id="viewWarehouseModalLabel">View Warehouse</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <form id="view-warehouse-form">
                     <input type="hidden" id="view-warehouse-id">
                     <div class="mb-3">
-                        <label class="form-label">Местоположение</label>
+                        <label class="form-label">Location</label>
                         <input type="text" class="form-control" id="view-location" readonly>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Имя управляющего</label>
+                        <label class="form-label">Name of Manager</label>
                         <input type="text" class="form-control" id="view-manager-name" readonly>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Вместимость (куб.м)</label>
+                        <label class="form-label">Capacity (cubic meters)</label>
                         <input type="number" class="form-control" id="view-capacity" readonly>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Количество товаров</label>
+                        <label class="form-label">Current Stock</label>
                         <input type="number" class="form-control" id="view-current-stock" readonly>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Контактный телефон</label>
+                        <label class="form-label">Contact Phone</label>
                         <input type="text" class="form-control" id="view-contact-number" readonly>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Контактный email</label>
+                        <label class="form-label">Contact Email</label>
                         <input type="email" class="form-control" id="view-email" readonly>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Активность</label>
+                        <label class="form-label">Active</label>
                         <input type="text" class="form-control" id="view-is-active" readonly>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Площадь (кв.м)</label>
+                        <label class="form-label">Area Size (sq.m)</label>
                         <input type="number" class="form-control" id="view-area-size" readonly>
                     </div>
-                    <button type="button" class="btn btn-primary" onclick="viewWarehouseProducts()">Информация о продуктах</button>
+                    <button type="button" class="btn btn-primary" onclick="viewWarehouseProducts()">Information about products</button>
                 </form>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Таблица складов -->
 <div class="card shadow-sm">
     <div class="card-body">
-        <h5 class="card-title mb-3">Список складов</h5>
+        <h5 class="card-title mb-3">List of Warehouses</h5>
         <table class="table align-middle" id="warehouses-table">
             <thead  class="table-light">
                 <tr>
-                    <th scope="col">Местоположение</th>
-                    <th scope="col">Управляющий</th>
-                    <th scope="col">Вместимость</th>
-                    <th scope="col">Текущий запас</th>
-                    <th scope="col">Активность</th>
-                    <th scope="col">Площадь</th>
-                    <th scope="col class="text-center"">Действия</th>
+                    <th scope="col">Location</th>
+                    <th scope="col">Manager Name</th>
+                    <th scope="col">Capacity</th>
+                    <th scope="col">Current Stock</th>
+                    <th scope="col">Active Status</th>
+                    <th scope="col">Area Size</th>
+                    <th scope="col class="text-center"">Actions</th>
                 </tr>
             </thead>
             <tbody>
-                <!-- Данные будут загружены через JS -->
+
             </tbody>
         </table>
     </div>

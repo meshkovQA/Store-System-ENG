@@ -201,7 +201,7 @@ document.addEventListener("DOMContentLoaded", async function () {
         if (target.classList.contains("btn-outline-warning")) {
             openEditModal(supplierId);
         } else if (target.classList.contains("btn-outline-danger")) {
-            const confirmed = confirm("Вы уверены, что хотите удалить поставщика?");
+            const confirmed = confirm("Are you sure you want to delete this supplier?");
             if (confirmed) deleteSupplier(supplierId);
         }
     });
@@ -287,10 +287,10 @@ async function searchSupplier() {
 
     if (response.ok) {
         const suppliers = await response.json();
-        console.log("Найденные поставщики:", suppliers); // Отладка: вывод найденных поставщиков в консоль
+        console.log("Found suppliers:", suppliers);
         renderSuppliersTable(suppliers);
     } else {
-        console.error("Ошибка при поиске поставщика:", response.status);
+        console.error("Error searching suppliers:", response.status);
     }
 }
 
@@ -330,16 +330,16 @@ async function createSupplier() {
             await loadSuppliers(token);
 
             // Показываем уведомление об успешном добавлении
-            showNotification("Поставщик успешно добавлен!");
+            showNotification("Supplier successfully added", "success");
         } else {
             // Обработка ошибки
             const errorData = await response.json();
-            console.error("Ошибка при добавлении поставщика:", errorData);
-            showNotification("Ошибка при добавлении поставщика", "danger");
+            console.error("Error adding supplier:", errorData);
+            showNotification("Error adding supplier: " + (errorData.detail || "Unknown error"), "danger");
         }
     } catch (error) {
-        console.error("Ошибка при выполнении запроса:", error);
-        showNotification("Ошибка при добавлении поставщика", "danger");
+        console.error("Error connecting to server:", error);
+        showNotification("Error connecting to server: " + error.message, "danger");
     }
 }
 
@@ -382,14 +382,14 @@ async function deleteSupplier(supplierId) {
 
         if (!response.ok) {
             const error = await response.json();
-            showNotification(error.detail || "Ошибка при удалении поставщика", "danger");
+            showNotification(error.detail || "Error deleting supplier", "danger");
             return;
         }
 
-        showNotification("Поставщик успешно удален", "success");
+        showNotification("Supplier successfully deleted", "success");
         loadSuppliers(token);
     } catch (error) {
-        showNotification("Ошибка подключения к серверу", "danger");
+        showNotification("Error deleting supplier: " + error.message, "danger");
     }
 }
 
@@ -410,8 +410,8 @@ function renderSuppliersTable(suppliers) {
             <td>${supplier.city}</td>
             <td>${supplier.website}</td>
             <td class="text-center">
-                <button class="btn btn-sm btn-outline-warning mt-2" data-id="${supplier.supplier_id}">Редактировать</button>
-                <button class="btn btn-sm btn-outline-danger mt-2" data-id="${supplier.supplier_id}">Удалить</button>
+                <button class="btn btn-sm btn-outline-warning mt-2" data-id="${supplier.supplier_id}">Edit</button>
+                <button class="btn btn-sm btn-outline-danger mt-2" data-id="${supplier.supplier_id}">Delete</button>
             </td>
         `;
         tableBody.appendChild(row);

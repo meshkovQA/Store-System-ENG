@@ -7,7 +7,7 @@ async function getTokenFromDatabase() {
     });
 
     if (!response.ok) {
-        console.log("Не удалось получить токен. Перенаправляем на страницу логина.");
+        console.log("Don't have access token. Redirecting to login page.");
         window.location.href = '/login';
         return null;
     }
@@ -49,7 +49,7 @@ async function verifyTokenOnServer(token) {
 async function getNewAccessToken() {
     const refreshToken = getCookie('refresh_token');
     if (!refreshToken) {
-        console.log("Отсутствует refresh token. Перенаправляем на страницу логина.");
+        console.log("Refresh token not found. Redirecting to login page.");
         return null;
     }
 
@@ -67,7 +67,7 @@ async function getNewAccessToken() {
         localStorage.setItem('access_token', data.access_token);
         return data.access_token;
     } else {
-        console.log("Не удалось обновить токен. Перенаправляем на страницу логина.");
+        console.log("Didn't get new access token. Redirecting to login page.");
         return null;
     }
 }
