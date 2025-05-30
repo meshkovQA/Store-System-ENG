@@ -12,7 +12,7 @@
         <div class="card-body">
             <div class="row mb-3">
                 <div class="col-6">
-                    <strong>Manager:</strong>
+                    <strong>Manager’s Full Name:</strong>
                 </div>
                 <div class="col-6" id="warehouse-manager-name">
                     Not assigned
@@ -28,7 +28,7 @@
             </div>
             <div class="row mb-3">
                 <div class="col-6">
-                    <strong>Current stock:</strong>
+                    <strong>Current total number of products:</strong>
                 </div>
                 <div class="col-6" id="warehouse-current-stock">
                     -
@@ -36,7 +36,7 @@
             </div>
             <div class="row mb-3">
                 <div class="col-6">
-                    <strong>Phone number:</strong>
+                    <strong>Contact Phone:</strong>
                 </div>
                 <div class="col-6" id="warehouse-contact-number">
                     Not provided
@@ -44,7 +44,7 @@
             </div>
             <div class="row mb-3">
                 <div class="col-6">
-                    <strong>Email:</strong>
+                    <strong>Contact Email:</strong>
                 </div>
                 <div class="col-6" id="warehouse-email">
                     Not provided
@@ -70,7 +70,7 @@
     </div>
 
 
-    <button class="btn btn-primary mt-5" onclick="openAddProductModal()">Add product</button>
+    <button class="btn btn-primary mt-5" onclick="openAddProductModal()">Add Product to Warehouse</button>
 
     <div class="modal fade" id="addProductModal" tabindex="-1" aria-labelledby="addProductModalLabel" aria-hidden="true">
         <div class="modal-dialog">
@@ -82,11 +82,11 @@
                 <div class="modal-body">
                     <form id="add-product-form">
                         <div class="mb-3">
-                            <label for="product-id" class="form-label">ID product</label>
+                            <label for="product-id" class="form-label">Product ID</label>
                             <input type="text" class="form-control" id="product-id" required>
                         </div>
                         <div class="mb-3">
-                            <label for="product-quantity" class="form-label">Quantity of product</label>
+                            <label for="product-quantity" class="form-label">Quantity</label>
                             <input type="number" class="form-control" id="product-quantity" min="1" required>
                         </div>
                         <button type="submit" class="btn btn-primary">Add</button>
@@ -100,10 +100,10 @@
     <table class="table table-striped" id="products-table">
         <thead>
             <tr>
-                <th>ID</th>
-                <th>Name of product</th>
-                <th>Quantity</th>
-                <th>Action</th>
+                <th>Product ID</th>
+                <th>Product Name</th>
+                <th>Quantity in Stock</th>
+                <th>Actions</th>
             </tr>
         </thead>
         <tbody>

@@ -17,7 +17,7 @@
 
 <div class="input-group mb-4">
     <input type="text" class="form-control" id="search-name" placeholder="Enter product name to search">
-    <button class="btn btn-outline-secondary" onclick="searchProduct()">Find</button>
+    <button class="btn btn-outline-secondary" onclick="searchProduct()">Search</button>
 </div>
 
 <div class="modal fade" id="addProductModal" tabindex="-1" aria-labelledby="addProductModalLabel" aria-hidden="true">
@@ -32,7 +32,7 @@
 
                 <form id="add-product-form">
                     <div class="mb-3">
-                        <label for="add-name" class="form-label">Name of product (required)</label>
+                        <label for="add-name" class="form-label">Product Name (required)</label>
                         <input type="text" class="form-control" id="add-name" placeholder="Enter product name" required>
                         <small id="nameError" class="text-danger" style="display: none;">
                             Name is required, must be 3-100 characters long, and can only contain letters and numbers.
@@ -56,7 +56,7 @@
                     </div>
 
                     <div class="mb-3">
-                        <label for="add-price" class="form-label">Price (eur) (required)</label>
+                        <label for="add-price" class="form-label">Price (required)</label>
                         <input type="text" class="form-control" id="add-price" placeholder="Enter price for 1 item" required>
                         <small id="priceError" class="text-danger" style="display: none;">
                             Price is required, positive number with two decimal places, maximum 10 digits.
@@ -64,7 +64,7 @@
                     </div>
 
                     <div class="mb-3">
-                        <label for="add-stock-quantity" class="form-label">Quantity of product (required)</label>
+                        <label for="add-stock-quantity" class="form-label">Product Quantity (required)</label>
                         <input type="number" class="form-control" id="add-stock-quantity" placeholder="Enter quantity" required>
                         <small id="stockQuantityError" class="text-danger" style="display: none;">
                             Quantity must be a whole number, not less than 0.
@@ -88,7 +88,7 @@
                     </div>
 
                     <div class="mb-3">
-                        <label for="add-weight" class="form-label">Weight of product (kg)</label>
+                        <label for="add-weight" class="form-label">Weight(kg)</label>
                         <input type="number" class="form-control" id="add-weight" step="0.01" placeholder="Enter weight of product">
                         <small id="weightError" class="text-danger" style="display: none;">
                             Weight should be a positive number, maximum 6 digits (including 2 decimal places).
@@ -96,7 +96,7 @@
                     </div>
 
                     <div class="mb-3">
-                        <label for="add-dimensions" class="form-label">Dimensions of product (1x1x1 meters)</label>
+                        <label for="add-dimensions" class="form-label">Dimensions(1x1x1 meters)</label>
                         <input type="text" class="form-control" id="add-dimensions" placeholder="Enter dimensions in format 1x1x1">
                         <small id="dimensionsError" class="text-danger" style="display: none;">
                             Dimensions should be up to 100 characters and allow only numbers and the symbol "x".
@@ -129,7 +129,7 @@
                 <form id="edit-product-form">
                     <input type="hidden" id="edit-product-id">
                     <div class="mb-3">
-                        <label for="edit-name" class="form-label">Name of product (required)</label>
+                        <label for="edit-name" class="form-label">Product Name (required)</label>
                         <input type="text" class="form-control" id="edit-name" placeholder="Enter product name" required>
                         <small id="editnameError" class="text-danger" style="display: none;">
                             Name is required, must be 3-100 characters long, and can only contain letters and numbers.
@@ -150,14 +150,14 @@
                         </small>
                     </div>
                     <div class="mb-3">
-                        <label for="edit-price" class="form-label">Price (eur) (required)</label>
+                        <label for="edit-price" class="form-label">Price (required)</label>
                         <input type="text" class="form-control" id="edit-price" placeholder="Enter price for 1 item" required>
                         <small id="editpriceError" class="text-danger" style="display: none;">
                             Price is required, positive number with two decimal places, maximum 10 digits.
                         </small>
                     </div>
                     <div class="mb-3">
-                        <label for="edit-stock-quantity" class="form-label">Quantity of product (required)</label>
+                        <label for="edit-stock-quantity" class="form-label">Product Quantity (required)</label>
                         <input type="number" class="form-control" id="edit-stock-quantity" placeholder="Enter quantity" required>
                         <small id="editstockQuantityError" class="text-danger" style="display: none;">
                             Quantity must be a whole number, not less than 0.
@@ -177,14 +177,14 @@
                         </small>
                     </div>
                     <div class="mb-3">
-                        <label for="edit-weight" class="form-label">Weight of product (kg)</label>
+                        <label for="edit-weight" class="form-label">Weight (kg)</label>
                         <input type="number" class="form-control" id="edit-weight" step="0.01" placeholder="Enter weight of product">
                         <small id="editweightError" class="text-danger" style="display: none;">
                             Weight should be a positive number, maximum 6 digits (including 2 decimal places).
                         </small>
                     </div>
                     <div class="mb-3">
-                        <label for="edit-dimensions" class="form-label">Dimensions of product (1x1x1 meters)</label>
+                        <label for="edit-dimensions" class="form-label">Dimensions (1x1x1 meters)</label>
                         <input type="text" class="form-control" id="edit-dimensions" placeholder="Enter dimensions in format 1x1x1">
                         <small id="editdimensionsError" class="text-danger" style="display: none;">
                             Dimensions should be up to 100 characters and allow only numbers and the symbol "x".
@@ -211,7 +211,7 @@
         <table class="table align-middle" id="products-table">
             <thead class="table-light">
                 <tr>
-                    <th scope="col">ID</th> 
+                    <th scope="col">Product ID</th> 
                     <th scope="col">Name</th>
                     <th scope="col">Description</th>
                     <th scope="col">Category</th>
